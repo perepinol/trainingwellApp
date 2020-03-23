@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-        <link rel="stylesheet" href="{% static "base.css" %}">
+        <link rel="stylesheet" href="{% static "CSS/base.css" %}">
         <title>Trainingwell App</title>
     </head>
     <body class="container container-body">
@@ -13,15 +13,9 @@
             </div>
             <div class="col hcentered vcentered">
                 {% if user.is_authenticated %}
-                    <form method="post" action="/accounts/logout/" style="margin: 0;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-primary">Logout</button>
-                    </form>
+                    <a href="/accounts/logout/" class="btn btn-primary">Logout</a>
                 {% else %}
-                    <form method="get" action="/accounts/login/" style="margin: 0;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-primary">Login</button>
-                    </form>
+                    <a href="/accounts/login/" class="btn btn-primary">Login</a>
                 {% endif %}
             </div>
         </div>
