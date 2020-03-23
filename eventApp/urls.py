@@ -16,6 +16,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-urlpatterns = [
+from eventApp.views import test_view
 
+urlpatterns = [
+    path('', test_view)
 ]
