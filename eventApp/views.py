@@ -18,9 +18,8 @@ class TestView(TemplateView):
     template_name = 'eventApp/test.html'
 
 
-class EventView(ListView):
-    template_name = 'eventApp/list_view.html'
-    model = Reservation
+class EventView(TemplateView):
+    template_name = 'eventApp/event_list_view.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -33,9 +32,10 @@ class EventView(ListView):
                 if chosen_date < date.today():
                     chosen_date = date.today()
             except ValueError:
-                pass
+                pass  # Stick with current date
 
         context['form'] = DateForm(chosen_date=chosen_date)
+        context['event_list'] = Reservation.objects.filter(event_date__exact=chosen_date)
         return context
 
 

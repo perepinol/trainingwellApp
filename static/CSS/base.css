@@ -2,7 +2,7 @@ html {
     height: 100%;
 }
 
-.container {
+.container-nomargin {
     padding: 0;
     max-width: 100%;
 }
@@ -45,6 +45,10 @@ html {
     align-items: center;
 }
 
-.form > p {
+form > p {
     margin: 3em 0 0 0;
+}
+
+.card {
+    width: 100%;
 }

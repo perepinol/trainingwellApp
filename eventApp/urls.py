@@ -20,5 +20,6 @@ from eventApp.views import TestView, reservation_view, EventView
 
 urlpatterns = [
     path('reservation/new', reservation_view, name="reservation_form"),
+    path('event/<int:id>', TestView.as_view(), name='event_detail'),
     path('', EventView.as_view())
 ]

@@ -8,12 +8,14 @@
         <link rel="stylesheet" href="{% static "CSS/base.css" %}">
         <title>Trainingwell App</title>
     </head>
-    <body class="container container-body">
-        <div class="row header">
-            <div class="col-11 vcentered">
+    <body class="container-nomargin container-body h-100">
+        <div class="row header justify-content-between">
+            <div class="col-3 vcentered">
                 <h1>{% block pagetitle %}{% endblock %}</h1>
             </div>
-            <div class="col hcentered vcentered">
+            {% block headeritems %}
+            {% endblock %}
+            <div class="col-1 hcentered vcentered">
                 {% if user.is_authenticated %}
                     <a href="/accounts/logout/" class="btn btn-primary">Logout</a>
                 {% else %}
@@ -34,4 +36,6 @@
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
     {{ form.media }}
+    {% block scripts %}
+    {% endblock %}
 </html>

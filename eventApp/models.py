@@ -34,7 +34,7 @@ class Space(models.Model):
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
-        return u"%s" % self.field, self.id
+        return u"%s %d" % (self.field, self.id)
 
 
 class Reservation(models.Model):
