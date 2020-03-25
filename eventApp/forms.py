@@ -1,14 +1,14 @@
 from bootstrap_datepicker_plus import DatePickerInput
-from django.forms import ModelForm, ChoiceField
+from django.forms import ModelForm, ChoiceField, ModelChoiceField
 from datetime import date
 
-from eventApp.models import Reservation, Space
+from eventApp.models import Reservation, Space, Field
 
 
 class ReservationForm(ModelForm):
     name = "New reservation"
     submit_name = "Go to timetable"
-    space_type = ChoiceField(choices=Space.FIELD_OPTIONS)
+    space_type = ModelChoiceField(queryset=Field.objects.all())
 
     class Meta:
         model = Reservation

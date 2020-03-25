@@ -6,7 +6,7 @@ from django.db import models
 class CustomUser(User):
     is_adult = models.BooleanField()
     last_update = models.DateField()
-    modified_by = models.ForeignKey('self', on_delete=models.SET_NULL)
+    modified_by = models.ForeignKey('self', on_delete=models.PROTECT, null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
@@ -25,9 +25,9 @@ class Space(models.Model):
     size = models.IntegerField()  # review if necessary
     photo = models.ImageField()
     description = models.TextField(blank=True, null=True)
-    offer = models.FloatField()  # percentage by the moment
+    offer = models.FloatField(default=0)  # percentage by the moment
     last_update = models.DateField()
-    modified_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL)
+    modified_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
@@ -36,7 +36,7 @@ class Space(models.Model):
 
 class Reservation(models.Model):
     event_name = models.CharField(max_length=100)
-    organizer = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
+    organizer = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name="organizer")
     space = models.ForeignKey(Space, on_delete=models.PROTECT)
     reservation_date = models.DateField(auto_now_add=True)
     event_date = models.DateField()
@@ -45,7 +45,7 @@ class Reservation(models.Model):
     price = models.IntegerField()
     is_paid = models.BooleanField(default=False)
     last_update = models.DateField()
-    modified_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL)
+    modified_by = models.ForeignKey(CustomUser, null=True, on_delete=models.SET_NULL, default=organizer)
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
