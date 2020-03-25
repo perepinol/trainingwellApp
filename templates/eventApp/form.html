@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block pagetitle %}{{ form.name }}{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row hcentered"><h3 style="margin: 0;">{{ form.name }}</h3></div>
+        <div class="row hcentered">
+            <form class="hcentered" method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary">{{ form.submit_name }}</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
