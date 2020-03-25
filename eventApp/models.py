@@ -16,6 +16,9 @@ class CustomUser(User):
 class Field(models.Model):
     kind_of_field = models.CharField(max_length=50, primary_key=True)
 
+    def __str__(self):
+        return u'%s' % self.kind_of_field
+
 
 class Space(models.Model):
     field = models.ForeignKey(Field, on_delete=models.PROTECT)
