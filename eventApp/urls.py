@@ -16,9 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from eventApp.views import TestView, reservation_view
+from eventApp.views import TestView, reservation_view, EventView
 
 urlpatterns = [
     path('reservation/new', reservation_view, name="reservation_form"),
-    path('', TestView.as_view())
+    path('', EventView.as_view())
 ]

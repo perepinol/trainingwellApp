@@ -1,16 +1,42 @@
+from datetime import date, datetime
+from urllib.parse import parse_qs
+
+from bootstrap_datepicker_plus import DatePickerInput
 from django import http
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 
 # Create your views here.
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, ListView
 
-from eventApp.forms import ReservationForm
+from eventApp.forms import ReservationForm, DateForm
+from eventApp.models import Reservation
 
 
 class TestView(TemplateView):
     template_name = 'eventApp/test.html'
+
+
+class EventView(ListView):
+    template_name = 'eventApp/list_view.html'
+    model = Reservation
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        chosen_date = date.today()
+        query_string = parse_qs(self.request.GET.urlencode())
+        if 'chosen_date' in query_string and len(query_string['chosen_date']) == 1:
+            try:
+                chosen_date = datetime.strptime(query_string['chosen_date'][0], "%d-%m-%Y").date()
+                if chosen_date < date.today():
+                    chosen_date = date.today()
+            except ValueError:
+                pass
+
+        context['form'] = DateForm(chosen_date=chosen_date)
+        return context
 
 
 @login_required()
