@@ -3,18 +3,6 @@
     background-color: #b0daf1;
 }
 
-.vcentered {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.hcentered {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
 .reservation > p {
     margin: 3em 0 0 0;
 }

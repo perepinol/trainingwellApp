@@ -1,15 +1,12 @@
 {% extends 'base.html' %}
 
-{% block pagetitle %}Your reservations{% endblock %}
-
-{% block headeritems %}
-    <div class="col-2 vcentered">
+{% block content %}
+    <div class="col-md-auto">
+        <h1>Your reservations</h1>
+    </div>
+    <div class="col d-flex align-items-center">
         <a class="btn btn-primary" href={% url 'reservation_form' %}>New reservation</a>
     </div>
-{% endblock %}
-
-{% block content %}
-    <!-- TODO: make this scrollable -->
     <div class="card-deck w-100" style="height: min-content">
         <div class="row w-100 my-3">
             {% for res in res_list %}

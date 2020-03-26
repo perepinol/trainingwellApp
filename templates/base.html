@@ -8,28 +8,32 @@
         <link rel="stylesheet" href="{% static "CSS/base.css" %}">
         <title>Trainingwell App</title>
     </head>
-    <body class="mw-100 h-100 d-flex flex-column p-0">
-        <div class="row header d-flex w-100">
-            <div class="col vcentered flex-grow-1">
-                <h1 class="ml-3">{% block pagetitle %}{% endblock %}</h1>
+    <body>
+        <nav class="navbar navbar-expand navbar-dark bg-dark">
+            <a class="navbar-brand">TrainingWell</a>
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'home' %}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'reservations' %}">Reservations</a>
+                </li>
+            </ul>
+            {% if user.is_authenticated %}
+                <a class="btn btn-primary" href="/accounts/logout">Logout</a>
+            {% else %}
+                <a class="btn btn-primary" href="/accounts/login">Login</a>
+            {% endif %}
+        </nav>
+        <div class="container mw-100 h-100 d-flex flex-column p-0">
+            <div class="row m-4 flex-grow-1">
+                {% block content %}
+                {% endblock %}
             </div>
-            {% block headeritems %}
-            {% endblock %}
-            <div class="col-1 hcentered vcentered">
-                {% if user.is_authenticated %}
-                    <a href="/accounts/logout/" class="btn btn-primary">Logout</a>
-                {% else %}
-                    <a href="/accounts/login/" class="btn btn-primary">Login</a>
-                {% endif %}
+            <div class="row footer mx-5 border-top border-light" style="height: 3em;">
+                {% block footer %}
+                {% endblock %}
             </div>
-        </div>
-        <div class="row m-4 flex-grow-1">
-            {% block content %}
-            {% endblock %}
-        </div>
-        <div class="row footer mx-5 border-top border-light" style="height: 3em;">
-            {% block footer %}
-            {% endblock %}
         </div>
     </body>
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
