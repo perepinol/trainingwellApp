@@ -23,7 +23,7 @@ class ReservationView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['res_list'] = Reservation.objects.filter(organizer=self.request.user)
+        context['res_list'] = Reservation.objects.filter(organizer=self.request.user, is_deleted=False)
         return context
 
 
