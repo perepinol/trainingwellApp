@@ -1,6 +1,6 @@
 {% load static %}
 <!doctype html>
-<html>
+<html class="h-100">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -8,10 +8,10 @@
         <link rel="stylesheet" href="{% static "CSS/base.css" %}">
         <title>Trainingwell App</title>
     </head>
-    <body class="container-nomargin container-body h-100">
-        <div class="row header justify-content-between">
-            <div class="col-3 vcentered">
-                <h1>{% block pagetitle %}{% endblock %}</h1>
+    <body class="mw-100 h-100 d-flex flex-column p-0">
+        <div class="row header d-flex w-100">
+            <div class="col vcentered flex-grow-1">
+                <h1 class="ml-3">{% block pagetitle %}{% endblock %}</h1>
             </div>
             {% block headeritems %}
             {% endblock %}
@@ -23,11 +23,11 @@
                 {% endif %}
             </div>
         </div>
-        <div class="row content">
+        <div class="row m-4 flex-grow-1">
             {% block content %}
             {% endblock %}
         </div>
-        <div class="row footer">
+        <div class="row footer mx-5 border-top border-light" style="height: 3em;">
             {% block footer %}
             {% endblock %}
         </div>

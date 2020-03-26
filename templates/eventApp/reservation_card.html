@@ -1,0 +1,10 @@
+<div class="card w-100">
+    <div class="card-body">
+        <h3 class="card-title">{{ res.event_name }}</h3>
+        <p class="card-text">At {{ res.starting_hour }}</p>
+    </div>
+    <div class="card-footer">
+        <p class="card-text">Location: {{ res.space }}</p>
+        <a class="btn btn-primary stretched-link" href={% url 'reservation_detail' id=res.id %}>Details</a>
+    </div>
+</div>

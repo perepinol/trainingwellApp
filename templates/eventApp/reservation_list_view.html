@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block pagetitle %}Your reservations{% endblock %}
+
+{% block headeritems %}
+    <div class="col-2 vcentered">
+        <a class="btn btn-primary" href={% url 'reservation_form' %}>New reservation</a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <!-- TODO: make this scrollable -->
+    <div class="card-deck w-100" style="height: min-content">
+        <div class="row w-100 my-3">
+            {% for res in res_list %}
+                <div class="col-4">
+                    {% include 'eventApp/reservation_card.html' with res=res %}
+                </div>
+                {% if forloop.counter|divisibleby:3 %}
+                    </div>
+                    <div class="row w-100 my-3">
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

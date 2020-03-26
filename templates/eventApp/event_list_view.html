@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block pagetitle %}Events{% endblock %}
+{% block pagetitle %}Your reservations{% endblock %}
 
 {% block headeritems %}
     <div class="col-2 vcentered">
@@ -15,7 +15,7 @@
     <!-- TODO: make this scrollable -->
     <div class="card-deck w-100 row-cols-md-3" style="height: min-content">
         {% for event in event_list %}
-            {% include 'eventApp/event_card.html' with event=event %}
+            {% include 'eventApp/reservation_card.html' with event=event %}
         {% empty %}
             <div class="row">
                 <h1>No events at the time</h1>

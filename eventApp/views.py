@@ -18,8 +18,17 @@ class TestView(TemplateView):
     template_name = 'eventApp/test.html'
 
 
+class ReservationView(TemplateView):
+    template_name = 'eventApp/reservation_list_view.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['res_list'] = Reservation.objects.filter(organizer=self.request.user)
+        return context
+
+
 class EventView(TemplateView):
-    template_name = 'eventApp/event_list_view.html'
+    template_name = 'eventApp/reservation_list_view.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -40,9 +49,9 @@ class EventView(TemplateView):
 
 
 @login_required()
-def reservation_view(request):
+def create_reservation_view(request):
     if request.method == 'POST':
         # TODO: process POST and redirect to timetable view with name, date and activity in context
         return http.HttpResponseRedirect('/events')
 
-    return render(request, 'eventApp/form.html', {'form': ReservationForm()})
+    return render(request, 'eventApp/form.html', {'form': ReservationForm(), 'back': '/events/reservation'})
