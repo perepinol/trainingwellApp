@@ -1,16 +1,23 @@
-from django.contrib.auth.models import User
+from datetime import date
+
+from django.conf import settings
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
 # Create your models here.
-class CustomUser(User):
-    is_adult = models.BooleanField()
+class User(AbstractUser):
+    is_adult = models.BooleanField(default=False)
     last_update = models.DateField()
     modified_by = models.ForeignKey('self', on_delete=models.PROTECT, null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return u"%s" % self.username
+
+    def save(self, *args, **kwargs):
+        self.last_update = date.today()
+        super(User, self).save(*args, **kwargs)
 
 
 class Field(models.Model):
@@ -30,16 +37,20 @@ class Space(models.Model):
     description = models.TextField(blank=True, null=True)
     offer = models.FloatField(default=0)  # percentage by the moment
     last_update = models.DateField()
-    modified_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
+    modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return u"%s" % self.field, self.id
 
+    def save(self, *args, **kwargs):
+        self.last_update = date.today()
+        super(Space, self).save(*args, **kwargs)
+
 
 class Reservation(models.Model):
     event_name = models.CharField(max_length=100)
-    organizer = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name="organizer")
+    organizer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="organizer")
     space = models.ForeignKey(Space, on_delete=models.PROTECT)
     reservation_date = models.DateField(auto_now_add=True)
     event_date = models.DateField()
@@ -48,8 +59,12 @@ class Reservation(models.Model):
     price = models.IntegerField()
     is_paid = models.BooleanField(default=False)
     last_update = models.DateField()
-    modified_by = models.ForeignKey(CustomUser, null=True, on_delete=models.SET_NULL, default=organizer)
+    modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, default=organizer)
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return u"%s" % self.event_name
+    
+    def save(self, *args, **kwargs):
+        self.last_update = date.today()
+        super(Reservation, self).save(*args, **kwargs)

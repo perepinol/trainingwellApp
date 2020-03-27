@@ -125,3 +125,5 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
 
 LOGIN_REDIRECT_URL = '/events'
 LOGOUT_REDIRECT_URL = '/events'
+
+AUTH_USER_MODEL = 'eventApp.User'
