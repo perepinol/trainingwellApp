@@ -7,6 +7,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
         <link rel="stylesheet" href="{% static "CSS/base.css" %}">
+        {% block head %}{% endblock %}
         <title>Trainingwell App</title>
     </head>
     <body>
@@ -27,10 +28,11 @@
             {% endif %}
         </nav>
         <div class="container mw-100 h-100 d-flex flex-column p-0">
-            <div class="row m-4 flex-grow-1">
-                {% block content %}
-                {% endblock %}
-            </div>
+            <!--div class="row m-4 flex-grow-1"> Is it needed?
+                  Here was block content
+            </div-->
+            {% block content %}
+            {% endblock %}
             <div class="row footer mx-5 border-top border-light" style="height: 3em;">
                 {% block footer %}
                 {% endblock %}

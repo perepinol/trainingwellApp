@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-03-27 13:57+0000\n"
+"POT-Creation-Date: 2020-03-27 21:44+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,11 +18,22 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: templates/base.html:20
+#: templates/base.html:21
 msgid "Reservations"
 msgstr "Reservas"
 
-#: templates/eventApp/test.html:6
+#: templates/eventApp/reservation_schedule_view.html:8
+msgid "Reserve Now!"
+msgstr "Reserva Ahora!"
+
+#: templates/eventApp/reservation_schedule_view.html:9
+msgid "Not available"
+msgstr "No disponible"
+
+#: templates/eventApp/reservation_schedule_view.html:22
+msgid "Desired Spaces"
+msgstr "Espacios deseados"
+
+#: templates/eventApp/test.html:7
 msgid "This is a test page"
 msgstr "Esto es una página de prueba"
-
