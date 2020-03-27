@@ -1,50 +1,8 @@
-html {
-    height: 100%;
-}
-
-.container {
-    padding: 0;
-    max-width: 100%;
-}
-
-.container-body {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.row {
-    margin: 0;
-}
-
 .header {
     height: 6em;
     background-color: #b0daf1;
 }
 
-.content {
-    margin: 2em;
-    flex-grow: 1
-}
-
-.footer {
-    height: 3em;
-    border-top: 1px solid #bcc2c6;
-    margin: 0 2em 0 2em;
-}
-
-.vcentered {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.hcentered {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.form > p {
+.reservation > p {
     margin: 3em 0 0 0;
 }

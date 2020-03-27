@@ -1,0 +1,15 @@
+<div class="card w-100 h-100">
+    <div class="card-body">
+        <h3 class="card-title">{{ res.event_name }}</h3>
+        <p class="card-text">{{ res.reservation_date|date:"DATE_FORMAT" }} from {{ res.starting_hour|time:"TIME_FORMAT" }} to {{ res.ending_hour|time:"TIME_FORMAT" }}</p>
+        <p class="card-text">Location: {{ res.space }}</p>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+        {% if res.is_paid %}
+            <p class="card-text m-0">Price: {{ res.price }}€ (paid)</p>
+        {% else %}
+            <p class="card-text m-0 text-danger">Price: {{ res.price }}€ (unpaid)</p>
+        {% endif %}
+        <a class="stretched-link" href={% url 'reservation_detail' id=res.id %}>Details</a>
+    </div>
+</div>
