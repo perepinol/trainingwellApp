@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block pagetitle %}Test page{% endblock %}
 
 {% block content %}
-    <h1>This is a test page</h1>
+    <h1>{% trans 'This is a test page' %}</h1>
 {% endblock %}

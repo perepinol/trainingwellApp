@@ -33,7 +33,7 @@ class Space(models.Model):
     available_until = models.TimeField()
     price_per_hour = models.IntegerField
     size = models.IntegerField()  # review if necessary
-    photo = models.ImageField()
+    photo = models.ImageField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     offer = models.FloatField(default=0)  # percentage by the moment
     last_update = models.DateField()
