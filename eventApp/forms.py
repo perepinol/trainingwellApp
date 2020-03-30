@@ -1,5 +1,5 @@
 from bootstrap_datepicker_plus import DatePickerInput
-from django.forms import ModelForm, ModelChoiceField, Form, DateField
+from django.forms import ModelForm, ModelChoiceField, Form, DateField, IntegerField
 from datetime import date
 
 from eventApp.models import Reservation, Field
@@ -8,11 +8,12 @@ from eventApp.models import Reservation, Field
 class ReservationForm(ModelForm):
     name = "New reservation"
     submit_name = "Go to timetable"
+    num_spaces = IntegerField(min_value=1, initial=1)
     space_type = ModelChoiceField(queryset=Field.objects.all())
 
     class Meta:
         model = Reservation
-        fields = ['event_name', 'space_type', 'event_date']
+        fields = ['event_name', 'space_type', 'num_spaces', 'event_date']
 
         widgets = {
             'event_date': DatePickerInput(options={
