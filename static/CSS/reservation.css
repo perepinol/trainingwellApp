@@ -1,0 +1,17 @@
+.can-reserve:hover {
+    text-decoration: none;
+}
+
+.can-reserve:hover span{
+    display: none;
+}
+
+.cannot-reserve:hover {
+    text-decoration: none;
+}
+
+.cannot-reserve:hover span{
+    display: none;
+}
+
+
