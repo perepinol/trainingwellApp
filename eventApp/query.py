@@ -1,27 +1,36 @@
 from eventApp.models import *
+from datetime import timedelta
 
 
-def get_all_reservations(user=None, date_filter=None, field=None, space=None):
-    """Returns a QuerySet with the models Reservation which meets the parameter conditions. Returns all the Reservations if no parameter is profided.
+def get_all_timeblocks_week(date_filter, space=None, field=None):
+    """Returns a QuerySet with the models Timeblock which meets the parameter conditions.
 
-    :param user: User whose reservations is owner
-    :param date_filter: Date which reservations are assigned
-    :param field: Field where the reservations are associated.
-    :param space: Field space where the reservations are performed. Note: if 'field' and 'space' are provided it will omit 'space'
-    :return: a QuerySet of Reservation model
+    :param date_filter: Mandatory. Date first fay of the week (inclusive) which timeblocks are assigned.
+    :param space: Field space where the timeblocks are performed. Note: if 'field' and 'space' are provided it will omit 'field'.
+    :param field: Field where timeblock are assigned.
+    :return: a QuerySet of Timeblocks model
     """
+    space_qs = None
+    if field or space:
+        space_qs = get_all_spaces_in_field(field=space.field if space else field)
+    timeblock_qs = Timeblock.objects.filter(start_time__day=date_filter.day,
+                                            start_time__month=date_filter.month,
+                                            start_time__year=date_filter.year)
+    for i in range(1, 7):
+        timeblock_qs = timeblock_qs | Timeblock.objects.filter(start_time__day=date_filter.day + i,
+                                                               start_time__month=date_filter.month,
+                                                               start_time__year=date_filter.year)
+    if space_qs:
+        timeblock_qs.filter(space__in=space_qs)
+    return timeblock_qs
 
-    space_queryset = get_all_spaces_in_field(field=space.field if space else field)
-    reservation_queryset = Reservation.objects.filter(space__in=space_queryset)
-    if date_filter: reservation_queryset.filter(event_date=date_filter)
-    if user: reservation_queryset.filter(organizer=user)
-    return reservation_queryset
 
-
-def get_all_spaces_in_field(field=None):
+def get_all_spaces_in_field(field=None, only_active=True):
     """Returns a QuerySet of Space. If no filter parameters are provided it will return the whole model table.
 
     :param field: Field of the desired Spaces
+    :param only_active: Mark if willing only active (non safe-deleted) or all.
     :return: a QuerySet of Space model
     """
-    return Space.objects.filter(field=field) if field else Space.objects.all()
+    space_qs = Space.objects.filter(field=field) if field else Space.objects.all()
+    return space_qs.filter(is_deleted=False) if only_active else space_qs

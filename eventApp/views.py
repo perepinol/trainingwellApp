@@ -60,9 +60,9 @@ def create_reservation_view(request):
     return render(request, 'eventApp/form.html', {'form': ReservationForm(), 'back': '/events/reservation'})
 
 
-@login_required()
+# @login_required()
 def show_reservation_schedule_view(request):
-    # TODO: get context from request
+    '''# TODO: get context from request
     # Temporal context simulation
     import random
     context = {
@@ -83,12 +83,19 @@ def show_reservation_schedule_view(request):
     schedule = _get_schedule(spaces, reservations, event_num_spaces)
 
     context['event']['num_spaces'] = 1
-    context['schedule'] = schedule
+    context['schedule'] = schedule'''
+    first_day = datetime(2020, 4, 1)
+    query.get_all_timeblocks_week(first_day)
 
-    return render(request, 'eventApp/reservation_schedule_view.html', context)
+    return render(request, 'eventApp/reservation_schedule_view.html')
 
 
-def _get_week_schedule():
+def _get_week_schedule(start_day):
+    """Gets the schedule for one week from the specified day as a parameter (inclusive).
+    Should no parameter given, 'today' is used as default.
+
+    :return: dictionary in JSON format of 1-week schedule { "day1": {"9h": [free spaces], ... }, ... }
+    """
     pass
 
 
