@@ -1,4 +1,5 @@
 from django.utils import timezone
+from datetime import date
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -81,7 +82,7 @@ class Space(models.Model):
         self.save()
 
     def is_available_in_season(self):
-        return self.season.start_date <= timezone.now() < self.season.end_date
+        return self.season.start_date <= date.today() < self.season.end_date
 
 
 class Reservation(models.Model):

@@ -12,7 +12,7 @@ from django.views.generic import TemplateView, ListView
 
 from eventApp import query
 from eventApp.forms import ReservationForm, DateForm
-from eventApp.models import Reservation, Field
+from eventApp.models import Reservation, Space
 
 import json
 
@@ -62,74 +62,64 @@ def create_reservation_view(request):
 
 # @login_required()
 def show_reservation_schedule_view(request):
-    '''# TODO: get context from request
-    # Temporal context simulation
-    import random
-    context = {
-        'event': {
-            'name': "Event Name",
-            'date': date.today(),
-            'num_spaces': 1,
-            'space_type': random.choice(Field.objects.all())
-        }
-    }
-    # ###################
-    event_date = context['event']['date']
-    event_field = context['event']['space_type']
-    event_num_spaces = context['event']['num_spaces']
-
-    spaces = query.get_all_spaces_in_field(field=event_field)
-    reservations = query.get_all_reservations(date_filter=event_date, field=event_field)
-    schedule = _get_schedule(spaces, reservations, event_num_spaces)
-
-    context['event']['num_spaces'] = 1
-    context['schedule'] = schedule'''
-    first_day = datetime(2020, 4, 1)
-    query.get_all_timeblocks_week(first_day)
-
-    return render(request, 'eventApp/reservation_schedule_view.html')
+    # TODO: check request user
+    schedule = _get_schedule()
+    return render(request, 'eventApp/reservation_schedule_view.html', schedule)
 
 
-def _get_week_schedule(start_day):
+def _get_schedule(start_day=date.today(), num_days=7):
     """Gets the schedule for one week from the specified day as a parameter (inclusive).
-    Should no parameter given, 'today' is used as default.
+    Should no parameter given, 'today' is used as default and schedule for a week time.
 
+    :param start_day: first day of the schedule desired.
+    :param num_days: day count from now to include in the schedule, exclusive.
     :return: dictionary in JSON format of 1-week schedule { "day1": {"9h": [free spaces], ... }, ... }
     """
-    pass
+    from copy import deepcopy
 
-
-def _get_schedule(spaces, reservations, num_desired_spaces):
     def get_int_hour(_timedelta):
         return int(_timedelta.seconds/3600)
 
-    def space_available(_space, hour):
-        if not (_space.available_since.hour <= hour < _space.available_until.hour): return False
-        for reservation in list_reservations:
-            if space == reservation[2] and hour_taken(reservation, hour):
-                return False
-        return True
-
-    def hour_taken(_reservation, hour):
-        return _reservation[0] <= hour < _reservation[1]
+    def get_day_all_spaces_free_(start_h, end_h, _spaces):
+        _today_sch = {}
+        for _hour in range(get_int_hour(start_h), get_int_hour(end_h)):
+            _today_sch[str(_hour)+':00'] = _spaces
+        return _today_sch
 
     schedule = {}
-    first_available_hour = min(set(map(lambda _space: timedelta(hours=_space.available_since.hour), list(spaces))))
-    last_available_hour = max(set(map(lambda _space: timedelta(hours=_space.available_until.hour-1), list(spaces))))
+    spaces = {}
 
-    list_reservations = [(r.starting_hour.hour, r.ending_hour.hour, r.space) for r in reservations]
+    open_season_hour = None
+    end_season_hour = None
 
-    i = 0
-    while first_available_hour + timedelta(hours=i) <= last_available_hour:
-        current_hour = get_int_hour(first_available_hour)+i
-        schedule[str(current_hour)] = {'hour_str': str(current_hour) + ':00', 'free': True, 'spaces': []}
+    for space in query.get_all_spaces():
+        if space.is_available_in_season():
+            spaces[space.id] = str(space)
+            if not (open_season_hour and end_season_hour):
+                open_season_hour = timedelta(hours=space.season.open_time.hour)
+                end_season_hour = timedelta(hours=space.season.close_time.hour)
 
-        for space in spaces:
-            if space_available(space, current_hour):
-                schedule[str(current_hour)]['spaces'].append(str(space))
-        if len(schedule[str(current_hour)]['spaces']) < num_desired_spaces:
-            schedule[str(current_hour)]['free'] = False
+    # TODO: if no existing spaces
 
-        i += 1
+    timeblocks_qs = query.get_all_timeblocks(start_day, num_days=num_days)
+
+    for day in range(0, num_days):
+        hour = 0
+        today_timeblocks = []
+        for timeblock in timeblocks_qs:
+            if timeblock.start_time.day == start_day.day + day:
+                today_timeblocks.append(timeblock)
+        if not today_timeblocks:
+            schedule[str(start_day.day + day)] = get_day_all_spaces_free_(open_season_hour, end_season_hour, spaces)
+        else:
+            schedule[str(start_day.day + day)] = {}
+            while open_season_hour + timedelta(hours=hour) < end_season_hour:
+                current_hour = open_season_hour + timedelta(hours=hour)
+                free_spaces_per_hour = deepcopy(spaces)
+                for timeblock in today_timeblocks:
+                    if timeblock.start_time.hour == get_int_hour(current_hour):
+                        del free_spaces_per_hour[timeblock.space.id]
+                schedule[str(start_day.day + day)][str(get_int_hour(current_hour))+':00'] = free_spaces_per_hour
+                hour += 1
 
     return schedule
