@@ -12,7 +12,7 @@ class ReservationForm(ModelForm):
 
     class Meta:
         model = Reservation
-        fields = ['event_name', 'space_type', 'event_date']
+        fields = ['event_name', 'space_type']
 
         widgets = {
             'event_date': DatePickerInput(options={

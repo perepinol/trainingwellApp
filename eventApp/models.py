@@ -1,4 +1,4 @@
-from datetime import date
+from django.utils import timezone
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -8,7 +8,7 @@ from django.db import models
 # Create your models here.
 class User(AbstractUser):
     is_adult = models.BooleanField(default=False)
-    last_update = models.DateField()
+    last_update = models.DateTimeField()
     modified_by = models.ForeignKey('self', on_delete=models.PROTECT, null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
 
@@ -16,8 +16,12 @@ class User(AbstractUser):
         return u"%s" % self.username
 
     def save(self, *args, **kwargs):
-        self.last_update = date.today()
-        super(User, self).save(*args, **kwargs)
+        self.last_update = timezone.now()
+        super(AbstractUser, self).save(*args, **kwargs)
+
+    def delete(self, using=None, keep_parents=False):
+        self.is_deleted = True
+        self.save()
 
 
 class Field(models.Model):
@@ -31,12 +35,12 @@ class Space(models.Model):
     field = models.ForeignKey(Field, on_delete=models.PROTECT)
     available_since = models.TimeField()
     available_until = models.TimeField()
-    price_per_hour = models.IntegerField
-    size = models.IntegerField()  # review if necessary
+    price_per_hour = models.IntegerField()
+    sqmt = models.IntegerField()
     photo = models.ImageField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     offer = models.FloatField(default=0)  # percentage by the moment
-    last_update = models.DateField()
+    last_update = models.DateTimeField()
     modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     is_deleted = models.BooleanField(default=False)
 
@@ -44,21 +48,21 @@ class Space(models.Model):
         return u"%s %d" % (self.field, self.id)
 
     def save(self, *args, **kwargs):
-        self.last_update = date.today()
+        self.last_update = timezone.now()
         super(Space, self).save(*args, **kwargs)
+
+    def delete(self, using=None, keep_parents=False):
+        self.is_deleted = True
+        self.save()
 
 
 class Reservation(models.Model):
     event_name = models.CharField(max_length=100)
     organizer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="organizer")
-    space = models.ForeignKey(Space, on_delete=models.PROTECT)
-    reservation_date = models.DateField(auto_now_add=True)
-    event_date = models.DateField()
-    starting_hour = models.TimeField()
-    ending_hour = models.TimeField()
+    reservation_date = models.DateTimeField(auto_now_add=True)
     price = models.IntegerField()
     is_paid = models.BooleanField(default=False)
-    last_update = models.DateField()
+    last_update = models.DateTimeField()
     modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, default=organizer)
     is_deleted = models.BooleanField(default=False)
 
@@ -66,5 +70,23 @@ class Reservation(models.Model):
         return u"%s" % self.event_name
     
     def save(self, *args, **kwargs):
-        self.last_update = date.today()
+        self.last_update = timezone.now()
         super(Reservation, self).save(*args, **kwargs)
+
+    def delete(self, using=None, keep_parents=False):
+        self.is_deleted = True
+        self.save()
+
+
+def get_timeblock_space(timeblock):
+    def callable_func():
+        return timeblock.space
+    return callable_func
+
+
+class Timeblock(models.Model):
+    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE)
+    space = models.ForeignKey(Space, on_delete=models.SET(get_timeblock_space('self').__str__()))
+    start_time = models.DateTimeField()
+
+
