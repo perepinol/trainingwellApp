@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+    <div class="row m-4">
+        <div class="container pl-5 mw-100">
+            <div class="row"><h3 class="m-0">{% trans 'Reservation confirmation' %}</h3></div>
+            <div class="row">
+                <form class="reservation w-100" method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <p class="mt-4">{% trans 'Price' %}: {{ price }}€</p>
+                    <h5 class="mt-5">{% trans 'Spaces included in the reservation' %}:</h5>
+                    <div class="card-deck">
+                        {% for tb in timeblocks %}
+                            <div class="card m-3" style="min-width: 300px; max-width: 300px;">
+                                <div class="card-body">
+                                    <h5 class="card-title">{% trans 'Space' %}: {{ tb.space }}</h5>
+                                    <p class="card-text">{% trans 'Date' %}: {{ tb.start_time|date:"DATE_FORMAT" }}</p>
+                                    <p class="card-text">{% trans 'Start time' %}: {{ tb.start_time|time:"TIME_FORMAT" }}</p>
+                                    <p class="card-text">{% trans 'End time' %}: {{ tb.end_time|time:"TIME_FORMAT" }}</p>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p>{% trans 'No spaces reserved' %}</p>
+                        {% endfor %}
+                    </div>
+                    <div class="row mt-5 w-25">
+                        <div class="col-5">
+                            <a href="{{ back }}" class="btn btn-danger">{% trans 'Cancel' %}</a>
+                        </div>
+                        <div class="col-7 p-0">
+                            <button type="submit" class="btn btn-primary">{% trans 'Make reservation' %}</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

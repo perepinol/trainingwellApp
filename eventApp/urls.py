@@ -19,8 +19,7 @@ from django.urls import path
 from eventApp.views import TestView, create_reservation_view, EventView, ReservationView, show_reservation_schedule_view
 
 urlpatterns = [
-    path('reservation/new/', create_reservation_view, name="reservation_form"),
-    path('reservation/new/schedule', show_reservation_schedule_view, name="schedule_view"),
+    path('reservation/new/', show_reservation_schedule_view, name="schedule_view"),
     path('reservation/', login_required(ReservationView.as_view()), name="reservations"),
     path('reservation/<int:id>/', TestView.as_view(), name='reservation_detail'),
     path('', TestView.as_view(), name='home')

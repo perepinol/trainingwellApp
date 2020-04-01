@@ -2,26 +2,14 @@ from bootstrap_datepicker_plus import DatePickerInput
 from django.forms import ModelForm, ModelChoiceField, Form, DateField
 from datetime import date
 
-from eventApp.models import Reservation, Field
+from eventApp.models import Reservation
 
 
-class ReservationForm(ModelForm):
-    name = "New reservation"
-    submit_name = "Go to timetable"
-    space_type = ModelChoiceField(queryset=Field.objects.all())
+class ReservationNameForm(ModelForm):
 
     class Meta:
         model = Reservation
-        fields = ['event_name', 'space_type']
-
-        widgets = {
-            'event_date': DatePickerInput(options={
-                'format': 'DD-MM-YYYY',
-                'minDate': date.today().strftime('%Y-%m-%d'),
-                'defaultDate': date.today().strftime('%Y-%m-%d'),
-                'showClear': False
-            })
-        }
+        fields = ['event_name']
 
 
 class DateForm(Form):
