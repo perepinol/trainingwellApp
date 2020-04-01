@@ -19,7 +19,7 @@ class User(AbstractUser):
         self.last_update = timezone.now()
         super(AbstractUser, self).save(*args, **kwargs)
 
-    def delete(self, using=None, keep_parents=False):
+    def soft_delete(self):
         self.is_deleted = True
         self.save()
 
@@ -30,11 +30,33 @@ class Field(models.Model):
     def __str__(self):
         return u'%s' % self.kind_of_field
 
+    def soft_delete(self):
+        self.is_deleted = True
+        self.save()
+
+
+class Season(models.Model):
+    name = models.CharField(max_length=20)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    open_time = models.TimeField()
+    close_time = models.TimeField()
+    last_update = models.DateTimeField()
+    modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+    is_deleted = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        self.last_update = timezone.now()
+        super(Season, self).save(*args, **kwargs)
+
+    def soft_delete(self):
+        self.is_deleted = True
+        self.save()
+
 
 class Space(models.Model):
     field = models.ForeignKey(Field, on_delete=models.PROTECT)
-    available_since = models.TimeField()
-    available_until = models.TimeField()
+    season = models.ForeignKey(Season, on_delete=models.PROTECT)
     price_per_hour = models.IntegerField()
     sqmt = models.IntegerField()
     photo = models.ImageField(blank=True, null=True)
@@ -51,9 +73,12 @@ class Space(models.Model):
         self.last_update = timezone.now()
         super(Space, self).save(*args, **kwargs)
 
-    def delete(self, using=None, keep_parents=False):
+    def soft_delete(self):
         self.is_deleted = True
         self.save()
+
+    def is_available_in_season(self):
+        return self.season.start_date <= timezone.now() < self.season.end_date
 
 
 class Reservation(models.Model):
@@ -73,7 +98,7 @@ class Reservation(models.Model):
         self.last_update = timezone.now()
         super(Reservation, self).save(*args, **kwargs)
 
-    def delete(self, using=None, keep_parents=False):
+    def soft_delete(self):
         self.is_deleted = True
         self.save()
 
