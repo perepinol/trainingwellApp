@@ -11,33 +11,38 @@
 {% endblock %}
 
 {% block content %}
-<div class="jumbotron">
-    <div class="row">
-        <div class="col-6">
-            <div class="col-12"><h4>{{ event.name }}</h4></div>
-            <div class="col-12 d-none d-lg-block"><h4>{{ event.space_type }}</h4></div>
-        </div>
-        <div class="col-6">
-            <div class="col-12"><h4>{{ event.date }}</h4></div>
-            <div class="col-12 d-none d-lg-block"><h4>{% trans 'Desired Spaces'%}: {{ event.num_spaces }}</h4></div>
-        </div>
-        <div class="col-6"><h4></h4></div>
-    </div>
-{% for _,data in schedule.items %}
-    <div class="row m-4">
-            <div class="col-3"></div>
-            {% if data.free %}
-                 <div class="col-6">
-                    <a href="#" class="rounded bg-success text-white can-reserve" style="text-align: center; display: block"><span>{{ data.hour_str }}</span></a>
-                 </div>
-            {% else %}
-                 <div class="col-6">
-                     <a href="#" class="rounded bg-danger text-white cannot-reserve" style="text-align: center; display: block"><span>{{ data.hour_str }}</span></a>
-                 </div>
-            {% endif %}
-            <div class="col-3"></div>
-    </div>
-{% endfor %}
-</div>
+    <div class="row d-flex justify-content-center">
 
+        {% for day, daily_info in schedule.items %}
+            <div class="col-xl-2 col-lg-4 col-md-6 col-sm-12">
+                <div class="col-12" style="text-align: center; display: block; margin-left: 2%; margin-right: 2%; margin-top: 2%">
+                    <h6>{{ day }}</h6>
+                </div>
+                {% for hour, free_spaces in daily_info.items %}
+                    {% if free_spaces|length > 0 %}
+                    <div class="col-12" style="margin: 2%">
+                        <button class="w-100 rounded bg-success text-white can-reserve" style="text-align: center; display: block"><span>{{ hour }}</span></button>
+                    </div>
+                    {% else %}
+                    <div class="col-12" style="margin: 2%">
+                        <div class="w-100 rounded bg-danger text-white cannot-reserve" style="text-align: center; display: block"><span>{{ hour }}</span></div>
+                    </div>
+                    {% endif %}
+                {% endfor%}
+            </div>
+        {% empty %}
+            No schedule for this week
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        Array.from(document.getElementsByClassName("can-reserve")).forEach((elem) => {
+            elem.addEventListener("click", click_reserve)
+        });
+        function click_reserve() {
+            alert("Click");
+        }
+    </script>
 {% endblock %}

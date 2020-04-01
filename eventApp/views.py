@@ -63,11 +63,11 @@ def create_reservation_view(request):
 # @login_required()
 def show_reservation_schedule_view(request):
     # TODO: check request user
-    schedule = _get_schedule()
-    return render(request, 'eventApp/reservation_schedule_view.html', schedule)
+    context = {'schedule': _get_schedule()}
+    return render(request, 'eventApp/reservation_schedule_view.html', context)
 
 
-def _get_schedule(start_day=date.today(), num_days=7):
+def _get_schedule(start_day=date.today(), num_days=6):
     """Gets the schedule for one week from the specified day as a parameter (inclusive).
     Should no parameter given, 'today' is used as default and schedule for a week time.
 
@@ -107,19 +107,22 @@ def _get_schedule(start_day=date.today(), num_days=7):
         hour = 0
         today_timeblocks = []
         for timeblock in timeblocks_qs:
-            if timeblock.start_time.day == start_day.day + day:
+            _date = start_day + timedelta(days=day)
+            if timeblock.start_time.day == _date.day and \
+                    timeblock.start_time.month == _date.month and \
+                    timeblock.start_time.year == _date.year:
                 today_timeblocks.append(timeblock)
         if not today_timeblocks:
-            schedule[str(start_day.day + day)] = get_day_all_spaces_free_(open_season_hour, end_season_hour, spaces)
+            schedule[str(start_day + timedelta(days=day))] = get_day_all_spaces_free_(open_season_hour, end_season_hour, spaces)
         else:
-            schedule[str(start_day.day + day)] = {}
+            schedule[str(start_day + timedelta(days=day))] = {}
             while open_season_hour + timedelta(hours=hour) < end_season_hour:
                 current_hour = open_season_hour + timedelta(hours=hour)
                 free_spaces_per_hour = deepcopy(spaces)
                 for timeblock in today_timeblocks:
                     if timeblock.start_time.hour == get_int_hour(current_hour):
                         del free_spaces_per_hour[timeblock.space.id]
-                schedule[str(start_day.day + day)][str(get_int_hour(current_hour))+':00'] = free_spaces_per_hour
+                schedule[str(start_day + timedelta(days=day))][str(get_int_hour(current_hour))+':00'] = free_spaces_per_hour
                 hour += 1
 
     return schedule
