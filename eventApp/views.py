@@ -129,6 +129,10 @@ def show_reservation_schedule_view(request):
         return render(request, 'eventApp/reservation_confirmation.html', context)
 
 
+def _get_week_schedule():
+    pass
+
+
 def _get_schedule(spaces, reservations, num_desired_spaces):
     def get_int_hour(_timedelta):
         return int(_timedelta.seconds/3600)
