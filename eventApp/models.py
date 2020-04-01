@@ -53,6 +53,9 @@ class Season(models.Model):
         self.is_deleted = True
         self.save()
 
+    def __str__(self):
+        return u"%s" % self.name
+
 
 class Space(models.Model):
     field = models.ForeignKey(Field, on_delete=models.PROTECT)
