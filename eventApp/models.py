@@ -117,4 +117,7 @@ class Timeblock(models.Model):
     space = models.ForeignKey(Space, on_delete=models.SET(get_timeblock_space('self').__str__()))
     start_time = models.DateTimeField()
 
+    def __str__(self):
+        return u"%s at %s" % (self.space, self.start_time.isoformat())
+
 

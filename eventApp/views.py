@@ -3,8 +3,9 @@ from urllib.parse import parse_qs
 
 from bootstrap_datepicker_plus import DatePickerInput
 from django import http
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.db.models import Sum
 from django.shortcuts import render
 
 
@@ -12,8 +13,8 @@ from django.shortcuts import render
 from django.views.generic import TemplateView, ListView
 
 from eventApp import query
-from eventApp.forms import ReservationForm, DateForm
-from eventApp.models import Reservation, Field
+from eventApp.forms import ReservationNameForm, DateForm
+from eventApp.models import Reservation, Field, Timeblock
 
 import json
 import logging
@@ -64,35 +65,76 @@ def create_reservation_view(request):
         # TODO: process POST and redirect to timetable view with name, date and activity in context
         return http.HttpResponseRedirect('/events')
 
-    return render(request, 'eventApp/form.html', {'form': ReservationForm(), 'back': '/events/reservation'})
+    return render(request, 'eventApp/form.html', {'form': ReservationNameForm(), 'back': '/events/reservation'})
+
+
+def aggregate_timeblocks(timeblocks):
+    """{
+        'start_time',
+        'end_time',
+        'space'
+    }"""
+    agg_list = []
+    agg = {}
+    for timeblock in timeblocks.order_by('space', 'start_time'):
+        if len(agg.keys()) != 0:
+            # If timeblocks are consecutive, just extend end_time
+            if str(timeblock.space) == agg['space'] and timeblock.start_time == agg['end_time']:
+                agg['end_time'] = agg['end_time'] + settings.RESERVATION_GRANULARITY
+                continue
+
+            # Else, add previous agg to list and store current one
+            agg_list.append(agg)
+
+        # Store current agg
+        agg = {
+            'start_time': timeblock.start_time,
+            'end_time': timeblock.start_time + settings.RESERVATION_GRANULARITY,
+            'space': str(timeblock.space)
+        }
+
+    if len(agg.keys()) != 0:
+        agg_list.append(agg)  # Store last agg
+    return agg_list
 
 
 @login_required()
 def show_reservation_schedule_view(request):
-    # TODO: get context from request
-    # Temporal context simulation
-    import random
-    context = {
-        'event': {
-            'name': "Event Name",
-            'date': date.today(),
-            'num_spaces': 1,
-            'space_type': random.choice(Field.objects.all())
+    if request.method == 'GET':
+        # TODO: get context from request
+        # Temporal context simulation
+        import random
+        context = {
+            'event': {
+                'name': "Event Name",
+                'date': date.today(),
+                'num_spaces': 1,
+                'space_type': random.choice(Field.objects.all())
+            }
         }
-    }
-    # ###################
-    event_date = context['event']['date']
-    event_field = context['event']['space_type']
-    event_num_spaces = context['event']['num_spaces']
+        # ###################
+        event_date = context['event']['date']
+        event_field = context['event']['space_type']
+        event_num_spaces = context['event']['num_spaces']
 
-    spaces = query.get_all_spaces_in_field(field=event_field)
-    reservations = query.get_all_reservations(date_filter=event_date, field=event_field)
-    schedule = _get_schedule(spaces, reservations, event_num_spaces)
+        spaces = query.get_all_spaces_in_field(field=event_field)
+        reservations = query.get_all_reservations(date_filter=event_date, field=event_field)
+        schedule = _get_schedule(spaces, reservations, event_num_spaces)
 
-    context['event']['num_spaces'] = 1
-    context['schedule'] = schedule
+        context['event']['num_spaces'] = 1
+        context['schedule'] = schedule
 
-    return render(request, 'eventApp/reservation_schedule_view.html', context)
+        return render(request, 'eventApp/reservation_schedule_view.html', context)
+
+    else:
+        requested_timeblocks = Timeblock.objects.all()  # TODO: get timeblocks from POST
+        timeblock_sum = requested_timeblocks.aggregate(price=Sum('space__price_per_hour'))['price']
+        context = {
+            'form': ReservationNameForm(),
+            'timeblocks': aggregate_timeblocks(Timeblock.objects.all()),
+            'price': timeblock_sum if timeblock_sum is not None else 0
+        }
+        return render(request, 'eventApp/reservation_confirmation.html', context)
 
 
 def _get_week_schedule():
