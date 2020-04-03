@@ -130,6 +130,8 @@ LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale/'),
 )
 
+LOG_PATH = os.path.join(BASE_DIR, 'logs')
+
 LOGIN_REDIRECT_URL = '/events'
 LOGOUT_REDIRECT_URL = '/events'
 
@@ -137,5 +139,56 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 AUTH_USER_MODEL = 'eventApp.User'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+        },
+    },
+    'handlers': {
+        'basic': {
+            'level' : 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/info_log.log',
+            'formatter': 'standard',
+        },
+        'error_handler': {
+            'level' : 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/error_log.log',
+            'formatter': 'standard',
+        },
+        'mail_handler': {
+            'level' : 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/mail_log.log',
+            'formatter': 'standard',
+        },
+    },
+    'root': {
+        'handlers': ['basic'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'basic': {
+            'handlers': ['basic'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'error': {
+            'handlers': ['error_handler'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'mail': {
+            'handlers': ['mail_handler'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
 
 RESERVATION_GRANULARITY = timedelta(hours=1)
