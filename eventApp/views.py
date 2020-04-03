@@ -93,7 +93,8 @@ def aggregate_timeblocks(timeblocks):
             'space': str(timeblock.space)
         }
 
-    agg_list.append(agg)  # Store last agg
+    if len(agg.keys()) != 0:
+        agg_list.append(agg)  # Store last agg
     return agg_list
 
 
@@ -127,10 +128,11 @@ def show_reservation_schedule_view(request):
 
     else:
         requested_timeblocks = Timeblock.objects.all()  # TODO: get timeblocks from POST
+        timeblock_sum = requested_timeblocks.aggregate(price=Sum('space__price_per_hour'))['price']
         context = {
             'form': ReservationNameForm(),
             'timeblocks': aggregate_timeblocks(Timeblock.objects.all()),
-            'price': requested_timeblocks.aggregate(price=Sum('space__price_per_hour'))['price']
+            'price': timeblock_sum if timeblock_sum is not None else 0
         }
         return render(request, 'eventApp/reservation_confirmation.html', context)
 
