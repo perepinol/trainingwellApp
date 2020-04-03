@@ -59,7 +59,7 @@ class Season(models.Model):
 
 class Space(models.Model):
     field = models.ForeignKey(Field, on_delete=models.PROTECT)
-    season = models.ForeignKey(Season, on_delete=models.PROTECT)
+    season = models.ManyToManyField(Season)
     price_per_hour = models.IntegerField()
     sqmt = models.IntegerField()
     photo = models.ImageField(blank=True, null=True)
