@@ -17,11 +17,13 @@ from eventApp.forms import ReservationNameForm, DateForm
 from eventApp.models import Reservation, Field, Timeblock
 
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TestView(TemplateView):
     template_name = 'eventApp/test.html'
-
 
 class ReservationView(TemplateView):
     template_name = 'eventApp/reservation_list_view.html'
@@ -52,6 +54,10 @@ class EventView(TemplateView):
         context['event_list'] = Reservation.objects.filter(event_date__exact=chosen_date)
         return context
 
+
+def prova_view(request):
+    logger.info("SOC EL REI")
+    return HttpResponse("HOLA")
 
 @login_required()
 def create_reservation_view(request):
