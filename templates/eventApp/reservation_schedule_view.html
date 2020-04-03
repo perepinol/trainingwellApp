@@ -21,7 +21,7 @@
                 {% for hour, free_spaces in daily_info.items %}
                     {% if free_spaces|length > 0 %}
                     <div class="col-12" style="margin: 2%">
-                        <button class="w-100 rounded bg-success text-white can-reserve" style="text-align: center; display: block"><span>{{ hour }}</span></button>
+                        <button id='{{ day }} {{ hour }}' class="w-100 rounded bg-success text-white can-reserve" style="text-align: center; display: block"><span>{{ hour }}</span></button>
                     </div>
                     {% else %}
                     <div class="col-12" style="margin: 2%">
@@ -34,15 +34,29 @@
             No schedule for this week
         {% endfor %}
     </div>
+    <div class="row d-flex justify-content-center" style="margin-top: 2%">
+        <div class="col-1">
+            <a href="#" class="btn btn-danger" style="display: block">Cancel</a>
+        </div>
+
+        <div class="col-1">
+            <a href="#" class="btn btn-success" style="display: block">Confirm</a>
+        </div>
+    </div>
 {% endblock %}
 
 {% block scripts %}
     <script type="text/javascript">
+        let json_string = JSON.parse('{{ scheduleJSON | escapejs }}');
+
         Array.from(document.getElementsByClassName("can-reserve")).forEach((elem) => {
-            elem.addEventListener("click", click_reserve)
+            elem.addEventListener("click", () => { click_reserve(event.target); });
         });
-        function click_reserve() {
-            alert("Click");
+        function click_reserve(elem) {
+            let id = elem.id.split(' ');
+            let day = id[0];
+            let hour = id[1];
+            console.log(json_string[day][hour]);
         }
     </script>
 {% endblock %}

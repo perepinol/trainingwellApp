@@ -51,23 +51,15 @@ class EventView(TemplateView):
         return context
 
 
-@login_required()
-def create_reservation_view(request):
-    if request.method == 'POST':
-        # TODO: process POST and redirect to timetable view with name, date and activity in context
-        return http.HttpResponseRedirect('/events')
-
-    return render(request, 'eventApp/form.html', {'form': ReservationForm(), 'back': '/events/reservation'})
-
-
 # @login_required()
 def show_reservation_schedule_view(request):
     # TODO: check request user
-    context = {'schedule': _get_schedule()}
+    context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()), 'back': 'reservations'}
     return render(request, 'eventApp/reservation_schedule_view.html', context)
 
 
-def _get_schedule(start_day=date.today(), num_days=6):
+# TODO: change default date today
+def _get_schedule(start_day=date(2020, 4, 1), num_days=6):
     """Gets the schedule for one week from the specified day as a parameter (inclusive).
     Should no parameter given, 'today' is used as default and schedule for a week time.
 
