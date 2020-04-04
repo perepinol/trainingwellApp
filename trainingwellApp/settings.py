@@ -130,6 +130,9 @@ LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale/'),
 )
 
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+
 LOGIN_REDIRECT_URL = '/events'
 LOGOUT_REDIRECT_URL = '/events'
 

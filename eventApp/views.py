@@ -5,7 +5,7 @@ from bootstrap_datepicker_plus import DatePickerInput
 from django import http
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-
+from django.conf import settings
 
 # Create your views here.
 from django.views.generic import TemplateView, ListView
@@ -14,7 +14,11 @@ from eventApp import query
 from eventApp.forms import ReservationForm, DateForm
 from eventApp.models import Reservation, Space
 
-import json
+import json, redis
+
+# Redis connection instance
+redis_instance = redis.StrictRedis(host=settings.REDIS_HOST,
+                                   port=settings.REDIS_PORT, db=0)
 
 
 class TestView(TemplateView):
