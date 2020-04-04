@@ -5,7 +5,6 @@ from bootstrap_datepicker_plus import DatePickerInput
 from django import http
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-from django.conf import settings
 
 # Create your views here.
 from django.views.generic import TemplateView, ListView
@@ -14,11 +13,7 @@ from eventApp import query
 from eventApp.forms import ReservationForm, DateForm
 from eventApp.models import Reservation, Space
 
-import json, redis
-
-# Redis connection instance
-redis_instance = redis.StrictRedis(host=settings.REDIS_HOST,
-                                   port=settings.REDIS_PORT, db=0)
+import json
 
 
 class TestView(TemplateView):
@@ -62,8 +57,14 @@ def show_reservation_schedule_view(request):
     return render(request, 'eventApp/reservation_schedule_view.html', context)
 
 
-# TODO: change default date today
-def _get_schedule(start_day=date(2020, 4, 1), num_days=6):
+def _ajax_change_view(request):
+    start_day = date(year=int(request.GET.get('year', 2020)),
+                     month=int(request.GET.get('month', 1)),
+                     day=int(request.GET.get('day', 1)))
+    return http.JsonResponse(_get_schedule(start_day=start_day))
+
+
+def _get_schedule(start_day=date.today(), num_days=6):
     """Gets the schedule for one week from the specified day as a parameter (inclusive).
     Should no parameter given, 'today' is used as default and schedule for a week time.
 

@@ -11,7 +11,19 @@
 {% endblock %}
 
 {% block content %}
-    <div class="row d-flex justify-content-center">
+    <div class="row">
+        <div class="col-3" style="margin-top: 16px; margin-left: 16px">
+            <ul class="pagination">
+                <li id="previous-week" class="page-item">
+                    <button id="get-previous-week" class="page-link" tabindex="-1">{% trans 'Previous' %}</button>
+                </li>
+                <li class="page-item">
+                    <button id="get-next-week" class="page-link">{% trans 'Next' %}</button>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div id="schedule" class="row d-flex justify-content-center">
 
         {% for day, daily_info in schedule.items %}
             <div class="col-xl-2 col-lg-4 col-md-6 col-sm-12">
@@ -73,12 +85,15 @@
 {% block scripts %}
     <script type="text/javascript">
         let json_string = JSON.parse('{{ scheduleJSON | escapejs }}');
+        let firstDaySchedule = new Date(Object.keys(json_string)[0]);
         let day, hour;
         let selected = {};
 
+        canGoPreviousWeek();
         Array.from(document.getElementsByClassName("can-reserve")).forEach((elem) => {
             elem.addEventListener("click", () => { click_reserve(event.target); });
         });
+
         function click_reserve(elem) {
             let id = elem.id.split(' ');
             day = id[0];
@@ -97,29 +112,27 @@
             }
             $('#modal-spaces').html(innerHtml);
         }
-        $('#save-changes').click(() => {
-            let selectedSpaces = [];
-            $('#modal-spaces input[type=checkbox]:checked').each( (_, space_id) => {
-                selectedSpaces.push(space_id.id);
-            });
-
-            addSpaces(timeToSeconds(day, hour), selectedSpaces);
-
-        });
-        function addSpaces(key, value) {
-            if (value.length > 0) {
-                selected[key] = value;
+        function canGoPreviousWeek() {
+            if (new Date() > firstDaySchedule) {
+                $('#previous-week').addClass('disabled');
             } else {
-                if (selected.hasOwnProperty(key)) {
-                    delete selected[key];
-                }
+                $('#previous-week').removeClass('disabled');
             }
-            console.log(selected)
         }
-
-        function timeToSeconds(day, hour) {
-            let date = new Date(day+"T"+hour);
-            return (date.getTime()/1000).toString();
+        function changeWeek(dateRequest) {
+            $.ajax({
+                url : '{% url "ajax_change_week" %}',
+                data: {
+                    'year': dateRequest.getFullYear(),
+                    'month': dateRequest.getMonth(),
+                    'day': dateRequest.getDate()
+                },
+                dataType: 'json',
+                success: function (data) {
+                    changeSchedule(data);
+                }
+            });
         }
     </script>
+    <script type="text/javascript" src="{% static 'JS/reservation_view.js' %}"></script>
 {% endblock %}
