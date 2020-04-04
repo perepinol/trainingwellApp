@@ -62,7 +62,7 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary">Save changes</button>
+            <button id="save-changes" type="button" class="btn btn-primary" data-dismiss="modal">Save changes</button>
           </div>
         </div>
       </div>
@@ -75,24 +75,32 @@
         let json_string = JSON.parse('{{ scheduleJSON | escapejs }}');
         let modal = document.getElementById("myModal");
         let span = document.getElementsByClassName("close")[0];
+        let day, hour;
 
         Array.from(document.getElementsByClassName("can-reserve")).forEach((elem) => {
             elem.addEventListener("click", () => { click_reserve(event.target); });
         });
         function click_reserve(elem) {
             let id = elem.id.split(' ');
-            let day = id[0];
-            let hour = id[1];
+            day = id[0];
+            hour = id[1];
             let buttonData = json_string[day][hour];
             $('#modal-day-hour').html('{% trans 'Select Spaces at' %} ' + day.toString() + ' - ' + hour.toString());
             let innerHtml = "";
+
             for (let [space_id, space_name] of Object.entries(buttonData)) {
-                console.log(space_name);
-                innerHtml += "<label class='container-checkbox'>" + space_name +
-                        "<input type='checkbox'>" +
+                innerHtml += "<label id='"+space_id.toString()+"' class='container-checkbox'>" +
+                        "<input id='"+space_id.toString()+"' type='checkbox'>" + space_name +
                         "<span class='checkmark'></span></label>"
             }
             $('#modal-spaces').html(innerHtml);
         }
+        $('#save-changes').click(() => {
+            let selected = [];
+            $('#modal-spaces input[type=checkbox]:checked').each( (_, space_id) => {
+                selected.push(space_id.id);
+            });
+            console.log(day + " " + hour + ": [" + selected.join(", ") + "]")
+        });
     </script>
 {% endblock %}
