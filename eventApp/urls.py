@@ -17,12 +17,12 @@ from django.contrib.auth.decorators import login_required
 from django.urls import path
 
 from eventApp.views import TestView, create_reservation_view, EventView, ReservationView, \
-    show_reservation_schedule_view, prova_view
+    show_reservation_schedule_view, prova_view, reservation_detail
 
 urlpatterns = [
     path('reservation/new/', show_reservation_schedule_view, name="schedule_view"),
     path('reservation/', login_required(ReservationView.as_view()), name="reservations"),
-    path('reservation/<int:id>/', TestView.as_view(), name='reservation_detail'),
+    path('reservation/<int:id>/', reservation_detail, name='reservation_detail'),
     path('', TestView.as_view(), name='home'),
     path('prova/', prova_view, name='prova')
 ]

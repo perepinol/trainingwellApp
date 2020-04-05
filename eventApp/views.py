@@ -6,6 +6,7 @@ from django import http
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
+from django.http import HttpResponse
 from django.shortcuts import render
 
 
@@ -175,3 +176,8 @@ def _get_schedule(spaces, reservations, num_desired_spaces):
         i += 1
 
     return schedule
+
+def reservation_detail(request, id):
+    reservation = Reservation.objects.get(id=id)
+    return render(request, 'eventApp/reservation_detail.html', {'reservation': reservation})
+    #return HttpResponse(id)
