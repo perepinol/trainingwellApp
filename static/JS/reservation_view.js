@@ -18,6 +18,7 @@ function addSpaces(day, hour, value) {
 }
 
 function timeToSeconds(day, hour) {
+    if (hour.length <= 4) { hour = '0'+hour}
     let date = new Date(day+"T"+hour);
     return (date.getTime()/1000).toString();
 }
@@ -57,16 +58,17 @@ function changeSchedule() {
     elem.animate({
         left: '-='+positionAnimate,
         opacity: '0'
-    }, function () {
+    }, 400, 'swing', function () {
         elem.css('left', '+='+2*positionAnimate);
         elem.html(scheduleContent);
         elem.animate({
             left: '-='+positionAnimate,
             opacity: 1,
+        }, 400, 'swing', function () {
+            canGoPreviousWeek();
+            restartListeners();
         });
     });
-    canGoPreviousWeek();
-    restartListeners();
 }
 
 function createDiv(classList, styleList) {
