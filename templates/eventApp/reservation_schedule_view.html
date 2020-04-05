@@ -23,7 +23,7 @@
             </ul>
         </div>
     </div>
-    <div id="schedule" class="row d-flex justify-content-center">
+    <div id="schedule" class="row d-flex justify-content-center" style="position: relative">
 
         {% for day, daily_info in schedule.items %}
             <div class="col-xl-2 col-lg-4 col-md-6 col-sm-12">
@@ -87,7 +87,7 @@
         let json_string = JSON.parse('{{ scheduleJSON | escapejs }}');
         let firstDaySchedule = new Date(Object.keys(json_string)[0]);
         let day, hour;
-        let selected = {};
+        let selected = {'user': {{ user }}};
 
         Date.prototype.MAX_DAYS = 6;
         Date.prototype.addDays = function(days) {
@@ -105,9 +105,7 @@
         };
 
         canGoPreviousWeek();
-        Array.from(document.getElementsByClassName("can-reserve")).forEach((elem) => {
-            elem.addEventListener("click", () => { click_reserve(event.target); });
-        });
+        restartListeners();
 
         function click_reserve(elem) {
             let id = elem.id.split(' ');
@@ -128,8 +126,6 @@
             $('#modal-spaces').html(innerHtml);
         }
         function canGoPreviousWeek() {
-            console.log(new Date() < firstDaySchedule,new Date(), new Date(firstDaySchedule));
-            console.log(new Date().daysDifference(firstDaySchedule));
             if (-new Date().daysDifference(firstDaySchedule) < 1) {
                 $('#previous-week').addClass('disabled');
             } else {
@@ -146,11 +142,27 @@
                 },
                 dataType: 'json',
                 success: function (data) {
-                    changeSchedule(data);
+                    json_string = data;
+                    changeSchedule();
                 }
             });
         }
 
+        function restartListeners() {
+            Array.from(document.getElementsByClassName("can-reserve")).forEach((elem) => {
+                elem.addEventListener("click", () => { click_reserve(event.target); });
+            });
+        }
+
+        $('#confirm').click(() => {
+            console.log(selected);
+        });
+
+        $('#cancel').click(() => {
+            if (confirm('{% trans 'Do you want to cancel and return?' %}')) {
+                location.href = '{% url 'reservations' %}';
+            }
+        })
 
     </script>
     <script type="text/javascript" src="{% static 'JS/reservation_view.js' %}"></script>

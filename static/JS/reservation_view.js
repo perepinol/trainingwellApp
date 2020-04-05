@@ -3,11 +3,11 @@ $('#save-changes').click(() => {
     $('#modal-spaces input[type=checkbox]:checked').each( (_, space_id) => {
         selectedSpaces.push(space_id.id);
     });
-
-    addSpaces(timeToSeconds(day, hour), selectedSpaces);
-
+    addSpaces(day, hour, selectedSpaces);
 });
-function addSpaces(key, value) {
+
+function addSpaces(day, hour, value) {
+    let key = timeToSeconds(day, hour);
     if (value.length > 0) {
         selected[key] = value;
     } else {
@@ -15,7 +15,6 @@ function addSpaces(key, value) {
             delete selected[key];
         }
     }
-    console.log(selected)
 }
 
 function timeToSeconds(day, hour) {
@@ -24,7 +23,6 @@ function timeToSeconds(day, hour) {
 }
 
 $('#get-previous-week').click(() => {
-    console.log(firstDaySchedule);
     changeWeek(new Date(firstDaySchedule).addDays(new Date().daysDifference(firstDaySchedule)));
 });
 
@@ -32,9 +30,9 @@ $('#get-next-week').click(() => {
     changeWeek(new Date(firstDaySchedule).addDays(firstDaySchedule.MAX_DAYS));
 });
 
-function changeSchedule(schedule) {
+function changeSchedule() {
     let scheduleContent = "";
-    for (let [day, daily] of Object.entries(schedule)) {
+    for (let [day, daily] of Object.entries(json_string)) {
         scheduleContent += createDiv(['col-xl-2', 'col-lg-4', 'col-md-6', 'col-sm-12']);
             scheduleContent += createDiv(['col-12'], ['text-align: center', 'display: block', 'margin-left: 2%', 'margin-right: 2%', 'margin-top: 2%']);
                 scheduleContent += "<h6>"+day+"</h6>";
@@ -52,9 +50,23 @@ function changeSchedule(schedule) {
             }
         scheduleContent += "</div>\n";
     }
-    firstDaySchedule = new Date(Object.keys(schedule)[0]);
+    let newDate = new Date(Object.keys(json_string)[0]);
+    let positionAnimate = newDate > firstDaySchedule ? 200 : -200;
+    let elem = $('#schedule');
+    firstDaySchedule = newDate;
+    elem.animate({
+        left: '-='+positionAnimate,
+        opacity: '0'
+    }, function () {
+        elem.css('left', '+='+2*positionAnimate);
+        elem.html(scheduleContent);
+        elem.animate({
+            left: '-='+positionAnimate,
+            opacity: 1,
+        });
+    });
     canGoPreviousWeek();
-    $('#schedule').html(scheduleContent);
+    restartListeners();
 }
 
 function createDiv(classList, styleList) {

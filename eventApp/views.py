@@ -9,7 +9,7 @@ from django.shortcuts import render
 # Create your views here.
 from django.views.generic import TemplateView, ListView
 
-from eventApp import query
+from eventApp import query, decorators
 from eventApp.forms import ReservationForm, DateForm
 from eventApp.models import Reservation, Space
 
@@ -50,13 +50,15 @@ class EventView(TemplateView):
         return context
 
 
-# @login_required()
+@login_required
 def show_reservation_schedule_view(request):
     # TODO: check request user
-    context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()), 'back': 'reservations'}
+    context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()),
+               'back': 'reservations', 'user': request.user.id}
     return render(request, 'eventApp/reservation_schedule_view.html', context)
 
 
+@decorators.ajax_required
 def _ajax_change_view(request):
     start_day = date(year=int(request.GET.get('year', 2020)),
                      month=int(request.GET.get('month', 1)),
