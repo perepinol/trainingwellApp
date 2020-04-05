@@ -64,9 +64,9 @@ def _ajax_change_view(request):
     return http.JsonResponse(_get_schedule(start_day=start_day))
 
 
-def _get_schedule(start_day=date.today(), num_days=6):
+def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
     """Gets the schedule for one week from the specified day as a parameter (inclusive).
-    Should no parameter given, 'today' is used as default and schedule for a week time.
+    Should no parameter given, 'tomorrow' is used as default and schedule for a week time.
 
     :param start_day: first day of the schedule desired.
     :param num_days: day count from now to include in the schedule, exclusive.

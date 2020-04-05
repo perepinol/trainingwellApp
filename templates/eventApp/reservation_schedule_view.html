@@ -37,7 +37,7 @@
                     </div>
                     {% else %}
                     <div class="col-12" style="margin: 2%">
-                        <div class="w-100 rounded bg-danger text-white cannot-reserve" style="text-align: center; display: block"><span>{{ hour }}</span></div>
+                        <div class="w-100 rounded bg-danger text-white cannot-reserve" style="text-align: center; display: block; padding: 2px"><span>{{ hour }}</span></div>
                     </div>
                     {% endif %}
                 {% endfor%}
@@ -48,11 +48,11 @@
     </div>
     <div class="row d-flex justify-content-center" style="margin-top: 2%">
         <div class="col-1">
-            <a href="#" class="btn btn-secondary" style="display: block">Cancel</a>
+            <button id="cancel" class="btn btn-secondary w-100" style="display: block">{% trans 'Cancel' %}</button>
         </div>
 
         <div class="col-1">
-            <a href="#" class="btn btn-primary" style="display: block">Confirm</a>
+            <button id="confirm" class="btn btn-primary w-100" style="display: block">{% trans 'Confirm' %}</button>
         </div>
     </div>
 
@@ -89,6 +89,21 @@
         let day, hour;
         let selected = {};
 
+        Date.prototype.MAX_DAYS = 6;
+        Date.prototype.addDays = function(days) {
+            let date = new Date(this.valueOf());
+            date.setDate(date.getDate() + days);
+            return date;
+        };
+        Date.prototype.daysDifference = function(d2) {
+            let days = parseInt((this - d2)/1000/3600/24);
+            if (days > -this.MAX_DAYS ) {
+                return days;
+            } else {
+                return -this.MAX_DAYS;
+            }
+        };
+
         canGoPreviousWeek();
         Array.from(document.getElementsByClassName("can-reserve")).forEach((elem) => {
             elem.addEventListener("click", () => { click_reserve(event.target); });
@@ -113,7 +128,9 @@
             $('#modal-spaces').html(innerHtml);
         }
         function canGoPreviousWeek() {
-            if (new Date() > firstDaySchedule) {
+            console.log(new Date() < firstDaySchedule,new Date(), new Date(firstDaySchedule));
+            console.log(new Date().daysDifference(firstDaySchedule));
+            if (-new Date().daysDifference(firstDaySchedule) < 1) {
                 $('#previous-week').addClass('disabled');
             } else {
                 $('#previous-week').removeClass('disabled');
@@ -124,7 +141,7 @@
                 url : '{% url "ajax_change_week" %}',
                 data: {
                     'year': dateRequest.getFullYear(),
-                    'month': dateRequest.getMonth(),
+                    'month': dateRequest.getMonth()+1,
                     'day': dateRequest.getDate()
                 },
                 dataType: 'json',
@@ -133,6 +150,8 @@
                 }
             });
         }
+
+
     </script>
     <script type="text/javascript" src="{% static 'JS/reservation_view.js' %}"></script>
 {% endblock %}

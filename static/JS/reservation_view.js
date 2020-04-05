@@ -23,29 +23,13 @@ function timeToSeconds(day, hour) {
     return (date.getTime()/1000).toString();
 }
 
-Date.prototype.addDays = function(days) {
-    let date = new Date(this.valueOf());
-    date.setDate(date.getDate() + days);
-    return date;
-};
-
-const MAX_DAYS = 6;
-
-function differenceDays(d1, d2) {
-    let days = parseInt((d1 - d2)/1000/3600/24);
-    if (days > -MAX_DAYS ) {
-        return days;
-    } else {
-        return -MAX_DAYS;
-    }
-}
-
 $('#get-previous-week').click(() => {
-    changeWeek(new Date(firstDaySchedule).addDays(differenceDays(new Date(), firstDaySchedule)));
+    console.log(firstDaySchedule);
+    changeWeek(new Date(firstDaySchedule).addDays(new Date().daysDifference(firstDaySchedule)));
 });
 
 $('#get-next-week').click(() => {
-    changeWeek(new Date(firstDaySchedule).addDays(MAX_DAYS));
+    changeWeek(new Date(firstDaySchedule).addDays(firstDaySchedule.MAX_DAYS));
 });
 
 function changeSchedule(schedule) {
@@ -58,7 +42,7 @@ function changeSchedule(schedule) {
             for (let [hour, spaces] of Object.entries(daily)) {
                 scheduleContent += createDiv(['col-12'], ['margin: 2%']);
                 if (spaces === undefined || Object.keys(spaces).length === 0) {
-                    scheduleContent += createDiv(['w-100', 'rounded', 'bg-danger', 'text-white', 'cannot-reserve']);
+                    scheduleContent += createDiv(['w-100', 'rounded', 'bg-danger', 'text-white', 'cannot-reserve'], ['text-align: center', 'display: block','padding: 2px']);
                         scheduleContent+=createSpan(hour);
                     scheduleContent += "</div>\n";
                 } else {
@@ -68,12 +52,14 @@ function changeSchedule(schedule) {
             }
         scheduleContent += "</div>\n";
     }
+    firstDaySchedule = new Date(Object.keys(schedule)[0]);
+    canGoPreviousWeek();
     $('#schedule').html(scheduleContent);
 }
 
 function createDiv(classList, styleList) {
     let classes = classList !== undefined && classList.length > 0? 'class="'+classList.join(" ")+'" ' : "";
-    let styles  = styleList !== undefined && styleList.length > 0? 'class="'+styleList.join(";")+'" ' : "";
+    let styles  = styleList !== undefined && styleList.length > 0? 'style="'+styleList.join(";")+'" ' : "";
     return "<div " + classes + styles + ">\n";
 }
 
