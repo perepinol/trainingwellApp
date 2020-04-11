@@ -1,19 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Detail</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block content %}
     <div class="reservation-detail">
         <div class="reservation">
+         <div class="card-body">
             <h2>{{ reservation.event_name }}</h2>
-            <p>{{ reservation.organizer }}</p>
-            <p>{{ reservation.reservation_date }}</p>
-            <p>{{ reservation.price }}</p>
-            <p>{{ reservation.organizer }}</p>
-            <p>{{ reservation.is_paid }}</p>
+            <p>Reserved by: {{ reservation.organizer }}</p>
+            <p>Reservation date: {{ reservation.reservation_date }}</p>
+            <p>Price: {{ reservation.price }}€</p>
+            {% if  reservation.is_paid %}
+                <p>The reservation is already payed!</p>
+            {% else %}
+               <p>The reservation hasn't been payed yet.</p>
+            {% endif %}
+         </div>
         </div>
     </div>
-</body>
-</html>
+{% endblock %}
