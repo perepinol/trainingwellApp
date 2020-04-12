@@ -3,22 +3,26 @@ from urllib.parse import parse_qs
 
 from bootstrap_datepicker_plus import DatePickerInput
 from django import http
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
 from django.shortcuts import render
 
 # Create your views here.
 from django.views.generic import TemplateView, ListView
 
 from eventApp import query, decorators
-from eventApp.forms import ReservationForm, DateForm
-from eventApp.models import Reservation, Space
+from eventApp.forms import ReservationNameForm, DateForm
+from eventApp.models import Reservation, Field, Timeblock
 
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TestView(TemplateView):
     template_name = 'eventApp/test.html'
-
 
 class ReservationView(TemplateView):
     template_name = 'eventApp/reservation_list_view.html'
@@ -50,12 +54,66 @@ class EventView(TemplateView):
         return context
 
 
-@login_required
+def prova_view(request):
+    logger.info("SOC EL REI")
+    return HttpResponse("HOLA")
+
+@login_required()
+def create_reservation_view(request):
+    if request.method == 'POST':
+        # TODO: process POST and redirect to timetable view with name, date and activity in context
+        return http.HttpResponseRedirect('/events')
+
+    return render(request, 'eventApp/form.html', {'form': ReservationNameForm(), 'back': '/events/reservation'})
+
+
+def aggregate_timeblocks(timeblocks):
+    """{
+        'start_time',
+        'end_time',
+        'space'
+    }"""
+    agg_list = []
+    agg = {}
+    for timeblock in timeblocks.order_by('space', 'start_time'):
+        if len(agg.keys()) != 0:
+            # If timeblocks are consecutive, just extend end_time
+            if str(timeblock.space) == agg['space'] and timeblock.start_time == agg['end_time']:
+                agg['end_time'] = agg['end_time'] + settings.RESERVATION_GRANULARITY
+                continue
+
+            # Else, add previous agg to list and store current one
+            agg_list.append(agg)
+
+        # Store current agg
+        agg = {
+            'start_time': timeblock.start_time,
+            'end_time': timeblock.start_time + settings.RESERVATION_GRANULARITY,
+            'space': str(timeblock.space)
+        }
+
+    if len(agg.keys()) != 0:
+        agg_list.append(agg)  # Store last agg
+    return agg_list
+
+
+@login_required()
 def show_reservation_schedule_view(request):
-    # TODO: check request user
-    context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()),
+    if request.method == 'GET':
+        # TODO: check request user
+        context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()),
                'back': 'reservations', 'user': request.user.id}
-    return render(request, 'eventApp/reservation_schedule_view.html', context)
+        return render(request, 'eventApp/reservation_schedule_view.html', context)
+
+    else:
+        requested_timeblocks = Timeblock.objects.all()  # TODO: get timeblocks from POST
+        timeblock_sum = requested_timeblocks.aggregate(price=Sum('space__price_per_hour'))['price']
+        context = {
+            'form': ReservationNameForm(),
+            'timeblocks': aggregate_timeblocks(Timeblock.objects.all()),
+            'price': timeblock_sum if timeblock_sum is not None else 0
+        }
+        return render(request, 'eventApp/reservation_confirmation.html', context)
 
 
 @decorators.ajax_required

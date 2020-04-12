@@ -60,7 +60,7 @@ class Season(models.Model):
 
 class Space(models.Model):
     field = models.ForeignKey(Field, on_delete=models.PROTECT)
-    season = models.ForeignKey(Season, on_delete=models.PROTECT)
+    season = models.ManyToManyField(Season)
     price_per_hour = models.IntegerField()
     sqmt = models.IntegerField()
     photo = models.ImageField(blank=True, null=True)
@@ -117,5 +117,8 @@ class Timeblock(models.Model):
     reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE)
     space = models.ForeignKey(Space, on_delete=models.SET(get_timeblock_space('self').__str__()))
     start_time = models.DateTimeField()
+
+    def __str__(self):
+        return u"%s at %s" % (self.space, self.start_time.isoformat())
 
 
