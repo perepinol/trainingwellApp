@@ -155,7 +155,7 @@
         }
 
         $('#confirm').click(() => {
-            console.log(selected);
+            $.post('{% url 'schedule_view' %}', selected);
         });
 
         $('#cancel').click(() => {
