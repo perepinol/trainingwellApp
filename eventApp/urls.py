@@ -16,13 +16,12 @@ Including another URLconf
 from django.contrib.auth.decorators import login_required
 from django.urls import path
 
-from eventApp.views import TestView, create_reservation_view, EventView, ReservationView, \
-    show_reservation_schedule_view, prova_view
+from eventApp.views import TestView, EventView, ReservationView, show_reservation_schedule_view, _ajax_change_view
 
 urlpatterns = [
-    path('reservation/new/', show_reservation_schedule_view, name="schedule_view"),
     path('reservation/', login_required(ReservationView.as_view()), name="reservations"),
+    path('reservation/new', show_reservation_schedule_view, name="schedule_view"),
     path('reservation/<int:id>/', TestView.as_view(), name='reservation_detail'),
     path('', TestView.as_view(), name='home'),
-    path('prova/', prova_view, name='prova')
+    path('ajax/change_week/', _ajax_change_view, name='ajax_change_week')
 ]
