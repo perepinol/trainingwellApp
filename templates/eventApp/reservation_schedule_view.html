@@ -155,7 +155,13 @@
         }
 
         $('#confirm').click(() => {
-            $.post('{% url 'schedule_view' %}', selected);
+            $.ajax({
+                url: '{% url 'schedule_view' %}',
+                method: "POST",
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                data: selected,
+                dataType: "json",
+            });
         });
 
         $('#cancel').click(() => {
