@@ -1,21 +1,22 @@
-from datetime import date, time, datetime, timedelta
+from datetime import date, datetime, timedelta
 from urllib.parse import parse_qs
+from django.utils import timezone
 
 from bootstrap_datepicker_plus import DatePickerInput
 from django import http
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum
 from django.shortcuts import render
 
 # Create your views here.
-from django.views.generic import TemplateView, ListView
+from django.views.generic import TemplateView
 
 from eventApp import query, decorators
 from eventApp.forms import ReservationNameForm, DateForm
-from eventApp.models import Reservation, Field, Timeblock
+from eventApp.models import Reservation, Timeblock, User
 
 import json
+from functools import reduce
 import logging
 
 logger = logging.getLogger(__name__)
@@ -23,14 +24,6 @@ logger = logging.getLogger(__name__)
 
 class TestView(TemplateView):
     template_name = 'eventApp/test.html'
-
-class ReservationView(TemplateView):
-    template_name = 'eventApp/reservation_list_view.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['res_list'] = Reservation.objects.filter(organizer=self.request.user, is_deleted=False)
-        return context
 
 
 class EventView(TemplateView):
@@ -56,15 +49,55 @@ class EventView(TemplateView):
 
 def prova_view(request):
     logger.info("SOC EL REI")
-    return HttpResponse("HOLA")
+    return http.HttpResponse("HOLA")
+
+
+def generate_timeblocks(post_data):
+    timeblocks = []
+    for timestamp in sorted(post_data.keys()):
+        if timestamp == 'user':
+            continue
+        for space_id in sorted(post_data[timestamp]):
+            timestamp = int(timestamp)
+            tb = Timeblock(
+                space_id=space_id,
+                start_time=datetime.fromtimestamp(timestamp).astimezone(timezone.utc)
+            )
+            timeblocks.append(tb)
+    return timeblocks
+
 
 @login_required()
-def create_reservation_view(request):
+def reservation_view(request):
     if request.method == 'POST':
-        # TODO: process POST and redirect to timetable view with name, date and activity in context
-        return http.HttpResponseRedirect('/events')
+        res_name_form = ReservationNameForm(request.POST)
+        if 'timeblocks' not in request.session or not res_name_form.is_valid():
+            return http.HttpResponseBadRequest()
 
-    return render(request, 'eventApp/form.html', {'form': ReservationNameForm(), 'back': '/events/reservation'})
+        # Make timeblocks. No need to check format because it has been checked before
+        timeblocks = generate_timeblocks(request.session['timeblocks'])
+
+        price = reduce(lambda agg, tb: agg + tb.space.price_per_hour, timeblocks, 0)
+
+        # Create reservation object
+        res = Reservation.objects.create(
+            event_name=res_name_form.cleaned_data['event_name'],
+            price=price,
+            organizer=request.user,
+            modified_by=request.user
+        )
+
+        # Add price to reservation and save
+        logger.info("Created new reservation (id: %d, user: %s)" % (res.id, res.organizer))
+
+        # Save timeblocks
+        for timeblock in timeblocks:
+            timeblock.reservation = res
+            timeblock.save()
+
+    return render(request, 'eventApp/reservation_list_view.html', {
+        'res_list': Reservation.objects.filter(organizer=request.user, is_deleted=False)
+    })
 
 
 def aggregate_timeblocks(timeblocks):
@@ -75,7 +108,7 @@ def aggregate_timeblocks(timeblocks):
     }"""
     agg_list = []
     agg = {}
-    for timeblock in timeblocks.order_by('space', 'start_time'):
+    for timeblock in timeblocks:
         if len(agg.keys()) != 0:
             # If timeblocks are consecutive, just extend end_time
             if str(timeblock.space) == agg['space'] and timeblock.start_time == agg['end_time']:
@@ -101,18 +134,27 @@ def aggregate_timeblocks(timeblocks):
 def show_reservation_schedule_view(request):
     if request.method == 'GET':
         # TODO: check request user
+        # Remove session if available
+        if 'timeblocks' in request.session:
+            del request.session['timeblocks']
+
         context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()),
                    'back': 'reservations', 'user': request.user.id}
         return render(request, 'eventApp/reservation_schedule_view.html', context)
 
     else:
-        print(request.POST['reservations'])
-        requested_timeblocks = Timeblock.objects.all()  # TODO: get timeblocks from POST
-        timeblock_sum = requested_timeblocks.aggregate(price=Sum('space__price_per_hour'))['price']
+        # Get JSON and process timeblocks
+        tb_json = json.loads(request.POST['reservations'])
+        try:
+            requested_timeblocks = generate_timeblocks(tb_json)
+        except:  # Means that timeblocks had faulty format
+            return http.HttpResponseBadRequest("Bad body format")
+
+        request.session['timeblocks'] = tb_json  # So that we have the data in next view
         context = {
             'form': ReservationNameForm(),
-            'timeblocks': aggregate_timeblocks(Timeblock.objects.all()),
-            'price': timeblock_sum if timeblock_sum is not None else 0
+            'timeblocks': aggregate_timeblocks(requested_timeblocks),
+            'price': reduce(lambda agg, tb: agg + tb.space.price_per_hour, requested_timeblocks, 0)
         }
         return render(request, 'eventApp/reservation_confirmation.html', context)
 

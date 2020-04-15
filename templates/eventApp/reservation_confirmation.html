@@ -6,7 +6,7 @@
         <div class="container pl-5 mw-100">
             <div class="row"><h3 class="m-0">{% trans 'Reservation confirmation' %}</h3></div>
             <div class="row">
-                <form class="reservation w-100" method="post">
+                <form class="reservation w-100" method="post" action="{% url 'reservations' %}">
                     {% csrf_token %}
                     {{ form.as_p }}
                     <p class="mt-4">{% trans 'Price' %}: {{ price }}€</p>

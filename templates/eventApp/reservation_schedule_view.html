@@ -157,7 +157,7 @@
             });
         }
 
-        $('#reservation_submit').submit((event) => {
+        $('#reservation_submit').submit(() => {
             $('<input />').attr("type", "hidden")
                 .attr("name", "reservations")
                 .attr("value", JSON.stringify(selected))
