@@ -102,10 +102,11 @@ def show_reservation_schedule_view(request):
     if request.method == 'GET':
         # TODO: check request user
         context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()),
-               'back': 'reservations', 'user': request.user.id}
+                   'back': 'reservations', 'user': request.user.id}
         return render(request, 'eventApp/reservation_schedule_view.html', context)
 
     else:
+        print(request.POST['reservations'])
         requested_timeblocks = Timeblock.objects.all()  # TODO: get timeblocks from POST
         timeblock_sum = requested_timeblocks.aggregate(price=Sum('space__price_per_hour'))['price']
         context = {
