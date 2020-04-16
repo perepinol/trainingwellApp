@@ -6,6 +6,7 @@ from django import http
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
+from django.http import HttpResponse
 from django.shortcuts import render
 
 # Create your views here.
@@ -183,3 +184,10 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
                 hour += 1
 
     return schedule
+
+def reservation_detail(request, id):
+    queryset = Reservation.objects.filter(id=id)
+    if queryset.count() == 0:
+         return HttpResponse ("ERROR 404 (object not found)")
+    reservation = queryset.first()
+    return render(request, 'eventApp/reservation_detail.html', {'reservation': reservation})
