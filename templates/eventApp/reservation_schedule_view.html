@@ -158,10 +158,14 @@
         }
 
         $('#reservation_submit').submit(() => {
-            $('<input />').attr("type", "hidden")
-                .attr("name", "reservations")
-                .attr("value", JSON.stringify(selected))
-                .appendTo('#reservation_submit');
+            if (jQuery.isEmptyObject(selected)) {
+                alert('{% trans 'You did not select any block' %}')
+            } else {
+                $('<input />').attr("type", "hidden")
+                    .attr("name", "reservations")
+                    .attr("value", JSON.stringify(selected))
+                    .appendTo('#reservation_submit');
+            }
         });
 
         $('#cancel').click(() => {
