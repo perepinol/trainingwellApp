@@ -6,13 +6,12 @@
         <div class="reservation">
          <div class="card-body">
             <h2>{{ reservation.event_name }}</h2>
-            <p>{% trans 'Name organizer: ' %}{{ reservation.organizer }}</p>
-            <p>{% trans 'Reservation date : ' %}{{ reservation.reservation_date }}</p>
-            <p>{% trans 'Price: ' %} {{ reservation.price }}€</p>
+            <p>{% trans 'Reservation date' %}: {{ reservation.reservation_date }}</p>
+            <p>{% trans 'Price' %}:  {{ reservation.price }}€</p>
             {% if  reservation.is_paid %}
-                <p>{% trans 'The reservation is already payed!' %}</p>
+                <p>{% trans 'The reservation is already paid' %}!</p>
             {% else %}
-               <p>{% trans 'The reservation hasn not been payed yet.' %}</p>
+               <p>{% trans 'The reservation has not been paid yet' %}.</p>
             {% endif %}
          </div>
         </div>

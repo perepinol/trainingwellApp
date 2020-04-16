@@ -178,6 +178,6 @@ def _get_schedule(spaces, reservations, num_desired_spaces):
     return schedule
 
 def reservation_detail(request, id):
-    reservation = Reservation.objects.get(id=id)
+    reservation = Reservation.objects.all.filter(id=id)
     return render(request, 'eventApp/reservation_detail.html', {'reservation': reservation})
     #return HttpResponse(id)
