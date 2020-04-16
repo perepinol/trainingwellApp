@@ -11,33 +11,159 @@
 {% endblock %}
 
 {% block content %}
-<div class="jumbotron">
     <div class="row">
-        <div class="col-6">
-            <div class="col-12"><h4>{{ event.name }}</h4></div>
-            <div class="col-12 d-none d-lg-block"><h4>{{ event.space_type }}</h4></div>
+        <div class="col-3" style="margin-top: 16px; margin-left: 16px">
+            <ul class="pagination">
+                <li id="previous-week" class="page-item">
+                    <button id="get-previous-week" class="page-link" tabindex="-1">{% trans 'Previous' %}</button>
+                </li>
+                <li class="page-item">
+                    <button id="get-next-week" class="page-link">{% trans 'Next' %}</button>
+                </li>
+            </ul>
         </div>
-        <div class="col-6">
-            <div class="col-12"><h4>{{ event.date }}</h4></div>
-            <div class="col-12 d-none d-lg-block"><h4>{% trans 'Desired Spaces'%}: {{ event.num_spaces }}</h4></div>
-        </div>
-        <div class="col-6"><h4></h4></div>
     </div>
-{% for _,data in schedule.items %}
-    <div class="row m-4">
-            <div class="col-3"></div>
-            {% if data.free %}
-                 <div class="col-6">
-                    <a href="#" class="rounded bg-success text-white can-reserve" style="text-align: center; display: block"><span>{{ data.hour_str }}</span></a>
-                 </div>
-            {% else %}
-                 <div class="col-6">
-                     <a href="#" class="rounded bg-danger text-white cannot-reserve" style="text-align: center; display: block"><span>{{ data.hour_str }}</span></a>
-                 </div>
-            {% endif %}
-            <div class="col-3"></div>
-    </div>
-{% endfor %}
-</div>
+    <div id="schedule" class="row d-flex justify-content-center" style="position: relative">
 
+        {% for day, daily_info in schedule.items %}
+            <div class="col-xl-2 col-lg-4 col-md-6 col-sm-12">
+                <div class="col-12" style="text-align: center; display: block; margin-left: 2%; margin-right: 2%; margin-top: 2%">
+                    <h6>{{ day }}</h6>
+                </div>
+                {% for hour, free_spaces in daily_info.items %}
+                    {% if free_spaces|length > 0 %}
+                    <div class="col-12" style="margin: 2%">
+                        <button id='{{ day }} {{ hour }}' class="w-100 rounded bg-success text-white can-reserve" data-toggle="modal" data-target="#exampleModal" style="text-align: center; display: block"><span>{{ hour }}</span></button>
+                    </div>
+                    {% else %}
+                    <div class="col-12" style="margin: 2%">
+                        <div class="w-100 rounded bg-danger text-white cannot-reserve" style="text-align: center; display: block; padding: 2px"><span>{{ hour }}</span></div>
+                    </div>
+                    {% endif %}
+                {% endfor%}
+            </div>
+        {% empty %}
+            No schedule for this week
+        {% endfor %}
+    </div>
+    <div class="row d-flex justify-content-center" style="margin-top: 2%">
+        <div class="col-1">
+            <button id="cancel" class="btn btn-secondary w-100" style="display: block">{% trans 'Cancel' %}</button>
+        </div>
+
+        <div class="col-1">
+            <button id="confirm" class="btn btn-primary w-100" style="display: block">{% trans 'Confirm' %}</button>
+        </div>
+    </div>
+
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">{% trans 'Available Spaces' %}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div id="modal-day-hour">
+            </div>
+            <div id="modal-spaces">
+
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button id="save-changes" type="button" class="btn btn-primary" data-dismiss="modal">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        let json_string = JSON.parse('{{ scheduleJSON | escapejs }}');
+        let firstDaySchedule = new Date(Object.keys(json_string)[0]);
+        let day, hour;
+        let selected = {'user': {{ user }}};
+
+        Date.prototype.MAX_DAYS = 6;
+        Date.prototype.addDays = function(days) {
+            let date = new Date(this.valueOf());
+            date.setDate(date.getDate() + days);
+            return date;
+        };
+        Date.prototype.daysDifference = function(d2) {
+            let days = parseInt((this - d2)/1000/3600/24);
+            if (days > -this.MAX_DAYS ) {
+                return days;
+            } else {
+                return -this.MAX_DAYS;
+            }
+        };
+
+        canGoPreviousWeek();
+        restartListeners();
+
+        function click_reserve(elem) {
+            let id = elem.id.split(' ');
+            day = id[0];
+            hour = id[1];
+            let buttonData = json_string[day][hour];
+            $('#modal-day-hour').html('{% trans 'Select Spaces at' %} ' + day.toString() + ' - ' + hour.toString());
+            let innerHtml = "";
+
+            for (let [space_id, space_name] of Object.entries(buttonData)) {
+                let key = timeToSeconds(day, hour);
+                let is_checked = selected.hasOwnProperty(key) && selected[key].includes(space_id) ? "checked" : "";
+
+                innerHtml += "<label id='"+space_id.toString()+"' class='container-checkbox'>" +
+                        "<input id='"+space_id.toString()+"' type='checkbox' "+is_checked+">" + space_name +
+                        "<span class='checkmark'></span></label>"
+            }
+            $('#modal-spaces').html(innerHtml);
+        }
+        function canGoPreviousWeek() {
+            if (-new Date().daysDifference(firstDaySchedule) < 1) {
+                $('#previous-week').addClass('disabled');
+            } else {
+                $('#previous-week').removeClass('disabled');
+            }
+        }
+        function changeWeek(dateRequest) {
+            $.ajax({
+                url : '{% url "ajax_change_week" %}',
+                data: {
+                    'year': dateRequest.getFullYear(),
+                    'month': dateRequest.getMonth()+1,
+                    'day': dateRequest.getDate()
+                },
+                dataType: 'json',
+                success: function (data) {
+                    json_string = data;
+                    changeSchedule();
+                }
+            });
+        }
+
+        function restartListeners() {
+            Array.from(document.getElementsByClassName("can-reserve")).forEach((elem) => {
+                elem.addEventListener("click", () => { click_reserve(event.target); });
+            });
+        }
+
+        $('#confirm').click(() => {
+            $.post('{% url 'schedule_view' %}', selected);
+        });
+
+        $('#cancel').click(() => {
+            if (confirm('{% trans 'Do you want to cancel and return?' %}')) {
+                location.href = '{% url 'reservations' %}';
+            }
+        })
+
+    </script>
+    <script type="text/javascript" src="{% static 'JS/reservation_view.js' %}"></script>
 {% endblock %}
