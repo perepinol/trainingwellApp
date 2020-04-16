@@ -1,8 +1,10 @@
+from copy import deepcopy
 from datetime import date, datetime, timedelta
 from urllib.parse import parse_qs
+
+from django.urls import reverse
 from django.utils import timezone
 
-from bootstrap_datepicker_plus import DatePickerInput
 from django import http
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -13,11 +15,13 @@ from django.views.generic import TemplateView
 
 from eventApp import query, decorators
 from eventApp.forms import ReservationNameForm, DateForm
-from eventApp.models import Reservation, Timeblock, User
+from eventApp.models import Reservation, Timeblock, Space
 
 import json
 from functools import reduce
 import logging
+
+from eventApp.query import AlreadyExistsException
 
 logger = logging.getLogger(__name__)
 
@@ -53,59 +57,93 @@ def prova_view(request):
 
 
 def generate_timeblocks(post_data):
+    """
+    Create partial Timeblock objects (missing reservation) and return them, or raise exception if not valid.
+
+    :param post_data: A JSON object with timestamps as keys and lists of space ids as values.
+    :return: A list of Timeblocks without reservation.
+    :raises:
+        ValueError: If JSON is not correctly formatted.
+        Space.DoesNotExist: If a space id is not in the database.
+        AlreadyExistsException: If an identical Timeblock (except for its Reservation) is in the database.
+    """
+    post_data = deepcopy(post_data)
+    if 'user' in post_data:
+        del post_data['user']
+    if not post_data:
+        raise ValueError()  # As if JSON verification failed
+
     timeblocks = []
     for timestamp in sorted(post_data.keys()):
-        if timestamp == 'user':
-            continue
         for space_id in sorted(post_data[timestamp]):
-            timestamp = int(timestamp)
+            timestamp = int(timestamp)  # May throw ValueError
             tb = Timeblock(
                 space_id=space_id,
                 start_time=datetime.fromtimestamp(timestamp).astimezone(timezone.utc)
             )
+            if not Space.objects.filter(id=space_id).count():
+                raise Space.DoesNotExist()
+            if Timeblock.objects.filter(space_id=tb.space_id, start_time=tb.start_time).count():
+                raise AlreadyExistsException()
             timeblocks.append(tb)
     return timeblocks
 
 
 @login_required()
 def reservation_view(request):
+    """
+    Render the user's reservation list.
+
+    If method is POST, also create reservation from JSON body.
+    """
     if request.method == 'POST':
         res_name_form = ReservationNameForm(request.POST)
         if 'timeblocks' not in request.session or not res_name_form.is_valid():
             return http.HttpResponseBadRequest()
 
         # Make timeblocks. No need to check format because it has been checked before
-        timeblocks = generate_timeblocks(request.session['timeblocks'])
-
-        price = reduce(lambda agg, tb: agg + tb.space.price_per_hour, timeblocks, 0)
+        try:
+            timeblocks = generate_timeblocks(request.session['timeblocks'])
+        except AlreadyExistsException:
+            return render(request, 'concurrency_error.html', {'redirect': reverse('schedule_view')})
 
         # Create reservation object
         res = Reservation.objects.create(
             event_name=res_name_form.cleaned_data['event_name'],
-            price=price,
+            price=reduce(lambda agg, tb: agg + tb.space.price_per_hour, timeblocks, 0),
             organizer=request.user,
             modified_by=request.user
         )
-
-        # Add price to reservation and save
         logger.info("Created new reservation (id: %d, user: %s)" % (res.id, res.organizer))
 
         # Save timeblocks
         for timeblock in timeblocks:
             timeblock.reservation = res
             timeblock.save()
+            logger.info("Created new timeblock (id: %d)" % timeblock.id)
+        return http.HttpResponseRedirect(reverse('reservations'))
 
     return render(request, 'eventApp/reservation_list_view.html', {
-        'res_list': Reservation.objects.filter(organizer=request.user, is_deleted=False)
+        'res_list': sorted(
+            Reservation.objects.filter(organizer=request.user, is_deleted=False),
+            key=lambda r: r.timeblock_set.first().start_time
+        )
     })
 
 
 def aggregate_timeblocks(timeblocks):
-    """{
-        'start_time',
-        'end_time',
-        'space'
-    }"""
+    """
+    Aggregate Timeblocks into a list of objects summarizing the input.
+
+    :param timeblocks: A list of Timeblocks.
+    :return: A list of objects of the form:
+        {
+            'start_time',
+            'end_time',
+            'space'
+        }
+    Where consecutive Timeblocks with the same space are squashed into one object.
+    """
     agg_list = []
     agg = {}
     for timeblock in timeblocks:
@@ -132,6 +170,12 @@ def aggregate_timeblocks(timeblocks):
 
 @login_required()
 def show_reservation_schedule_view(request):
+    """
+    Show the different views in the reservation process.
+
+    If GET, return the reservation timetable.
+    If POST, check the input's correctness and show the reservation confirmation page.
+    """
     if request.method == 'GET':
         # TODO: check request user
         # Remove session if available
@@ -147,8 +191,12 @@ def show_reservation_schedule_view(request):
         tb_json = json.loads(request.POST['reservations'])
         try:
             requested_timeblocks = generate_timeblocks(tb_json)
-        except:  # Means that timeblocks had faulty format
+        except ValueError:  # Means that timeblocks had faulty format
             return http.HttpResponseBadRequest("Bad body format")
+        except Space.DoesNotExist:
+            return http.HttpResponseBadRequest("Invalid space id")
+        except AlreadyExistsException:
+            return render(request, 'concurrency_error.html', {'redirect': request.get_full_path()})
 
         request.session['timeblocks'] = tb_json  # So that we have the data in next view
         context = {

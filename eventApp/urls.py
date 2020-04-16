@@ -13,7 +13,6 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib.auth.decorators import login_required
 from django.urls import path
 
 from eventApp.views import TestView, reservation_view, show_reservation_schedule_view, _ajax_change_view
@@ -22,6 +21,6 @@ urlpatterns = [
     path('reservation/', reservation_view, name="reservations"),
     path('reservation/new', show_reservation_schedule_view, name="schedule_view"),
     path('reservation/<int:id>/', TestView.as_view(), name='reservation_detail'),
+    path('ajax/change_week/', _ajax_change_view, name='ajax_change_week'),
     path('', TestView.as_view(), name='home'),
-    path('ajax/change_week/', _ajax_change_view, name='ajax_change_week')
 ]

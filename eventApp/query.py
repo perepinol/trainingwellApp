@@ -1,6 +1,11 @@
 from eventApp.models import *
 
 
+class AlreadyExistsException(Exception):
+    """Represents the situation where an object that already exists is being created (e.g. Timeblock overlap)."""
+    pass
+
+
 def get_all_timeblocks(start_date, num_days=1, space=None, field=None):
     """Returns a QuerySet with the models Timeblock which meets the parameter conditions.
 

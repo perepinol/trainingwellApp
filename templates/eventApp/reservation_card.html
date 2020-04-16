@@ -1,15 +1,17 @@
+{% load i18n %}
+
 <div class="card w-100 h-100">
     <div class="card-body">
         <h3 class="card-title">{{ res.event_name }}</h3>
-        <p class="card-text">{{ res.reservation_date|date:"DATE_FORMAT" }} from {{ res.starting_hour|time:"TIME_FORMAT" }} to {{ res.ending_hour|time:"TIME_FORMAT" }}</p>
-        <p class="card-text">Location: {{ res.space }}</p>
+        {% with f=res.timeblock_set.all|first %}
+        <p class="card-text">{% blocktrans with d=f.start_time|date:"DATE_FORMAT" t=f.start_time|time:"TIME_FORMAT" %}Starting in {{ d }}, {{ t }}{% endblocktrans %}</p>
+        <p class="card-text">{% blocktrans with num=res.timeblock_set.all|length %}Includes {{ num }} reservations{% endblocktrans %}</p>
+        {% endwith %}
     </div>
     <div class="card-footer d-flex justify-content-between">
-        {% if res.is_paid %}
-            <p class="card-text m-0">Price: {{ res.price }}€ (paid)</p>
-        {% else %}
-            <p class="card-text m-0 text-danger">Price: {{ res.price }}€ (unpaid)</p>
-        {% endif %}
-        <a class="stretched-link" href={% url 'reservation_detail' id=res.id %}>Details</a>
+        <p class="card-text m-0">{% blocktrans with p=res.price paid=res.is_paid|yesno:"paid,unpaid" %}
+            Price: {{ p }}€ ({{ paid }})
+        {% endblocktrans %}</p>
+        <a class="stretched-link" href={% url 'reservation_detail' id=res.id %}>{% trans 'Details' %}</a>
     </div>
 </div>

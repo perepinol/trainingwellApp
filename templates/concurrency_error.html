@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+    <div class="m-4">
+        <h3>{% trans 'Oops' %}!</h3>
+        <p>{% trans 'A block you requested has already been reserved' %}.</p>
+        <p>{% trans 'You will be redirected to the schedule page' %}.</p>
+        <a class="btn btn-primary d-inline" href="{{ redirect }}">Redirect now</a>
+    </div>
+{% endblock %}
+{% block scripts %}
+<script>
+    setTimeout(() => {
+        window.location.assign("{{ redirect }}")
+    }, 4000)
+</script>
+{% endblock %}
