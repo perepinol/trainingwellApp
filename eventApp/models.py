@@ -96,18 +96,19 @@ class Space(models.Model):
 
 class Reservation(models.Model):
     event_name = models.CharField(max_length=100)
-    organizer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="organizer")
+    organizer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     reservation_date = models.DateTimeField(auto_now_add=True)
     price = models.IntegerField()
     is_paid = models.BooleanField(default=False)
     last_update = models.DateTimeField()
-    modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, default=organizer)
+    modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="modifier")
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return u"%s" % self.event_name
     
     def save(self, *args, **kwargs):
+        print(self.organizer.username)
         self.last_update = timezone.now()
         super(Reservation, self).save(*args, **kwargs)
 
@@ -126,6 +127,9 @@ class Timeblock(models.Model):
     reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE)
     space = models.ForeignKey(Space, on_delete=models.SET(get_timeblock_space('self').__str__()))
     start_time = models.DateTimeField()
+
+    class Meta:
+        ordering = ['start_time']
 
     def __str__(self):
         return u"%s at %s" % (self.space, self.start_time.isoformat())

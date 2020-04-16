@@ -52,7 +52,10 @@
         </div>
 
         <div class="col-1">
-            <button id="confirm" class="btn btn-primary w-100" style="display: block">{% trans 'Confirm' %}</button>
+            <form id="reservation_submit" method="POST" action="{% url 'schedule_view' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary w-100" style="display: block">{% trans 'Confirm' %}</button>
+            </form>
         </div>
     </div>
 
@@ -154,17 +157,14 @@
             });
         }
 
-        $('#confirm').click(() => {
+        $('#reservation_submit').submit(() => {
             if (jQuery.isEmptyObject(selected)) {
                 alert('{% trans 'You did not select any block' %}')
             } else {
-                $.ajax({
-                    url: '{% url 'schedule_view' %}',
-                    method: "POST",
-                    headers: {'X-CSRFToken': '{{ csrf_token }}'},
-                    data: selected,
-                    dataType: "json",
-                });
+                $('<input />').attr("type", "hidden")
+                    .attr("name", "reservations")
+                    .attr("value", JSON.stringify(selected))
+                    .appendTo('#reservation_submit');
             }
         });
 

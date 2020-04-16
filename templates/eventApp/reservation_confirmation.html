@@ -6,7 +6,7 @@
         <div class="container pl-5 mw-100">
             <div class="row"><h3 class="m-0">{% trans 'Reservation confirmation' %}</h3></div>
             <div class="row">
-                <form class="reservation w-100" method="post">
+                <form class="reservation w-100" method="post" action="{% url 'reservations' %}">
                     {% csrf_token %}
                     {{ form.as_p }}
                     <p class="mt-4">{% trans 'Price' %}: {{ price }}€</p>
@@ -15,7 +15,7 @@
                         {% for tb in timeblocks %}
                             <div class="card m-3" style="min-width: 300px; max-width: 300px;">
                                 <div class="card-body">
-                                    <h5 class="card-title">{% trans 'Space' %}: {{ tb.space }}</h5>
+                                    <h5 class="card-title">{{ tb.space }}</h5>
                                     <p class="card-text">{% trans 'Date' %}: {{ tb.start_time|date:"DATE_FORMAT" }}</p>
                                     <p class="card-text">{% trans 'Start time' %}: {{ tb.start_time|time:"TIME_FORMAT" }}</p>
                                     <p class="card-text">{% trans 'End time' %}: {{ tb.end_time|time:"TIME_FORMAT" }}</p>
