@@ -87,7 +87,7 @@
         let json_string = JSON.parse('{{ scheduleJSON | escapejs }}');
         let firstDaySchedule = new Date(Object.keys(json_string)[0]);
         let day, hour;
-        let selected = {'user': {{ user }}};
+        let selected = {};
 
         Date.prototype.MAX_DAYS = 6;
         Date.prototype.addDays = function(days) {
@@ -155,7 +155,17 @@
         }
 
         $('#confirm').click(() => {
-            $.post('{% url 'schedule_view' %}', selected);
+            if (jQuery.isEmptyObject(selected)) {
+                alert('{% trans 'You did not select any block' %}')
+            } else {
+                $.ajax({
+                    url: '{% url 'schedule_view' %}',
+                    method: "POST",
+                    headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                    data: selected,
+                    dataType: "json",
+                });
+            }
         });
 
         $('#cancel').click(() => {

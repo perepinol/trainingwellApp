@@ -103,7 +103,7 @@ def show_reservation_schedule_view(request):
     if request.method == 'GET':
         # TODO: check request user
         context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()),
-               'back': 'reservations', 'user': request.user.id}
+               'back': 'reservations'}
         return render(request, 'eventApp/reservation_schedule_view.html', context)
 
     else:
@@ -154,8 +154,8 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
         if space.is_available_in_season():
             spaces[space.id] = str(space)
             if not (open_season_hour and end_season_hour):
-                open_season_hour = timedelta(hours=space.season.open_time.hour)
-                end_season_hour = timedelta(hours=space.season.close_time.hour)
+                open_season_hour = timedelta(hours=space.get_season_open_hour())
+                end_season_hour = timedelta(hours=space.get_season_close_hour())
 
     # TODO: if no existing spaces
 
