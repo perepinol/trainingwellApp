@@ -178,6 +178,8 @@ def _get_schedule(spaces, reservations, num_desired_spaces):
     return schedule
 
 def reservation_detail(request, id):
-    reservation = Reservation.objects.all.filter(id=id)
+    queryset = Reservation.objects.filter(id=id)
+    if queryset.count() == 0:
+         return HttpResponse ("ERROR 404 (object not found)")
+    reservation = queryset.first()
     return render(request, 'eventApp/reservation_detail.html', {'reservation': reservation})
-    #return HttpResponse(id)
