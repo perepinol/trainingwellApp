@@ -274,3 +274,10 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
                 hour += 1
 
     return schedule
+
+def reservation_detail(request, id):
+    queryset = Reservation.objects.filter(id=id)
+    if queryset.count() == 0:
+         return HttpResponse ("ERROR 404 (object not found)")
+    reservation = queryset.first()
+    return render(request, 'eventApp/reservation_detail.html', {'reservation': reservation})

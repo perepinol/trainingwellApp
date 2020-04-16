@@ -14,13 +14,12 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path
-
-from eventApp.views import TestView, reservation_view, show_reservation_schedule_view, _ajax_change_view
+from eventApp.views import TestView, reservation_view, show_reservation_schedule_view, _ajax_change_view, reservation_detail
 
 urlpatterns = [
     path('reservation/', reservation_view, name="reservations"),
     path('reservation/new', show_reservation_schedule_view, name="schedule_view"),
-    path('reservation/<int:id>/', TestView.as_view(), name='reservation_detail'),
+    path('reservation/<int:id>/', reservation_detail, name='reservation_detail'),
     path('ajax/change_week/', _ajax_change_view, name='ajax_change_week'),
-    path('', TestView.as_view(), name='home'),
+    path('', TestView.as_view(), name='home'),    
 ]
