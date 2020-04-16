@@ -82,11 +82,10 @@ class Space(models.Model):
         self.save()
 
     def current_season(self):
-        return self.season.filter(start_date__lte=date.today()).filter(end_date__gt=date.today()).first()
+        return self.season.filter(start_date__lte=date.today(), end_date__gt=date.today()).first()
 
     def is_available_in_season(self):
-        season = self.current_season()
-        return season.start_date <= date.today() < season.end_date
+        return self.current_season() is not None
 
     def get_season_open_hour(self):
         return self.current_season().open_time.hour

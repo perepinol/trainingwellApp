@@ -102,7 +102,7 @@ def show_reservation_schedule_view(request):
     if request.method == 'GET':
         # TODO: check request user
         context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()),
-               'back': 'reservations', 'user': request.user.id}
+               'back': 'reservations'}
         return render(request, 'eventApp/reservation_schedule_view.html', context)
 
     else:
