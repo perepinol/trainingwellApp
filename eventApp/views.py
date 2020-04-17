@@ -8,7 +8,7 @@ from django.utils import timezone
 from django import http
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 
 # Create your views here.
 from django.views.generic import TemplateView
@@ -177,13 +177,12 @@ def show_reservation_schedule_view(request):
     If POST, check the input's correctness and show the reservation confirmation page.
     """
     if request.method == 'GET':
-        # TODO: check request user
         # Remove session if available
         if 'timeblocks' in request.session:
             del request.session['timeblocks']
 
         context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()),
-               'back': 'reservations'}
+                   'back': 'reservations'}
         return render(request, 'eventApp/reservation_schedule_view.html', context)
 
     else:
@@ -247,7 +246,8 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
                 open_season_hour = timedelta(hours=space.get_season_open_hour())
                 end_season_hour = timedelta(hours=space.get_season_close_hour())
 
-    # TODO: if no existing spaces
+    if not spaces:
+        raise RuntimeError("No spaces in database")
 
     timeblocks_qs = query.get_all_timeblocks(start_day, num_days=num_days)
 
@@ -275,9 +275,9 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
 
     return schedule
 
+
 def reservation_detail(request, id):
-    queryset = Reservation.objects.filter(id=id)
-    if queryset.count() == 0:
-         return HttpResponse ("ERROR 404 (object not found)")
-    reservation = queryset.first()
-    return render(request, 'eventApp/reservation_detail.html', {'reservation': reservation})
+    res = get_object_or_404(Reservation, pk=id)
+    if res.organizer != request.user:
+        return http.HttpResponseForbidden()
+    return render(request, 'eventApp/reservation_detail.html', {'reservation': res})

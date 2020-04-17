@@ -157,9 +157,10 @@
             });
         }
 
-        $('#reservation_submit').submit(() => {
+        $('#reservation_submit').submit((event) => {
             if (jQuery.isEmptyObject(selected)) {
                 alert('{% trans 'You did not select any block' %}')
+                event.preventDefault();
             } else {
                 $('<input />').attr("type", "hidden")
                     .attr("name", "reservations")
