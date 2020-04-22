@@ -25,6 +25,21 @@ class User(AbstractUser):
         self.save()
 
 
+class Notification(models.Model):
+    title = models.CharField(max_length=50)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_deleted = models.BooleanField(default=False)  # Also represents a seen notification
+
+    def save(self, *args, **kwargs):
+        self.last_update = timezone.now()
+        super(Notification, self).save(*args, **kwargs)
+
+    def soft_delete(self):
+        self.is_deleted = True
+        self.save()
+
+
 class Field(models.Model):
     kind_of_field = models.CharField(max_length=50, primary_key=True)
 
@@ -108,7 +123,6 @@ class Reservation(models.Model):
         return u"%s" % self.event_name
     
     def save(self, *args, **kwargs):
-        print(self.organizer.username)
         self.last_update = timezone.now()
         super(Reservation, self).save(*args, **kwargs)
 
