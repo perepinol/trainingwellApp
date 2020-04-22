@@ -3,9 +3,12 @@
 <div class="card w-100 h-100">
     <div class="card-body">
         <h3 class="card-title">{{ res.event_name }}</h3>
-        {% with f=res.timeblock_set.all|first %}
-        <p class="card-text">{% blocktrans with d=f.start_time|date:"DATE_FORMAT" t=f.start_time|time:"TIME_FORMAT" %}Starting in {{ d }}, {{ t }}{% endblocktrans %}</p>
-        <p class="card-text">{% blocktrans with num=res.timeblock_set.all|length %}Includes {{ num }} reservations{% endblocktrans %}</p>
+        {% with f=res.timeblock_set.all|first l=res.timeblock_set.all|dictsortreversed:"start_time"|first %}
+            <p class="card-text">{% blocktrans with d=f.start_time|date:"DATE_FORMAT" t=f.start_time|time:"TIME_FORMAT" %}First reservation: {{ d }}, {{ t }}{% endblocktrans %}</p>
+            {% if f.start_time != l.start_time %}
+                <p class="card-text">{% blocktrans with d=l.start_time|date:"DATE_FORMAT" t=l.start_time|time:"TIME_FORMAT" %}Last reservation: {{ d }}, {{ t }}{% endblocktrans %}</p>
+            {% endif %}
+            <p class="card-text">{% blocktrans with num=res.timeblock_set.all|length %}Includes {{ num }} reservations{% endblocktrans %}</p>
         {% endwith %}
     </div>
     <div class="card-footer d-flex justify-content-between">
