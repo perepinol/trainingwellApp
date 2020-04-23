@@ -1,5 +1,5 @@
 {% load i18n %}
-
+{% load static %}
 <div class="container border-bottom">
     <div class="row p-2">
         <div class="col">
@@ -10,8 +10,10 @@
                 <p class="m-0">{{ noti.content }}</p>
             </div>
         </div>
-        <div class="col p-0 d-flex justify-content-center align-items-center">
-            <a class="mark_read_noti" href="/events/notification/{{ noti.pk }}">Mark as read</a>
+        <div class="col-1 p-0 d-flex justify-content-end align-items-center">
+            <a class="mark_read_noti" href="/events/notification/{{ noti.pk }}/">
+                <img src="{% static 'check.svg' %}" alt="Mark as read" class="icon-svg" /> <!-- Popover does not accept SVG -->
+            </a>
         </div>
     </div>
 </div>

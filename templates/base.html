@@ -22,7 +22,14 @@
                 </li>
             </ul>
             {% if user.is_authenticated %}
-                <button type="button" class="btn btn-secondary mr-5" data-toggle="popover" data-placement="bottom">N</button>
+                <div class="mr-5">
+                    <span id="noti-count" class="badge badge-pill badge-danger badge-overlap"></span>
+                    <button type="button" class="btn btn-secondary" data-toggle="popover" data-placement="bottom">
+                        <svg class="bi bi-bell-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="white" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 16a2 2 0 002-2H6a2 2 0 002 2zm.995-14.901a1 1 0 10-1.99 0A5.002 5.002 0 003 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901z"></path>
+                        </svg>
+                    </button>
+                </div>
                 <a class="btn btn-primary" href="/accounts/logout">Logout</a>
             {% else %}
                 <a class="btn btn-primary" href="/accounts/login">Login</a>
@@ -39,9 +46,11 @@
     <div id="notification_popover_content" style="display: none">
         {% for noti in notifications %}
             {% include 'eventApp/notification.html' with noti=noti %}
+        {% empty %}
+            <p class="p-2 m-0 border-bottom">{% trans 'No unread notifications' %}</p>
         {% endfor %}
         <div class="container p-0 m-1 position-relative">
-            <a class="m-1 stretched-link" href="/events/notifications">Show all notifications</a>
+            <a href="" role="button" class="all-read m-1 {{ notifications|length|yesno:",anchor--disabled" }}">{% trans 'Mark all as read' %}</a>
         </div>
     </div>
     </body>
@@ -50,6 +59,14 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
     {{ form.media }}
     <script type="text/javascript" src="{% static 'JS/notification_popover.js' %}"></script>
+    <script>
+        // Set notification count
+        const count = {{ notifications|length }}
+        $('#noti-count').text(count > 0 ? count : '');
+
+        // Create popover
+        create_popover($.parseHTML('{% csrf_token %}')[0].value);
+    </script>
     {% block scripts %}
     {% endblock %}
 </html>
