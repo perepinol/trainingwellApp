@@ -28,12 +28,12 @@ class User(AbstractUser):
 class Notification(models.Model):
     title = models.CharField(max_length=50)
     content = models.TextField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     is_deleted = models.BooleanField(default=False)  # Also represents a seen notification
 
-    def save(self, *args, **kwargs):
-        self.last_update = timezone.now()
-        super(Notification, self).save(*args, **kwargs)
+    def __str__(self):
+        return self.title
 
     def soft_delete(self):
         self.is_deleted = True

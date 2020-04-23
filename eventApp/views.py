@@ -15,7 +15,7 @@ from django.views.generic import TemplateView
 
 from eventApp import query, decorators
 from eventApp.forms import ReservationNameForm, DateForm
-from eventApp.models import Reservation, Timeblock, Space
+from eventApp.models import Reservation, Timeblock, Space, Notification
 
 import json
 from functools import reduce
@@ -24,6 +24,14 @@ import logging
 from eventApp.query import AlreadyExistsException
 
 logger = logging.getLogger(__name__)
+
+
+def notification_context_processor(request):
+    return {
+        'notifications': Notification.objects.filter(
+            user=request.user,
+            is_deleted=False
+        )} if request.user.is_authenticated else {}
 
 
 class TestView(TemplateView):

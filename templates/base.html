@@ -22,6 +22,7 @@
                 </li>
             </ul>
             {% if user.is_authenticated %}
+                <button type="button" class="btn btn-secondary mr-5" data-toggle="popover" data-placement="bottom">N</button>
                 <a class="btn btn-primary" href="/accounts/logout">Logout</a>
             {% else %}
                 <a class="btn btn-primary" href="/accounts/login">Login</a>
@@ -35,11 +36,20 @@
                 {% endblock %}
             </div>
         </div>
+    <div id="notification_popover_content" style="display: none">
+        {% for noti in notifications %}
+            {% include 'eventApp/notification.html' with noti=noti %}
+        {% endfor %}
+        <div class="container p-0 m-1 position-relative">
+            <a class="m-1 stretched-link" href="/events/notifications">Show all notifications</a>
+        </div>
+    </div>
     </body>
     <script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
     {{ form.media }}
+    <script type="text/javascript" src="{% static 'JS/notification_popover.js' %}"></script>
     {% block scripts %}
     {% endblock %}
 </html>
