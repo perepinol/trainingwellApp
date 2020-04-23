@@ -16,7 +16,7 @@ function get_popover_settings() {
     return {
         html: true,
         container: 'body',
-        content: $('#notification_popover_content').html(),
+        content: $('#notification-popover__content').html(),
         template: '<div class="popover w-100" role="tooltip"><div class="arrow"></div><div class="popover-body p-0"></div></div>',
         trigger: 'click'
     }
@@ -25,8 +25,8 @@ function get_popover_settings() {
 function set_popover_listeners_on_shown(token) {
     $('[data-toggle=popover]').on('shown.bs.popover', function () {
         const popbody =  $('.popover-body')
-        const mark_read_buttons = popbody.find('.mark_read_noti');
-        const all_read_button = popbody.find('a.all-read');
+        const mark_read_buttons = popbody.find('.js-notification-read');
+        const all_read_button = popbody.find('a.js-all-read');
 
         // So that popover closes when clicking on rest of page
         $(document).click(popover_on_click_trigger);
@@ -49,7 +49,7 @@ function set_popover_listeners_on_shown(token) {
                     if (noti.text() === '') all_read_button.addClass('anchor--disabled');
 
                     // Save HTML to outside of popover
-                    $('#notification_popover_content').html($(".popover-body").html());
+                    $('#notification-popover__content').html($(".popover-body").html());
                 });
         });
 

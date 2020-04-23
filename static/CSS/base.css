@@ -11,7 +11,7 @@ div.inactive {
     background-color: rgba(0, 0, 0, 0.15);
 }
 
-img.icon-svg {
+img.icon__svg {
     width: 15px;
     height: 15px;
 }

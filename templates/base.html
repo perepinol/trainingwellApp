@@ -43,14 +43,14 @@
                 {% endblock %}
             </div>
         </div>
-    <div id="notification_popover_content" style="display: none">
+    <div id="notification-popover__content" style="display: none">
         {% for noti in notifications %}
             {% include 'eventApp/notification.html' with noti=noti %}
         {% empty %}
             <p class="p-2 m-0 border-bottom">{% trans 'No unread notifications' %}</p>
         {% endfor %}
         <div class="container p-0 m-1 position-relative">
-            <a href="" role="button" class="all-read m-1 {{ notifications|length|yesno:",anchor--disabled" }}">{% trans 'Mark all as read' %}</a>
+            <a href="" role="button" class="js-all-read m-1 {{ notifications|length|yesno:",anchor--disabled" }}">{% trans 'Mark all as read' %}</a>
         </div>
     </div>
     </body>
