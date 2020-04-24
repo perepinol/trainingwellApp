@@ -11,11 +11,11 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
 
 # Create your views here.
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, ListView
 
 from eventApp import query, decorators
 from eventApp.forms import ReservationNameForm, DateForm
-from eventApp.models import Reservation, Timeblock, Space
+from eventApp.models import Reservation, Timeblock, Space, Notification
 
 import json
 from functools import reduce
@@ -24,6 +24,14 @@ import logging
 from eventApp.query import AlreadyExistsException
 
 logger = logging.getLogger(__name__)
+
+
+def notification_context_processor(request):
+    return {
+        'notifications': Notification.objects.filter(
+            user=request.user,
+            is_deleted=False
+        )} if request.user.is_authenticated else {}
 
 
 class TestView(TemplateView):
@@ -273,6 +281,16 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
 
 def reservation_detail(request, id):
     res = get_object_or_404(Reservation, pk=id)
-    if res.organizer != request.user:
+    if res.organizer != request.user:  # TODO: use object fetching function
         return http.HttpResponseForbidden()
     return render(request, 'eventApp/reservation_detail.html', {'reservation': res})
+
+
+@login_required()
+@decorators.ajax_required
+def _ajax_mark_as_read(request, noti_id):
+    notification = get_object_or_404(Notification, pk=noti_id)
+    if notification.user != request.user:  # TODO: use object fetching function
+        return http.HttpResponseForbidden()
+    notification.soft_delete()
+    return http.HttpResponse()

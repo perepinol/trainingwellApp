@@ -1,0 +1,19 @@
+{% load i18n %}
+{% load static %}
+<div class="container border-bottom">
+    <div class="row p-2">
+        <div class="col">
+            <div class="row">
+                <h5 class="m-0">{{ noti.title }}</h5>
+            </div>
+            <div class="row">
+                <p class="m-0">{{ noti.content }}</p>
+            </div>
+        </div>
+        <div class="col-1 p-0 d-flex justify-content-end align-items-center">
+            <a class="js-notification-read" href="/events/notification/{{ noti.pk }}/">
+                <img src="{% static 'check.svg' %}" alt="Mark as read" class="icon__svg" /> <!-- Popover does not accept SVG -->
+            </a>
+        </div>
+    </div>
+</div>
