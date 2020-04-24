@@ -51,11 +51,6 @@ class EventView(TemplateView):
         return context
 
 
-def prova_view(request):
-    logger.info("SOC EL REI")
-    return http.HttpResponse("HOLA")
-
-
 def generate_timeblocks(post_data):
     """
     Create partial Timeblock objects (missing reservation) and return them, or raise exception if not valid.
