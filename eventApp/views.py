@@ -149,6 +149,7 @@ def aggregate_timeblocks(timeblocks):
     """
     agg_list = []
     agg = {}
+    timeblocks.sort(key=lambda tb: tb.space.id)
     for timeblock in timeblocks:
         if len(agg.keys()) != 0:
             # If timeblocks are consecutive, just extend end_time
