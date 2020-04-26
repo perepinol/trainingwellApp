@@ -12,6 +12,6 @@
         <p class="card-text m-0">{% blocktrans with p=res.price paid=res.is_paid|yesno:"paid,unpaid" %}
             Price: {{ p }}€ ({{ paid }})
         {% endblocktrans %}</p>
-        <a class="stretched-link" href={% url 'reservation_detail' id=res.id %}>{% trans 'Details' %}</a>
+        <a class="stretched-link" href={% url 'reservation_detail' obj_id=res.id %}>{% trans 'Details' %}</a>
     </div>
 </div>

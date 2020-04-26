@@ -114,10 +114,10 @@ def reservation_view(request):
         res = Reservation.objects.create(
             event_name=res_name_form.cleaned_data['event_name'],
             price=reduce(lambda agg, tb: agg + tb.space.price_per_hour, timeblocks, 0),
-            organizer=request.user,
+            user=request.user,
             modified_by=request.user
         )
-        logger.info("Created new reservation (id: %d, user: %s)" % (res.id, res.organizer))
+        logger.info("Created new reservation (id: %d, user: %s)" % (res.id, res.user))
 
         # Save timeblocks
         for timeblock in timeblocks:
@@ -128,7 +128,7 @@ def reservation_view(request):
 
     return render(request, 'eventApp/reservation_list_view.html', {
         'res_list': sorted(
-            Reservation.objects.filter(organizer=request.user, is_deleted=False),
+            Reservation.objects.filter(user=request.user, is_deleted=False),
             key=lambda r: r.timeblock_set.first().start_time
         )
     })
@@ -279,18 +279,16 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
     return schedule
 
 
-def reservation_detail(request, id):
-    res = get_object_or_404(Reservation, pk=id)
-    if res.organizer != request.user:  # TODO: use object fetching function
-        return http.HttpResponseForbidden()
-    return render(request, 'eventApp/reservation_detail.html', {'reservation': res})
+@decorators.get_if_creator(Reservation)
+def reservation_detail(request, instance):
+    return render(request, 'eventApp/reservation_detail.html', {'reservation': instance})
 
 
 @login_required()
 @decorators.ajax_required
-def _ajax_mark_as_read(request, noti_id):
-    notification = get_object_or_404(Notification, pk=noti_id)
-    if notification.user != request.user:  # TODO: use object fetching function
-        return http.HttpResponseForbidden()
-    notification.soft_delete()
+@decorators.get_if_creator(Notification)
+def _ajax_mark_as_read(request, instance):
+    if instance.is_deleted:
+        return http.HttpResponseNotModified()
+    instance.soft_delete()
     return http.HttpResponse()
