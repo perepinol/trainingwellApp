@@ -111,7 +111,7 @@ class Space(models.Model):
 
 class Reservation(models.Model):
     event_name = models.CharField(max_length=100)
-    organizer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     reservation_date = models.DateTimeField(auto_now_add=True)
     price = models.IntegerField()
     is_paid = models.BooleanField(default=False)
