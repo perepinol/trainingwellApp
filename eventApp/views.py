@@ -184,7 +184,6 @@ def show_reservation_schedule_view(request):
         # Remove session if available
         if 'timeblocks' in request.session:
             del request.session['timeblocks']
-
         context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()),
                    'back': 'reservations'}
         return render(request, 'eventApp/reservation_schedule_view.html', context)
