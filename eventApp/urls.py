@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib.auth.decorators import login_required
 from django.urls import path
 from eventApp.views import TestView, reservation_view, show_reservation_schedule_view, _ajax_change_view, \
-    reservation_detail, _ajax_mark_as_read
+    reservation_detail, _ajax_mark_as_read, incidences_list
 
 urlpatterns = [
     path('reservation/', reservation_view, name="reservations"),
@@ -24,5 +24,6 @@ urlpatterns = [
     path('reservation/<int:obj_id>/', reservation_detail, name='reservation_detail'),
     path('ajax/change_week/', _ajax_change_view, name='ajax_change_week'),
     path('notification/<int:obj_id>/', _ajax_mark_as_read, name='ajax_mark_read'),
+    path('incidences/', incidences_list, name="incidences"),
     path('', TestView.as_view(), name='home'),
 ]

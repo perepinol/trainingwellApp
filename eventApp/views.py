@@ -293,3 +293,8 @@ def _ajax_mark_as_read(request, instance):
         return http.HttpResponseNotModified()
     instance.soft_delete()
     return http.HttpResponse()
+
+
+@decorators.facility_responsible_only
+def incidences_list(request):
+    return render(request, 'eventApp/incidence.html')
