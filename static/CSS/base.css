@@ -26,3 +26,11 @@ a.anchor--disabled {
     pointer-events: none;
     color: #476b8b;
 }
+
+td#card-container > div {
+    margin-bottom: .25rem !important;
+}
+
+td#card-container > div:last-child {
+    margin-bottom: 0 !important;
+}

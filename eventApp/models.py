@@ -1,5 +1,5 @@
 from django.utils import timezone
-from datetime import date
+from datetime import date, datetime
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -71,6 +71,18 @@ class Season(models.Model):
 
     def __str__(self):
         return u"%s" % self.name
+
+    @staticmethod
+    def ongoing_season():
+        return Season.objects.filter(start_date__lte=date.today(), end_date__gt=date.today()).first()
+
+    def open_hours(self):
+        hours = [self.open_time]
+        next_datetime = datetime.combine(date.today(), hours[-1]) + settings.RESERVATION_GRANULARITY
+        while next_datetime.time() < self.close_time:
+            hours.append(next_datetime.time())
+            next_datetime = datetime.combine(date.today(), hours[-1]) + settings.RESERVATION_GRANULARITY
+        return hours
 
 
 class Space(models.Model):

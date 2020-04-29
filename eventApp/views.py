@@ -15,7 +15,7 @@ from django.views.generic import TemplateView, ListView
 
 from eventApp import query, decorators
 from eventApp.forms import ReservationNameForm, DateForm
-from eventApp.models import Reservation, Timeblock, Space, Notification
+from eventApp.models import Reservation, Timeblock, Space, Notification, Season
 
 import json
 from functools import reduce
@@ -39,23 +39,32 @@ class TestView(TemplateView):
 
 
 class EventView(TemplateView):
-    template_name = 'eventApp/reservation_list_view.html'
+    template_name = 'eventApp/event_list_view.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        chosen_date = date.today()
+        current_week = datetime.now() - timedelta(days=datetime.now().weekday())
+        chosen_week = current_week
         query_string = parse_qs(self.request.GET.urlencode())
-        if 'chosen_date' in query_string and len(query_string['chosen_date']) == 1:
+        if 'week' in query_string and len(query_string['week']) == 1:
             try:
-                chosen_date = datetime.strptime(query_string['chosen_date'][0], "%d-%m-%Y").date()
-                if chosen_date < date.today():
-                    chosen_date = date.today()
+                chosen_week = datetime.strptime(query_string['week'][0], "%d-%m-%Y").date()
+                if chosen_week < current_week:
+                    chosen_week = current_week
             except ValueError:
                 pass  # Stick with current date
 
-        context['form'] = DateForm(chosen_date=chosen_date)
-        context['event_list'] = Reservation.objects.filter(event_date__exact=chosen_date)
+        context['chosen_week'] = chosen_week
+        context['form'] = DateForm(chosen_date=chosen_week)
+        context['days'] = [chosen_week + timedelta(days=i) for i in range(7)]
+        timetable = []
+        for hour in Season.ongoing_season().open_hours():
+            hour_events = [hour] + [
+                query.get_all_timeblocks(d).filter(start_time__hour=hour.hour) for d in context['days']
+            ]
+            timetable.append(hour_events)
+        context['timetable'] = timetable
         return context
 
 
