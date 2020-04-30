@@ -314,3 +314,12 @@ def _ajax_mark_as_read(request, instance):
         return http.HttpResponseNotModified()
     instance.soft_delete()
     return http.HttpResponse()
+
+
+@decorators.facility_responsible_only
+@decorators.ajax_required
+def _ajax_mark_completed_incidence(request):
+    ids_list = request.GET.getlist('ids[]')
+    for id_ins in ids_list:
+        Incidence.objects.get(id=id_ins).soft_delete()
+    return http.JsonResponse({})

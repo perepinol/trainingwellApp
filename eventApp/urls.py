@@ -17,13 +17,14 @@ from django.contrib.auth.decorators import login_required
 from eventApp.decorators import facility_responsible_only
 from django.urls import path
 from eventApp.views import TestView, IncidenceView, reservation_view, show_reservation_schedule_view, _ajax_change_view, \
-    reservation_detail, _ajax_mark_as_read
+    reservation_detail, _ajax_mark_as_read, _ajax_mark_completed_incidence
 
 urlpatterns = [
     path('reservation/', reservation_view, name="reservations"),
     path('reservation/new', show_reservation_schedule_view, name="schedule_view"),
     path('reservation/<int:obj_id>/', reservation_detail, name='reservation_detail'),
     path('ajax/change_week/', _ajax_change_view, name='ajax_change_week'),
+    path('ajax/mark_completed_incidende/', _ajax_mark_completed_incidence, name='ajax_completed'),
     path('notification/<int:obj_id>/', _ajax_mark_as_read, name='ajax_mark_read'),
     path('incidences/', facility_responsible_only(IncidenceView.as_view()), name="incidences"),
     path('', TestView.as_view(), name='home'),

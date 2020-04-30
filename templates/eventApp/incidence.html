@@ -37,7 +37,7 @@
                 </li>
             </ul>
             <form class="form-inline my-2 my-lg-0">
-              <input class="form-control mr-sm-2" type="search" placeholder="Search (by Name)" aria-label="Search">
+              <input id="searcher" class="form-control mr-sm-2" type="search" placeholder="Search (by Name)" aria-label="Search">
             </form>
           </div>
     </nav>
@@ -71,5 +71,42 @@
             elem.style.display = showCompleted ? "" : "none";
         });
     });
+
+    $('#searcher').keyup(() => {
+        let text = event.target.value.toUpperCase();
+        Array.from(document.getElementsByClassName('card')).forEach(elem => {
+            if (elem.children[0].children[0].children[0].innerText.toUpperCase().indexOf(text) > -1) {
+                elem.parentElement.style.display = '';
+            } else { elem.parentElement.style.display = 'none';}
+        });
+    });
+
+    $('#mark-selected').click(() => {
+        if (selectedIncidences.length === 0) {
+            alert('{% trans 'You did not select any incidence' %}')
+        } else {
+            if (confirm('{% trans 'Are you sure you want to mark as completed?'%}')) {
+                $.ajax({
+                    url : '{% url "ajax_completed" %}',
+                    data: {
+                        'ids': selectedIncidences,
+                    },
+                    dataType: 'json',
+                    success: function (_) {
+                        selectedIncidences.forEach(id => {
+                            let elem = document.getElementById(id);
+                            selectedIncidences = selectedIncidences.filter(_id => _id !== id);
+                            elem.classList.remove('selected');
+                            elem.parentElement.classList.add('completed');
+                            elem.parentElement.style.display = 'none';
+                            elem.children[0].children[0].children[0].innerText += ' (Completed)';
+                        })
+                    }
+                });
+            }
+        }
+    });
+
+
 </script>
 {% endblock %}
