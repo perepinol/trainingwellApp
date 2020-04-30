@@ -15,7 +15,7 @@ from django.views.generic import TemplateView, ListView
 
 from eventApp import query, decorators
 from eventApp.forms import ReservationNameForm, DateForm
-from eventApp.models import Reservation, Timeblock, Space, Notification
+from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence
 
 import json
 from functools import reduce
@@ -210,6 +210,27 @@ def show_reservation_schedule_view(request):
         return render(request, 'eventApp/reservation_confirmation.html', context)
 
 
+class IncidenceView(TemplateView):
+    template_name = 'eventApp/incidence.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        incidences = Incidence.objects.all()
+        '''for inc in Incidence.objects.all():
+            incidencesJSON[inc.id] = {'name': inc.name,
+                                      'content': inc.content,
+                                      'deadline': inc.limit.strftime('%d/%m/%Y-%H:%M'),
+                                      'fields': [str(field) for field in inc.affected_fields.all()],
+                                      'disabled': inc.disable_fields,
+                                      'deleted': inc.is_deleted,
+                                      'date_created': inc.created_at.strftime('%d/%m/%Y-%H:%M')}'''
+        context['incidences'] = incidences
+        return context
+
+
 @decorators.ajax_required
 def _ajax_change_view(request):
     start_day = date(year=int(request.GET.get('year', 2020)),
@@ -293,8 +314,3 @@ def _ajax_mark_as_read(request, instance):
         return http.HttpResponseNotModified()
     instance.soft_delete()
     return http.HttpResponse()
-
-
-@decorators.facility_responsible_only
-def incidences_list(request):
-    return render(request, 'eventApp/incidence.html')
