@@ -153,7 +153,7 @@ class Incidence(models.Model):
     name = models.CharField(max_length=50)
     content = models.TextField()
     limit = models.DateTimeField()
-    affected_fields = models.ManyToManyField(Space)
+    affected_fields = models.ManyToManyField(Space, blank=True)
     disable_fields = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)

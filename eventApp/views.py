@@ -14,7 +14,7 @@ from django.shortcuts import render, get_object_or_404
 from django.views.generic import TemplateView, ListView
 
 from eventApp import query, decorators
-from eventApp.forms import ReservationNameForm, DateForm
+from eventApp.forms import ReservationNameForm, DateForm, IncidenceForm
 from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence
 
 import json
@@ -216,18 +216,17 @@ class IncidenceView(TemplateView):
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name, self.get_context_data())
 
+    def post(self, request):
+        form = IncidenceForm(data=request.POST)
+        if form.is_valid():
+            form.save(commit=False)
+
+        return render(request, self.template_name, self.get_context_data())
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        incidences = Incidence.objects.all()
-        '''for inc in Incidence.objects.all():
-            incidencesJSON[inc.id] = {'name': inc.name,
-                                      'content': inc.content,
-                                      'deadline': inc.limit.strftime('%d/%m/%Y-%H:%M'),
-                                      'fields': [str(field) for field in inc.affected_fields.all()],
-                                      'disabled': inc.disable_fields,
-                                      'deleted': inc.is_deleted,
-                                      'date_created': inc.created_at.strftime('%d/%m/%Y-%H:%M')}'''
-        context['incidences'] = incidences
+        context['incidences'] = Incidence.objects.all()
+        context['form'] = IncidenceForm()
         return context
 
 
