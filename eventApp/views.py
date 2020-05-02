@@ -219,8 +219,9 @@ class IncidenceView(TemplateView):
     def post(self, request):
         form = IncidenceForm(data=request.POST)
         if form.is_valid():
-            form.save(commit=False)
-
+            incidence = form.save(commit=False)
+            incidence.disable_fields = not incidence.disable_fields
+            incidence.save()
         return render(request, self.template_name, self.get_context_data())
 
     def get_context_data(self, **kwargs):

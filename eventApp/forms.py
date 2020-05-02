@@ -38,4 +38,10 @@ class IncidenceForm(ModelForm):
             'showClear': False,
             'minDate': date.today().strftime('%Y-%m-%d'),
         })
+        self.fields['limit'].input_formats = ['%d/%m/%Y %H:%M']
 
+    def save(self, commit=True):
+        incidence = super(IncidenceForm, self).save(commit=False)
+        if commit:
+            incidence.save()
+        return incidence
