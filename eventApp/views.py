@@ -1,12 +1,13 @@
 from datetime import date, datetime, timedelta
 from urllib.parse import parse_qs
 
+from django.http import HttpResponseForbidden
 from django.urls import reverse
 
 from django import http
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 # Create your views here.
 from django.views.generic import TemplateView
@@ -20,6 +21,8 @@ from functools import reduce
 import logging
 
 from eventApp.query import AlreadyExistsException
+
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -287,3 +290,21 @@ def _ajax_mark_as_read(request, instance):
         return http.HttpResponseNotModified()
     instance.soft_delete()
     return http.HttpResponse()
+
+def delete_reservation(request,id):
+    item = Reservation.objects.get(id=id)
+    request_date = datetime.now()
+    days = (request_date - item.reservation_date).days
+    if request.user == item.user:
+        if days >= 7:
+            item.status = Reservation.CANCELADAPARADEVOLVER
+            item.save()
+            Notification.content("Reservation status: " + item.status)
+            logger.info("Reservation" + item.id + "successfully delete")
+        else:
+            item.status = Reservation.CANCELADAFUERADEPLAZO
+            item.save()
+            Notification.content("Reservation status: " + item.status)
+    else:
+        return HttpResponseForbidden()
+    return redirect('eventApp/reservation_list_view.html')

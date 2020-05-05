@@ -109,6 +109,14 @@ class Space(models.Model):
 
 
 class Reservation(models.Model):
+    PAGADA = 'P'
+    NOPAGADA = 'NP'
+    CANCELADAPARADEVOLVER = 'CPD'
+    CANCELADADEVUELTA = 'CD'
+    CANCELADAFUERADEPLAZO = 'CFP'
+    STATUS = [(PAGADA, 'pagado'), (NOPAGADA, 'nopagada'), (CANCELADAPARADEVOLVER, 'canceladaparadevolver'),
+              (CANCELADADEVUELTA, 'canceladadevuelta'), (CANCELADAFUERADEPLAZO, 'canceladafueraplazo')]
+    status = models.CharField(max_length=100, choices=STATUS)
     event_name = models.CharField(max_length=100)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     reservation_date = models.DateTimeField(auto_now_add=True)
