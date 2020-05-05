@@ -39,3 +39,8 @@ def get_all_spaces(field=None, only_active=True):
     """
     space_qs = Space.objects.filter(field=field) if field else Space.objects.all()
     return space_qs.filter(is_deleted=False) if only_active else space_qs
+
+
+def get_all_incidences(limit=None, only_active=True):
+    incidences = Incidence.objects.filter(limit__lte=limit) if limit else Incidence.objects.all()
+    return incidences.filter(is_deleted=False) if only_active else incidences

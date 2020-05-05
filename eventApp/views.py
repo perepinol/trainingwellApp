@@ -286,7 +286,7 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
                     timeblock.start_time.year == _date.year:
                 today_timeblocks.append(timeblock)
         if not today_timeblocks:
-            schedule[str(start_day + timedelta(days=day))] = get_day_all_spaces_free_(open_season_hour, end_season_hour, spaces)
+            schedule[str(start_day + timedelta(days=day))] = get_day_all_spaces_free_(open_season_hour, end_season_hour, deepcopy(spaces))
         else:
             schedule[str(start_day + timedelta(days=day))] = {}
             while open_season_hour + timedelta(hours=hour) < end_season_hour:
