@@ -273,6 +273,8 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
 
 def reservation_detail(request, id):
     res = get_object_or_404(Reservation, pk=id)
+    tbck = Timeblock.objects.filter(reservation=id)
+    context = {'reservation': res, 'timeblocks': tbck}
     if res.organizer != request.user:
         return http.HttpResponseForbidden()
-    return render(request, 'eventApp/reservation_detail.html', {'reservation': res})
+    return render(request, 'eventApp/reservation_detail.html', context)
