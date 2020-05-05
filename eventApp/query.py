@@ -41,6 +41,7 @@ def get_all_spaces(field=None, only_active=True):
     return space_qs.filter(is_deleted=False) if only_active else space_qs
 
 
-def get_all_incidences(limit=None, only_active=True):
+def get_all_incidences(limit=None, only_disabling_fields=True, only_active=True):
     incidences = Incidence.objects.filter(limit__lte=limit) if limit else Incidence.objects.all()
+    if only_disabling_fields: incidences = incidences.filter(disable_fields=True)
     return incidences.filter(is_deleted=False) if only_active else incidences

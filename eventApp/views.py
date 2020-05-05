@@ -249,17 +249,27 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
     """
     from copy import deepcopy
 
+    # After updating timezone support, erase this
+    import pytz
+    spain = pytz.timezone('Europe/Madrid')
+
     def get_int_hour(_timedelta):
         return int(_timedelta.seconds/3600)
 
-    def get_day_all_spaces_free_(start_h, end_h, _spaces):
+    def get_day_all_spaces_free_(start_h, end_h, _spaces, _day):
         _today_sch = {}
         for _hour in range(get_int_hour(start_h), get_int_hour(end_h)):
-            _today_sch[str(_hour)+':00'] = _spaces
+            _hour_spaces = deepcopy(_spaces)
+            for _incidence in incidences:
+                if _incidence.limit > (datetime.combine(start_day+timedelta(days=_day), datetime.min.time()) + timedelta(hours=_hour)).replace(tzinfo=spain):
+                    for _sp in _incidence.affected_fields.all():
+                        del _hour_spaces[_sp.id]
+            _today_sch[str(_hour)+':00'] = _hour_spaces
         return _today_sch
 
     schedule = {}
     spaces = {}
+    incidences = query.get_all_incidences(limit=start_day+timedelta(days=num_days+1))
 
     open_season_hour = None
     end_season_hour = None
@@ -286,7 +296,7 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
                     timeblock.start_time.year == _date.year:
                 today_timeblocks.append(timeblock)
         if not today_timeblocks:
-            schedule[str(start_day + timedelta(days=day))] = get_day_all_spaces_free_(open_season_hour, end_season_hour, deepcopy(spaces))
+            schedule[str(start_day + timedelta(days=day))] = get_day_all_spaces_free_(open_season_hour, end_season_hour, spaces, day)
         else:
             schedule[str(start_day + timedelta(days=day))] = {}
             while open_season_hour + timedelta(hours=hour) < end_season_hour:
@@ -295,6 +305,10 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
                 for timeblock in today_timeblocks:
                     if timeblock.start_time.hour == get_int_hour(current_hour):
                         del free_spaces_per_hour[timeblock.space.id]
+                for incidence in incidences:
+                    if incidence.limit > (datetime.combine(start_day + timedelta(days=day), datetime.min.time()) + timedelta(hours=current_hour)).replace(tzinfo=spain):
+                        for sp in incidence.affected_fields.all():
+                            del free_spaces_per_hour[sp.id]
                 schedule[str(start_day + timedelta(days=day))][str(get_int_hour(current_hour))+':00'] = free_spaces_per_hour
                 hour += 1
 
