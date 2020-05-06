@@ -1,5 +1,4 @@
-from django.utils import timezone
-from datetime import date
+from datetime import datetime, date
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -17,7 +16,7 @@ class User(AbstractUser):
         return u"%s" % self.username
 
     def save(self, *args, **kwargs):
-        self.last_update = timezone.now()
+        self.last_update = datetime.now()
         super(AbstractUser, self).save(*args, **kwargs)
 
     def soft_delete(self):
@@ -62,7 +61,7 @@ class Season(models.Model):
     is_deleted = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
-        self.last_update = timezone.now()
+        self.last_update = datetime.now()
         super(Season, self).save(*args, **kwargs)
 
     def soft_delete(self):
@@ -89,7 +88,7 @@ class Space(models.Model):
         return u"%s %d" % (self.field, self.id)
 
     def save(self, *args, **kwargs):
-        self.last_update = timezone.now()
+        self.last_update = datetime.now()
         super(Space, self).save(*args, **kwargs)
 
     def soft_delete(self):
@@ -123,7 +122,7 @@ class Reservation(models.Model):
         return u"%s" % self.event_name
     
     def save(self, *args, **kwargs):
-        self.last_update = timezone.now()
+        self.last_update = datetime.now()
         super(Reservation, self).save(*args, **kwargs)
 
     def soft_delete(self):

@@ -1,4 +1,5 @@
 from eventApp.models import *
+from datetime import timedelta
 
 
 class AlreadyExistsException(Exception):
@@ -22,7 +23,8 @@ def get_all_timeblocks(start_date, num_days=1, space=None, field=None):
                                             start_time__month=start_date.month,
                                             start_time__year=start_date.year)
     for i in range(1, num_days):
-        timeblock_qs = timeblock_qs | Timeblock.objects.filter(start_time__day=start_date.day + i,
+        start_date += timedelta(days=1)
+        timeblock_qs = timeblock_qs | Timeblock.objects.filter(start_time__day=start_date.day,
                                                                start_time__month=start_date.month,
                                                                start_time__year=start_date.year)
     if space_qs:

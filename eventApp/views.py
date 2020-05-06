@@ -1,9 +1,7 @@
-from copy import deepcopy
 from datetime import date, datetime, timedelta
 from urllib.parse import parse_qs
 
 from django.urls import reverse
-from django.utils import timezone
 
 from django import http
 from django.conf import settings
@@ -11,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
 
 # Create your views here.
-from django.views.generic import TemplateView, ListView
+from django.views.generic import TemplateView
 
 from eventApp import query, decorators
 from eventApp.forms import ReservationNameForm, DateForm
@@ -70,9 +68,6 @@ def generate_timeblocks(post_data):
         Space.DoesNotExist: If a space id is not in the database.
         AlreadyExistsException: If an identical Timeblock (except for its Reservation) is in the database.
     """
-    post_data = deepcopy(post_data)
-    if 'user' in post_data:
-        del post_data['user']
     if not post_data:
         raise ValueError()  # As if JSON verification failed
 
@@ -82,7 +77,7 @@ def generate_timeblocks(post_data):
             timestamp = int(timestamp)  # May throw ValueError
             tb = Timeblock(
                 space_id=space_id,
-                start_time=datetime.fromtimestamp(timestamp).astimezone(timezone.utc)
+                start_time=datetime.fromtimestamp(timestamp)
             )
             if not Space.objects.filter(id=space_id).count():
                 raise Space.DoesNotExist()
@@ -184,7 +179,6 @@ def show_reservation_schedule_view(request):
         # Remove session if available
         if 'timeblocks' in request.session:
             del request.session['timeblocks']
-
         context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()),
                    'back': 'reservations'}
         return render(request, 'eventApp/reservation_schedule_view.html', context)
@@ -300,10 +294,15 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
 
     return schedule
 
+  
+def reservation_detail(request, id):
+    res = get_object_or_404(Reservation, pk=id)
+    tbck = Timeblock.objects.filter(reservation=id)
 
-@decorators.get_if_creator(Reservation)
-def reservation_detail(request, instance):
-    return render(request, 'eventApp/reservation_detail.html', {'reservation': instance})
+    context = {'reservation': res, 'timeblocks': aggregate_timeblocks(tbck)}
+    if res.organizer != request.user:
+        return http.HttpResponseForbidden()
+    return render(request, 'eventApp/reservation_detail.html', context)
 
 
 @login_required()
