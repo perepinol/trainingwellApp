@@ -8,14 +8,16 @@ from django.urls import reverse
 from django import http
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
+
+from django.shortcuts import render, get_object_or_404, redirect
 
 # Create your views here.
 from django.views.generic import TemplateView
 
 from eventApp import query, decorators
 from eventApp.forms import ReservationNameForm, DateForm
-from eventApp.models import Reservation, Timeblock, Space, Notification, User
+
+from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User
 
 import json
 from functools import reduce
@@ -208,6 +210,27 @@ def show_reservation_schedule_view(request):
         return render(request, 'eventApp/reservation_confirmation.html', context)
 
 
+class IncidenceView(TemplateView):
+    template_name = 'eventApp/incidence.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        incidences = Incidence.objects.all()
+        '''for inc in Incidence.objects.all():
+            incidencesJSON[inc.id] = {'name': inc.name,
+                                      'content': inc.content,
+                                      'deadline': inc.limit.strftime('%d/%m/%Y-%H:%M'),
+                                      'fields': [str(field) for field in inc.affected_fields.all()],
+                                      'disabled': inc.disable_fields,
+                                      'deleted': inc.is_deleted,
+                                      'date_created': inc.created_at.strftime('%d/%m/%Y-%H:%M')}'''
+        context['incidences'] = incidences
+        return context
+
+
 @decorators.ajax_required
 def _ajax_change_view(request):
     start_day = date(year=int(request.GET.get('year', 2020)),
@@ -277,20 +300,15 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
 
     return schedule
 
+  
+def reservation_detail(request, id):
+    res = get_object_or_404(Reservation, pk=id)
+    tbck = Timeblock.objects.filter(reservation=id)
 
-@decorators.get_if_creator(Reservation)
-def reservation_detail(request, instance):
-    return render(request, 'eventApp/reservation_detail.html', {'reservation': instance})
-
-
-@login_required()
-@decorators.ajax_required
-@decorators.get_if_creator(Notification)
-def _ajax_mark_as_read(request, instance):
-    if instance.is_deleted:
-        return http.HttpResponseNotModified()
-    instance.soft_delete()
-    return http.HttpResponse()
+    context = {'reservation': res, 'timeblocks': aggregate_timeblocks(tbck)}
+    if res.organizer != request.user:
+        return http.HttpResponseForbidden()
+    return render(request, 'eventApp/reservation_detail.html', context)
 
 
 def delete_reservation(request, pk):
@@ -316,3 +334,24 @@ def delete_reservation(request, pk):
     else:
         return HttpResponseForbidden()
     return redirect('/events/reservation')
+
+  
+@login_required()
+@decorators.ajax_required
+@decorators.get_if_creator(Notification)
+def _ajax_mark_as_read(request, instance):
+    if instance.is_deleted:
+        return http.HttpResponseNotModified()
+    instance.soft_delete()
+    return http.HttpResponse()
+
+  
+@login_required()
+@decorators.facility_responsible_only
+@decorators.ajax_required
+def _ajax_mark_completed_incidence(request):
+    ids_list = request.GET.getlist('ids[]')
+    for id_ins in ids_list:
+        Incidence.objects.get(id=id_ins).soft_delete()
+    return http.JsonResponse({})
+
