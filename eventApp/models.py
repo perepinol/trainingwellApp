@@ -148,3 +148,22 @@ class Timeblock(models.Model):
         return u"%s at %s" % (self.space, self.start_time.isoformat())
 
 
+class Incidence(models.Model):
+    name = models.CharField(max_length=50)
+    content = models.TextField()
+    limit = models.DateTimeField()
+    affected_fields = models.ManyToManyField(Space)
+    disable_fields = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_deleted = models.BooleanField(default=False)  # Also represents a finished Incidence
+
+    def __str__(self):
+        return self.name
+
+    def soft_delete(self):
+        if self.is_deleted:
+            self.delete()
+        else:
+            self.is_deleted = True
+            self.save()
