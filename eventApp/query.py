@@ -1,3 +1,5 @@
+from django.db.models import Count, Sum
+
 from eventApp.models import *
 from datetime import timedelta
 
@@ -41,3 +43,59 @@ def get_all_spaces(field=None, only_active=True):
     """
     space_qs = Space.objects.filter(field=field) if field else Space.objects.all()
     return space_qs.filter(is_deleted=False) if only_active else space_qs
+
+
+def generate_report(start_date, end_date, parts):
+    result = {}
+    if 'use' in parts:
+        # Count number of usages of each space between start and end date
+        counted_spaces = Space.objects.filter(
+            timeblock__start_time__gte=start_date,
+            timeblock__start_time__lte=end_date
+        ).annotate(usage=Count('timeblock'))
+
+        result['use'] = get_dict_from_iterator(map(
+            lambda space: (str(space), int(space.usage / count_open_hours(space, start_date, end_date) * 100)),
+            counted_spaces
+        ))
+
+    if 'incomeoutcome' in parts:
+        # Aggregate all income by date (takes into account day of reservation)
+        date_incomes = Reservation.objects.filter(
+            reservation_date__gte=start_date,
+            reservation_date__lte=end_date,
+            is_paid=True
+        )\
+            .annotate(recalculated_price=Sum('timeblock__space__price_per_hour'))\
+            .values('reservation_date', 'recalculated_price')
+
+        result['incomeoutcome'] = get_dict_from_iterator(map(
+            lambda i_o: (i_o['reservation_date'].date().isoformat(), i_o['recalculated_price']),
+            date_incomes
+        ))
+
+    if 'performance' in parts:
+        # Sum all prices of paid reservations in each space
+        timeblock_counted_spaces = Space.objects.filter(
+            timeblock__reservation__reservation_date__gte=start_date,
+            timeblock__reservation__reservation_date__lte=end_date,
+            timeblock__reservation__is_paid=True
+        ).annotate(num_timeblocks=Count('timeblock'))
+
+        result['performance'] = get_dict_from_iterator(map(
+            lambda s: (str(s), s.num_timeblocks * s.price_per_hour),
+            timeblock_counted_spaces
+        ))
+
+    return result
+
+
+def count_open_hours(space, start_date, end_date):
+    return 1  # TODO: implement
+
+
+def get_dict_from_iterator(iterator):
+    d = {}
+    for elem, value in iterator:
+        d[elem] = value
+    return d

@@ -12,7 +12,7 @@ from django.shortcuts import render, get_object_or_404
 from django.views.generic import TemplateView
 
 from eventApp import query, decorators
-from eventApp.forms import ReservationNameForm, DateForm
+from eventApp.forms import ReservationNameForm, DateForm, ReportForm
 from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence
 
 import json
@@ -305,7 +305,24 @@ def reservation_detail(request, id):
     return render(request, 'eventApp/reservation_detail.html', context)
 
 
-@login_required()
+def report_view(request):
+    if request.method == 'GET':
+        return render(request, 'eventApp/report_form.html', {'form': ReportForm()})
+
+    if request.method == 'POST':
+        rf = ReportForm(request.POST)
+        if rf.is_valid():
+            rep_json = query.generate_report(
+                rf.cleaned_data['start_date'],
+                rf.cleaned_data['end_date'],
+                rf.cleaned_data['include']
+            )
+            print(rep_json)
+        else:
+            return http.HttpResponseRedirect(request.get_raw_uri())  # Do not move
+
+
+@login_required
 @decorators.ajax_required
 @decorators.get_if_creator(Notification)
 def _ajax_mark_as_read(request, instance):
