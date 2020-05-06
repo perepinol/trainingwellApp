@@ -94,6 +94,7 @@ def generate_timeblocks(post_data):
 
 
 @login_required()
+@decorators.organizer_responsible_only
 def reservation_view(request):
     """
     Render the user's reservation list.
@@ -174,6 +175,7 @@ def aggregate_timeblocks(timeblocks):
 
 
 @login_required()
+@decorators.organizer_responsible_only
 def show_reservation_schedule_view(request):
     """
     Show the different views in the reservation process.
@@ -300,7 +302,9 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
 
     return schedule
 
-  
+
+@login_required()
+@decorators.organizer_responsible_only
 def reservation_detail(request, id):
     res = get_object_or_404(Reservation, pk=id)
     tbck = Timeblock.objects.filter(reservation=id)
@@ -311,6 +315,8 @@ def reservation_detail(request, id):
     return render(request, 'eventApp/reservation_detail.html', context)
 
 
+@login_required()
+@decorators.organizer_responsible_only
 def delete_reservation(request, pk):
     group_id = Group.objects.get(name='manager')
     manager_user = User.objects.filter(groups=group_id).first()

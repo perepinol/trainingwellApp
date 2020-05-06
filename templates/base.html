@@ -1,5 +1,6 @@
 {% load static %}
 {% load i18n %}
+{% load template_tags %}
 <!doctype html>
 <html class="h-100">
     <head>
@@ -17,9 +18,16 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'home' %}">Home</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'reservations' %}">{% trans 'Reservations' %}</a>
-                </li>
+                {% if request.user|has_group:"organizers" %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'reservations' %}">{% trans 'Reservations' %}</a>
+                    </li>
+                {% endif %}
+                {% if request.user|has_group:"facility" %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'incidences' %}">{% trans 'Incidences' %}</a>
+                    </li>
+                {% endif %}
             </ul>
             {% if user.is_authenticated %}
                 <div class="mr-5">
@@ -43,16 +51,18 @@
                 {% endblock %}
             </div>
         </div>
-    <div id="notification-popover__content" style="display: none">
-        {% for noti in notifications %}
-            {% include 'eventApp/notification.html' with noti=noti %}
-        {% empty %}
-            <p class="p-2 m-0 border-bottom">{% trans 'No unread notifications' %}</p>
-        {% endfor %}
-        <div class="container p-0 m-1 position-relative">
-            <a href="" role="button" class="js-all-read m-1 {{ notifications|length|yesno:",anchor--disabled" }}">{% trans 'Mark all as read' %}</a>
+    {% if user.is_authenticated %}
+        <div id="notification-popover__content" style="display: none">
+            {% for noti in notifications %}
+                {% include 'eventApp/notification.html' with noti=noti %}
+            {% empty %}
+                <p class="p-2 m-0 border-bottom">{% trans 'No unread notifications' %}</p>
+            {% endfor %}
+            <div class="container p-0 m-1 position-relative">
+                <a href="" role="button" class="js-all-read m-1 {{ notifications|length|yesno:",anchor--disabled" }}">{% trans 'Mark all as read' %}</a>
+            </div>
         </div>
-    </div>
+    {% endif %}
     </body>
     <script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
