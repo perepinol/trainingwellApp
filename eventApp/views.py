@@ -1,25 +1,31 @@
 from datetime import date, datetime, timedelta
 from urllib.parse import parse_qs
 
+from django.contrib.auth.models import Group
+from django.http import HttpResponseForbidden
 from django.urls import reverse
 
 from django import http
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404
+
+from django.shortcuts import render, get_object_or_404, redirect
 
 # Create your views here.
 from django.views.generic import TemplateView
 
 from eventApp import query, decorators
 from eventApp.forms import ReservationNameForm, DateForm
-from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence
+
+from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User
 
 import json
 from functools import reduce
 import logging
 
 from eventApp.query import AlreadyExistsException
+
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -305,6 +311,31 @@ def reservation_detail(request, id):
     return render(request, 'eventApp/reservation_detail.html', context)
 
 
+def delete_reservation(request, pk):
+    group_id = Group.objects.get(name='manager')
+    manager_user = User.objects.filter(groups=group_id).first()
+
+    def create_manager_notification(content):
+        Notification.objects.create(title='Cancel Reserve', content=content, user=manager_user)
+
+    item = Reservation.objects.get(id=pk)
+    if request.user == item.user:
+        request_date = datetime.now()
+        days = (item.timeblock_set.first().start_time - request_date).days
+        if days >= 7:
+            item.status = Reservation.CANCELTOREFUND if item.status == Reservation.PAID else Reservation.CANCEL
+            logger.info("Reservation " + str(item.id) + " successfully canceled as " + item.status)
+            create_manager_notification("Reserve " + str(item.id) + " was canceled. You should check if needs to be refunded")
+        else:
+            item.status = Reservation.CANCELOUTTIME
+            logger.info("Reservation " + item.id + " changed status to " + Reservation.CANCELOUTTIME)
+            create_manager_notification("Reserve " + str(item.id) + " canceled out of time.")
+        item.save()
+    else:
+        return HttpResponseForbidden()
+    return redirect('/events/reservation')
+
+  
 @login_required()
 @decorators.ajax_required
 @decorators.get_if_creator(Notification)
@@ -314,7 +345,8 @@ def _ajax_mark_as_read(request, instance):
     instance.soft_delete()
     return http.HttpResponse()
 
-
+  
+@login_required()
 @decorators.facility_responsible_only
 @decorators.ajax_required
 def _ajax_mark_completed_incidence(request):
@@ -322,3 +354,4 @@ def _ajax_mark_completed_incidence(request):
     for id_ins in ids_list:
         Incidence.objects.get(id=id_ins).soft_delete()
     return http.JsonResponse({})
+
