@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta
 from urllib.parse import parse_qs
 
+from django.contrib.auth.models import Group
 from django.http import HttpResponseForbidden
 from django.urls import reverse
 
@@ -14,7 +15,7 @@ from django.views.generic import TemplateView
 
 from eventApp import query, decorators
 from eventApp.forms import ReservationNameForm, DateForm
-from eventApp.models import Reservation, Timeblock, Space, Notification
+from eventApp.models import Reservation, Timeblock, Space, Notification, User
 
 import json
 from functools import reduce
@@ -291,23 +292,27 @@ def _ajax_mark_as_read(request, instance):
     instance.soft_delete()
     return http.HttpResponse()
 
-def delete_reservation(request,id):
-    item = Reservation.objects.get(id=id)
-    request_date = datetime.now()
-    days = (request_date - item.reservation_date).days
+
+def delete_reservation(request, pk):
+    group_id = Group.objects.get(name='manager')
+    manager_user = User.objects.filter(groups=group_id).first()
+
+    def create_manager_notification(content):
+        Notification.objects.create(title='Cancel Reserve', content=content, user=manager_user)
+
+    item = Reservation.objects.get(id=pk)
     if request.user == item.user:
+        request_date = datetime.now()
+        days = (item.timeblock_set.first().start_time - request_date).days
         if days >= 7:
-            item.status = Reservation.CANCELADAPARADEVOLVER
-            item.save()
-            item.soft_delete()
-            logger.info("Reservation" + item.id + "successfully delete")
-            notification = Notification.objects.create('Reservation status: CANCELADA PARA DEVOLVER')
-            notification.save()
-            Notification.objects.values_list('content', flat=True)
+            item.status = Reservation.CANCELTOREFUND if item.status == Reservation.PAID else Reservation.CANCEL
+            logger.info("Reservation " + str(item.id) + " successfully canceled as " + item.status)
+            create_manager_notification("Reserve " + str(item.id) + " was canceled. You should check if needs to be refunded")
         else:
-            item.status = Reservation.CANCELADAFUERADEPLAZO
-            item.save()
-            item.soft_delete()
+            item.status = Reservation.CANCELOUTTIME
+            logger.info("Reservation " + item.id + " changed status to " + Reservation.CANCELOUTTIME)
+            create_manager_notification("Reserve " + str(item.id) + " canceled out of time.")
+        item.save()
     else:
         return HttpResponseForbidden()
     return redirect('/events/reservation')

@@ -22,8 +22,8 @@ urlpatterns = [
     path('reservation/', reservation_view, name="reservations"),
     path('reservation/new', show_reservation_schedule_view, name="schedule_view"),
     path('reservation/<int:obj_id>/', reservation_detail, name='reservation_detail'),
+    path('reservation/delete/<int:pk>/', delete_reservation, name='delete_reservation'),
     path('ajax/change_week/', _ajax_change_view, name='ajax_change_week'),
     path('notification/<int:obj_id>/', _ajax_mark_as_read, name='ajax_mark_read'),
     path('', TestView.as_view(), name='home'),
-    path('delete/<int:id>/', delete_reservation, name='delete_reservation')
 ]
