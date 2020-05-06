@@ -9,8 +9,8 @@
         {% endwith %}
     </div>
     <div class="card-footer d-flex justify-content-between">
-        <p class="card-text m-0">{% blocktrans with p=res.price paid=res.is_paid|yesno:"paid,unpaid" %}
-            Price: {{ p }}€ ({{ paid }})
+        <p class="card-text m-0">{% blocktrans with p=res.price state=res.current_state %}
+            Price: {{ p }}€ ({{ state }})
         {% endblocktrans %}</p>
         <a class="stretched-link" href={% url 'reservation_detail' obj_id=res.id %}>{% trans 'Details' %}</a>
     </div>
