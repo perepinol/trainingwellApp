@@ -88,6 +88,7 @@
 {% block scripts %}
     <script type="text/javascript">
         let json_string = JSON.parse('{{ scheduleJSON | escapejs }}');
+        console.log(json_string);
         let firstDaySchedule = new Date(Object.keys(json_string)[0]);
         let day, hour;
         let selected = {};
