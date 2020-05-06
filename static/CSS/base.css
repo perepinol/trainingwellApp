@@ -34,3 +34,16 @@ td#card-container > div {
 td#card-container > div:last-child {
     margin-bottom: 0 !important;
 }
+
+div.card--disabled {
+    background-color: #bfbfbf;
+    color: #5e5e5e;
+}
+
+td.disabled {
+    background-color: #d0d0d0;
+}
+
+td.current {
+    background-color: #ffd1d1;
+}

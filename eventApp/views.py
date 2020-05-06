@@ -1,6 +1,5 @@
 from copy import deepcopy
 from datetime import date, datetime, timedelta
-from urllib.parse import parse_qs
 
 from django.urls import reverse
 from django.utils import timezone
@@ -8,13 +7,13 @@ from django.utils import timezone
 from django import http
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 
 # Create your views here.
-from django.views.generic import TemplateView, ListView
+from django.views.generic import TemplateView
 
 from eventApp import query, decorators
-from eventApp.forms import ReservationNameForm, DateForm
+from eventApp.forms import ReservationNameForm
 from eventApp.models import Reservation, Timeblock, Space, Notification, Season
 
 import json
@@ -39,24 +38,34 @@ class TestView(TemplateView):
 
 
 class EventView(TemplateView):
-    template_name = 'eventApp/event_list_view.html'
+    template_name = 'eventApp/event_schedule_view.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
         current_week = datetime.now() - timedelta(days=datetime.now().weekday())
         chosen_week = current_week
-        query_string = parse_qs(self.request.GET.urlencode())
-        if 'week' in query_string and len(query_string['week']) == 1:
+        if self.request.GET.get('week'):
             try:
-                chosen_week = datetime.strptime(query_string['week'][0], "%d-%m-%Y").date()
+                chosen_week = datetime.fromtimestamp(int(self.request.GET.get('week')))
                 if chosen_week < current_week:
                     chosen_week = current_week
             except ValueError:
                 pass  # Stick with current date
 
+        # Week information for forwards and backwards navigation
         context['chosen_week'] = chosen_week
-        context['form'] = DateForm(chosen_date=chosen_week)
+        context['weeks'] = {
+            'chosen': chosen_week,
+            'previous': chosen_week - timedelta(days=7),
+            'next': chosen_week + timedelta(days=7)
+        }
+        if context['weeks']['previous'].date() < current_week.date():
+            del context['weeks']['previous']
+
+        # Current moment to disable previous events
+        context['now'] = datetime.now()
+
+        # Timetable data
         context['days'] = [chosen_week + timedelta(days=i) for i in range(7)]
         timetable = []
         for hour in Season.ongoing_season().open_hours():
@@ -65,6 +74,7 @@ class EventView(TemplateView):
             ]
             timetable.append(hour_events)
         context['timetable'] = timetable
+
         return context
 
 

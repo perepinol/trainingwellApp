@@ -153,9 +153,14 @@ class Timeblock(models.Model):
     reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE)
     space = models.ForeignKey(Space, on_delete=models.SET(get_timeblock_space('self').__str__()))
     start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
 
     class Meta:
         ordering = ['start_time']
+
+    def save(self, *args, **kwargs):
+        self.end_time = self.start_time + settings.RESERVATION_GRANULARITY
+        super(Timeblock, self).save(*args, **kwargs)
 
     def __str__(self):
         return u"%s at %s" % (self.space, self.start_time.isoformat())
