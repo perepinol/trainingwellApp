@@ -6,3 +6,23 @@
 .reservation > p {
     margin: 3em 0 0 0;
 }
+
+div.inactive {
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
+img.icon__svg {
+    width: 15px;
+    height: 15px;
+}
+
+span.badge-overlap {
+    position: relative;
+    top: -15px;
+    left: 55px;
+}
+
+a.anchor--disabled {
+    pointer-events: none;
+    color: #476b8b;
+}

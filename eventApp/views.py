@@ -11,11 +11,11 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
 
 # Create your views here.
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, ListView
 
 from eventApp import query, decorators
 from eventApp.forms import ReservationNameForm, DateForm
-from eventApp.models import Reservation, Timeblock, Space
+from eventApp.models import Reservation, Timeblock, Space, Notification
 
 import json
 from functools import reduce
@@ -24,6 +24,14 @@ import logging
 from eventApp.query import AlreadyExistsException
 
 logger = logging.getLogger(__name__)
+
+
+def notification_context_processor(request):
+    return {
+        'notifications': Notification.objects.filter(
+            user=request.user,
+            is_deleted=False
+        )} if request.user.is_authenticated else {}
 
 
 class TestView(TemplateView):
@@ -106,10 +114,10 @@ def reservation_view(request):
         res = Reservation.objects.create(
             event_name=res_name_form.cleaned_data['event_name'],
             price=reduce(lambda agg, tb: agg + tb.space.price_per_hour, timeblocks, 0),
-            organizer=request.user,
+            user=request.user,
             modified_by=request.user
         )
-        logger.info("Created new reservation (id: %d, user: %s)" % (res.id, res.organizer))
+        logger.info("Created new reservation (id: %d, user: %s)" % (res.id, res.user))
 
         # Save timeblocks
         for timeblock in timeblocks:
@@ -120,7 +128,7 @@ def reservation_view(request):
 
     return render(request, 'eventApp/reservation_list_view.html', {
         'res_list': sorted(
-            Reservation.objects.filter(organizer=request.user, is_deleted=False),
+            Reservation.objects.filter(user=request.user, is_deleted=False),
             key=lambda r: r.timeblock_set.first().start_time
         )
     })
@@ -141,6 +149,7 @@ def aggregate_timeblocks(timeblocks):
     """
     agg_list = []
     agg = {}
+    timeblocks.sort(key=lambda tb: tb.space.id)
     for timeblock in timeblocks:
         if len(agg.keys()) != 0:
             # If timeblocks are consecutive, just extend end_time
@@ -270,7 +279,7 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
 
     return schedule
 
-
+  
 def reservation_detail(request, id):
     res = get_object_or_404(Reservation, pk=id)
     tbck = Timeblock.objects.filter(reservation=id)
@@ -279,3 +288,14 @@ def reservation_detail(request, id):
     if res.organizer != request.user:
         return http.HttpResponseForbidden()
     return render(request, 'eventApp/reservation_detail.html', context)
+
+
+@login_required()
+@decorators.ajax_required
+@decorators.get_if_creator(Notification)
+def _ajax_mark_as_read(request, instance):
+    if instance.is_deleted:
+        return http.HttpResponseNotModified()
+    instance.soft_delete()
+    return http.HttpResponse()
+
