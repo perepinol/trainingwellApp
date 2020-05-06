@@ -279,10 +279,15 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
 
     return schedule
 
+  
+def reservation_detail(request, id):
+    res = get_object_or_404(Reservation, pk=id)
+    tbck = Timeblock.objects.filter(reservation=id)
 
-@decorators.get_if_creator(Reservation)
-def reservation_detail(request, instance):
-    return render(request, 'eventApp/reservation_detail.html', {'reservation': instance})
+    context = {'reservation': res, 'timeblocks': aggregate_timeblocks(tbck)}
+    if res.organizer != request.user:
+        return http.HttpResponseForbidden()
+    return render(request, 'eventApp/reservation_detail.html', context)
 
 
 @login_required()
@@ -293,3 +298,4 @@ def _ajax_mark_as_read(request, instance):
         return http.HttpResponseNotModified()
     instance.soft_delete()
     return http.HttpResponse()
+
