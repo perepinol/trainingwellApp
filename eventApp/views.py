@@ -299,12 +299,15 @@ def delete_reservation(request,id):
         if days >= 7:
             item.status = Reservation.CANCELADAPARADEVOLVER
             item.save()
-            Notification.content("Reservation status: " + item.status)
+            item.soft_delete()
             logger.info("Reservation" + item.id + "successfully delete")
+            notification = Notification.objects.create('Reservation status: CANCELADA PARA DEVOLVER')
+            notification.save()
+            Notification.objects.values_list('content', flat=True)
         else:
             item.status = Reservation.CANCELADAFUERADEPLAZO
             item.save()
-            Notification.content("Reservation status: " + item.status)
+            item.soft_delete()
     else:
         return HttpResponseForbidden()
-    return redirect('eventApp/reservation_list_view.html')
+    return redirect('/events/reservation')
