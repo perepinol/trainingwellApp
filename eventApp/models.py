@@ -71,6 +71,18 @@ class Season(models.Model):
     def __str__(self):
         return u"%s" % self.name
 
+    @staticmethod
+    def ongoing_season():
+        return Season.objects.filter(start_date__lte=date.today(), end_date__gt=date.today()).first()
+
+    def open_hours(self):
+        hours = [self.open_time]
+        next_datetime = datetime.combine(date.today(), hours[-1]) + settings.RESERVATION_GRANULARITY
+        while next_datetime.time() < self.close_time:
+            hours.append(next_datetime.time())
+            next_datetime = datetime.combine(date.today(), hours[-1]) + settings.RESERVATION_GRANULARITY
+        return hours
+
 
 class Space(models.Model):
     field = models.ForeignKey(Field, on_delete=models.PROTECT)
@@ -153,9 +165,14 @@ class Timeblock(models.Model):
     reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE)
     space = models.ForeignKey(Space, on_delete=models.SET(get_timeblock_space('self').__str__()))
     start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
 
     class Meta:
         ordering = ['start_time']
+
+    def save(self, *args, **kwargs):
+        self.end_time = self.start_time + settings.RESERVATION_GRANULARITY
+        super(Timeblock, self).save(*args, **kwargs)
 
     def __str__(self):
         return u"%s at %s" % (self.space, self.start_time.isoformat())

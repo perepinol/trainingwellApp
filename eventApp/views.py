@@ -1,5 +1,4 @@
 from datetime import date, datetime, timedelta
-from urllib.parse import parse_qs
 
 from django.contrib.auth.models import Group
 from django.http import HttpResponseForbidden
@@ -16,7 +15,7 @@ from django.views.generic import TemplateView, ListView
 
 from eventApp import query, decorators
 from eventApp.forms import ReservationNameForm, DateForm, IncidenceForm
-from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User
+from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User, Season
 
 import json
 from functools import reduce
@@ -42,23 +41,43 @@ class TestView(TemplateView):
 
 
 class EventView(TemplateView):
-    template_name = 'eventApp/reservation_list_view.html'
+    template_name = 'eventApp/event_schedule_view.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        chosen_date = date.today()
-        query_string = parse_qs(self.request.GET.urlencode())
-        if 'chosen_date' in query_string and len(query_string['chosen_date']) == 1:
+        current_week = datetime.now() - timedelta(days=datetime.now().weekday())
+        chosen_week = current_week
+        if self.request.GET.get('week'):
             try:
-                chosen_date = datetime.strptime(query_string['chosen_date'][0], "%d-%m-%Y").date()
-                if chosen_date < date.today():
-                    chosen_date = date.today()
+                chosen_week = datetime.fromtimestamp(int(self.request.GET.get('week')))
+                if chosen_week < current_week:
+                    chosen_week = current_week
             except ValueError:
                 pass  # Stick with current date
 
-        context['form'] = DateForm(chosen_date=chosen_date)
-        context['event_list'] = Reservation.objects.filter(event_date__exact=chosen_date)
+        # Week information for forwards and backwards navigation
+        context['chosen_week'] = chosen_week
+        context['weeks'] = {
+            'chosen': chosen_week,
+            'previous': chosen_week - timedelta(days=7),
+            'next': chosen_week + timedelta(days=7)
+        }
+        if context['weeks']['previous'].date() < current_week.date():
+            del context['weeks']['previous']
+
+        # Current moment to disable previous events
+        context['now'] = datetime.now()
+
+        # Timetable data
+        context['days'] = [chosen_week + timedelta(days=i) for i in range(7)]
+        timetable = []
+        for hour in Season.ongoing_season().open_hours():
+            hour_events = [hour] + [
+                query.get_all_timeblocks(d).filter(start_time__hour=hour.hour) for d in context['days']
+            ]
+            timetable.append(hour_events)
+        context['timetable'] = timetable
+
         return context
 
 
@@ -115,7 +134,8 @@ def reservation_view(request):
             event_name=res_name_form.cleaned_data['event_name'],
             price=reduce(lambda agg, tb: agg + tb.space.price_per_hour, timeblocks, 0),
             user=request.user,
-            modified_by=request.user
+            modified_by=request.user,
+            status=Reservation.UNPAID
         )
         logger.info("Created new reservation (id: %d, user: %s)" % (res.id, res.user))
 
@@ -310,38 +330,36 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
     return schedule
 
 
-def reservation_detail(request, id):
-    res = get_object_or_404(Reservation, pk=id)
-    tbck = Timeblock.objects.filter(reservation=id)
+@decorators.get_if_creator(Reservation)
+def reservation_detail(request, instance):
+    tbck = Timeblock.objects.filter(reservation=instance)
 
-    context = {'reservation': res, 'timeblocks': aggregate_timeblocks(tbck)}
-    if res.organizer != request.user:
-        return http.HttpResponseForbidden()
+    context = {'reservation': instance, 'timeblocks': aggregate_timeblocks(list(tbck))}
     return render(request, 'eventApp/reservation_detail.html', context)
 
 
-def delete_reservation(request, pk):
-    group_id = Group.objects.get(name='manager')
-    manager_user = User.objects.filter(groups=group_id).first()
-
+@decorators.get_if_creator(Reservation)
+def delete_reservation(request, instance):
     def create_manager_notification(content):
         Notification.objects.create(title='Cancel Reserve', content=content, user=manager_user)
 
-    item = Reservation.objects.get(id=pk)
-    if request.user == item.user:
-        request_date = datetime.now()
-        days = (item.timeblock_set.first().start_time - request_date).days
-        if days >= 7:
-            item.status = Reservation.CANCELTOREFUND if item.status == Reservation.PAID else Reservation.CANCEL
-            logger.info("Reservation " + str(item.id) + " successfully canceled as " + item.status)
-            create_manager_notification("Reserve " + str(item.id) + " was canceled. You should check if needs to be refunded")
-        else:
-            item.status = Reservation.CANCELOUTTIME
-            logger.info("Reservation " + item.id + " changed status to " + Reservation.CANCELOUTTIME)
-            create_manager_notification("Reserve " + str(item.id) + " canceled out of time.")
-        item.save()
-    else:
+    if request.method != 'POST':
         return HttpResponseForbidden()
+
+    group_id = Group.objects.get(name='manager')
+    manager_user = User.objects.filter(groups=group_id).first()
+    request_date = datetime.now()
+    days = (instance.timeblock_set.first().start_time - request_date).days
+    if days >= 7:
+        instance.status = Reservation.CANCELTOREFUND if instance.status == Reservation.PAID else Reservation.CANCEL
+        logger.info("Reservation " + str(instance.id) + " successfully canceled as " + instance.status)
+        create_manager_notification("Reserve " + str(instance.id) + " was canceled. You should check if needs to be refunded")
+    else:
+        instance.status = Reservation.CANCELOUTTIME
+        logger.info("Reservation " + str(instance.id) + " changed status to " + Reservation.CANCELOUTTIME)
+        create_manager_notification("Reserve " + str(instance.id) + " canceled out of time.")
+    instance.save()
+
     return redirect('/events/reservation')
 
 
