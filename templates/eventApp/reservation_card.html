@@ -7,7 +7,29 @@
         <p class="card-text">{% blocktrans with num=res.timeblock_set.all|length %}Includes {{ num }} reservations{% endblocktrans %}</p>
         {% endwith %}
     </div>
-    <div class="card-footer d-flex justify-content-between">
+    <div class="card-footer d-flex justify-content-between" style="background-color:  {% if  res.status == "P" %}
+                                                                        springgreen;
+                                                                    {% else %}
+                                                                       {% if  res.status == "U" %}
+                                                                           darkorange
+                                                                        {% else %}
+                                                                           {% if  res.status == "CTR" %}
+                                                                                lightpink
+                                                                            {% else %}
+                                                                               {% if  res.status == "CR" %}
+                                                                                    khaki
+                                                                                {% else %}
+                                                                                   {% if  res.status == "COT" %}
+                                                                                        red
+                                                                                    {% else %}
+                                                                                        {% if  res.status == "C" %}
+                                                                                            aliceblue
+                                                                                        {% endif %}
+                                                                                    {% endif %}
+                                                                                {% endif %}
+                                                                            {% endif %}
+                                                                        {% endif %}
+                                                                    {% endif %}">
         <p class="card-text m-0">{% blocktrans with p=res.price state=res.current_state %}
             Price: {{ p }}€ ({{ state }})
         {% endblocktrans %}</p>
