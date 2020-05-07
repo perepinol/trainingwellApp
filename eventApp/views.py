@@ -397,7 +397,7 @@ class SeasonView(TemplateView):
         return context
 
 @login_required()
-@decorators.facility_manager_only
+@decorators.facility_responsible_only
 @decorators.ajax_required
 def _ajax_mark_completed_space(request):
     spc_list = request.GET.getlist('spc[]')
