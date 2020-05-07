@@ -135,7 +135,8 @@ def reservation_view(request):
             event_name=res_name_form.cleaned_data['event_name'],
             price=reduce(lambda agg, tb: agg + tb.space.price_per_hour, timeblocks, 0),
             user=request.user,
-            modified_by=request.user
+            modified_by=request.user,
+            status=Reservation.UNPAID
         )
         logger.info("Created new reservation (id: %d, user: %s)" % (res.id, res.user))
 
@@ -328,28 +329,28 @@ def reservation_detail(request, instance):
     return render(request, 'eventApp/reservation_detail.html', context)
 
 
-def delete_reservation(request, pk):
-    group_id = Group.objects.get(name='manager')
-    manager_user = User.objects.filter(groups=group_id).first()
-
+@decorators.get_if_creator(Reservation)
+def delete_reservation(request, instance):
     def create_manager_notification(content):
         Notification.objects.create(title='Cancel Reserve', content=content, user=manager_user)
 
-    item = Reservation.objects.get(id=pk)
-    if request.user == item.user:
-        request_date = datetime.now()
-        days = (item.timeblock_set.first().start_time - request_date).days
-        if days >= 7:
-            item.status = Reservation.CANCELTOREFUND if item.status == Reservation.PAID else Reservation.CANCEL
-            logger.info("Reservation " + str(item.id) + " successfully canceled as " + item.status)
-            create_manager_notification("Reserve " + str(item.id) + " was canceled. You should check if needs to be refunded")
-        else:
-            item.status = Reservation.CANCELOUTTIME
-            logger.info("Reservation " + item.id + " changed status to " + Reservation.CANCELOUTTIME)
-            create_manager_notification("Reserve " + str(item.id) + " canceled out of time.")
-        item.save()
-    else:
+    if request.method != 'POST':
         return HttpResponseForbidden()
+
+    group_id = Group.objects.get(name='manager')
+    manager_user = User.objects.filter(groups=group_id).first()
+    request_date = datetime.now()
+    days = (instance.timeblock_set.first().start_time - request_date).days
+    if days >= 7:
+        instance.status = Reservation.CANCELTOREFUND if instance.status == Reservation.PAID else Reservation.CANCEL
+        logger.info("Reservation " + str(instance.id) + " successfully canceled as " + instance.status)
+        create_manager_notification("Reserve " + str(instance.id) + " was canceled. You should check if needs to be refunded")
+    else:
+        instance.status = Reservation.CANCELOUTTIME
+        logger.info("Reservation " + str(instance.id) + " changed status to " + Reservation.CANCELOUTTIME)
+        create_manager_notification("Reserve " + str(instance.id) + " canceled out of time.")
+    instance.save()
+
     return redirect('/events/reservation')
 
   
