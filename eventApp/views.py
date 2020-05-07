@@ -1,26 +1,30 @@
-from copy import deepcopy
 from datetime import date, datetime, timedelta
 
+from django.contrib.auth.models import Group
+from django.http import HttpResponseForbidden
 from django.urls import reverse
-from django.utils import timezone
 
 from django import http
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+
+from django.shortcuts import render, get_object_or_404, redirect
 
 # Create your views here.
 from django.views.generic import TemplateView
 
 from eventApp import query, decorators
-from eventApp.forms import ReservationNameForm
-from eventApp.models import Reservation, Timeblock, Space, Notification, Season
+from eventApp.forms import ReservationNameForm, DateForm
+
+from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User
 
 import json
 from functools import reduce
 import logging
 
 from eventApp.query import AlreadyExistsException
+
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -89,9 +93,6 @@ def generate_timeblocks(post_data):
         Space.DoesNotExist: If a space id is not in the database.
         AlreadyExistsException: If an identical Timeblock (except for its Reservation) is in the database.
     """
-    post_data = deepcopy(post_data)
-    if 'user' in post_data:
-        del post_data['user']
     if not post_data:
         raise ValueError()  # As if JSON verification failed
 
@@ -101,7 +102,7 @@ def generate_timeblocks(post_data):
             timestamp = int(timestamp)  # May throw ValueError
             tb = Timeblock(
                 space_id=space_id,
-                start_time=datetime.fromtimestamp(timestamp).astimezone(timezone.utc)
+                start_time=datetime.fromtimestamp(timestamp)
             )
             if not Space.objects.filter(id=space_id).count():
                 raise Space.DoesNotExist()
@@ -203,7 +204,6 @@ def show_reservation_schedule_view(request):
         # Remove session if available
         if 'timeblocks' in request.session:
             del request.session['timeblocks']
-
         context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()),
                    'back': 'reservations'}
         return render(request, 'eventApp/reservation_schedule_view.html', context)
@@ -227,6 +227,27 @@ def show_reservation_schedule_view(request):
             'price': reduce(lambda agg, tb: agg + tb.space.price_per_hour, requested_timeblocks, 0)
         }
         return render(request, 'eventApp/reservation_confirmation.html', context)
+
+
+class IncidenceView(TemplateView):
+    template_name = 'eventApp/incidence.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        incidences = Incidence.objects.all()
+        '''for inc in Incidence.objects.all():
+            incidencesJSON[inc.id] = {'name': inc.name,
+                                      'content': inc.content,
+                                      'deadline': inc.limit.strftime('%d/%m/%Y-%H:%M'),
+                                      'fields': [str(field) for field in inc.affected_fields.all()],
+                                      'disabled': inc.disable_fields,
+                                      'deleted': inc.is_deleted,
+                                      'date_created': inc.created_at.strftime('%d/%m/%Y-%H:%M')}'''
+        context['incidences'] = incidences
+        return context
 
 
 @decorators.ajax_required
@@ -298,12 +319,42 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
 
     return schedule
 
+  
+def reservation_detail(request, id):
+    res = get_object_or_404(Reservation, pk=id)
+    tbck = Timeblock.objects.filter(reservation=id)
 
-@decorators.get_if_creator(Reservation)
-def reservation_detail(request, instance):
-    return render(request, 'eventApp/reservation_detail.html', {'reservation': instance})
+    context = {'reservation': res, 'timeblocks': aggregate_timeblocks(tbck)}
+    if res.organizer != request.user:
+        return http.HttpResponseForbidden()
+    return render(request, 'eventApp/reservation_detail.html', context)
 
 
+def delete_reservation(request, pk):
+    group_id = Group.objects.get(name='manager')
+    manager_user = User.objects.filter(groups=group_id).first()
+
+    def create_manager_notification(content):
+        Notification.objects.create(title='Cancel Reserve', content=content, user=manager_user)
+
+    item = Reservation.objects.get(id=pk)
+    if request.user == item.user:
+        request_date = datetime.now()
+        days = (item.timeblock_set.first().start_time - request_date).days
+        if days >= 7:
+            item.status = Reservation.CANCELTOREFUND if item.status == Reservation.PAID else Reservation.CANCEL
+            logger.info("Reservation " + str(item.id) + " successfully canceled as " + item.status)
+            create_manager_notification("Reserve " + str(item.id) + " was canceled. You should check if needs to be refunded")
+        else:
+            item.status = Reservation.CANCELOUTTIME
+            logger.info("Reservation " + item.id + " changed status to " + Reservation.CANCELOUTTIME)
+            create_manager_notification("Reserve " + str(item.id) + " canceled out of time.")
+        item.save()
+    else:
+        return HttpResponseForbidden()
+    return redirect('/events/reservation')
+
+  
 @login_required()
 @decorators.ajax_required
 @decorators.get_if_creator(Notification)
@@ -312,3 +363,14 @@ def _ajax_mark_as_read(request, instance):
         return http.HttpResponseNotModified()
     instance.soft_delete()
     return http.HttpResponse()
+
+  
+@login_required()
+@decorators.facility_responsible_only
+@decorators.ajax_required
+def _ajax_mark_completed_incidence(request):
+    ids_list = request.GET.getlist('ids[]')
+    for id_ins in ids_list:
+        Incidence.objects.get(id=id_ins).soft_delete()
+    return http.JsonResponse({})
+

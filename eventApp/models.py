@@ -1,5 +1,4 @@
-from django.utils import timezone
-from datetime import date, datetime
+from datetime import datetime, date
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -17,7 +16,7 @@ class User(AbstractUser):
         return u"%s" % self.username
 
     def save(self, *args, **kwargs):
-        self.last_update = timezone.now()
+        self.last_update = datetime.now()
         super(AbstractUser, self).save(*args, **kwargs)
 
     def soft_delete(self):
@@ -62,7 +61,7 @@ class Season(models.Model):
     is_deleted = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
-        self.last_update = timezone.now()
+        self.last_update = datetime.now()
         super(Season, self).save(*args, **kwargs)
 
     def soft_delete(self):
@@ -101,7 +100,7 @@ class Space(models.Model):
         return u"%s %d" % (self.field, self.id)
 
     def save(self, *args, **kwargs):
-        self.last_update = timezone.now()
+        self.last_update = datetime.now()
         super(Space, self).save(*args, **kwargs)
 
     def soft_delete(self):
@@ -122,6 +121,15 @@ class Space(models.Model):
 
 
 class Reservation(models.Model):
+    PAID = 'P'
+    UNPAID = 'U'
+    CANCELTOREFUND = 'CTR'
+    CANCELANDREFUND = 'CR'
+    CANCELOUTTIME = 'COT'
+    CANCEL = 'C'
+    STATUS = ((PAID, 'Paid'), (UNPAID, 'Unpaid'), (CANCELTOREFUND, 'Canceled, waiting refund'),
+              (CANCELANDREFUND, 'Canceled and refunded'), (CANCELOUTTIME, 'Canceled out of time'), (CANCEL, 'Canceled'))
+    status = models.CharField(max_length=100, choices=STATUS)
     event_name = models.CharField(max_length=100)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     reservation_date = models.DateTimeField(auto_now_add=True)
@@ -135,12 +143,16 @@ class Reservation(models.Model):
         return u"%s" % self.event_name
     
     def save(self, *args, **kwargs):
-        self.last_update = timezone.now()
+        self.last_update = datetime.now()
         super(Reservation, self).save(*args, **kwargs)
 
     def soft_delete(self):
         self.is_deleted = True
         self.save()
+
+    def current_state(self):
+        for s in self.STATUS:
+            if self.status == s[0]: return s[1]
 
 
 def get_timeblock_space(timeblock):
@@ -166,3 +178,22 @@ class Timeblock(models.Model):
         return u"%s at %s" % (self.space, self.start_time.isoformat())
 
 
+class Incidence(models.Model):
+    name = models.CharField(max_length=50)
+    content = models.TextField()
+    limit = models.DateTimeField()
+    affected_fields = models.ManyToManyField(Space)
+    disable_fields = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_deleted = models.BooleanField(default=False)  # Also represents a finished Incidence
+
+    def __str__(self):
+        return self.name
+
+    def soft_delete(self):
+        if self.is_deleted:
+            self.delete()
+        else:
+            self.is_deleted = True
+            self.save()

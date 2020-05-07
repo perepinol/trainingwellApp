@@ -3,7 +3,7 @@
 
 {% block content %}
     <div class="col-md-auto">
-        <h1>Your reservations</h1>
+        <h1>{% trans 'Your reservations' %}</h1>
     </div>
     <div class="col d-flex align-items-center">
         <a class="btn btn-primary" href={% url 'schedule_view' %}>{% trans 'New reservation' %}</a>
