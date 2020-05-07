@@ -383,3 +383,15 @@ class SpaceView(TemplateView):
         spaces = Space.objects.all()
         context['spaces'] = spaces
         return context
+
+class SeasonView(TemplateView):
+    template_name = 'eventApp/season.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        seasons = Season.objects.all()
+        context['seasons'] = seasons
+        return context

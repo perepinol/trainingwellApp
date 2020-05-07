@@ -1,9 +1,9 @@
 {% load i18n %}
-<div class="col-lg-4 col-md-6 col-sm-12 {% if space.is_deleted %}completed{% endif %}" style="padding: 8px; {% if incidence.is_deleted %}display: none{% endif %}">
+<div class="col-lg-4 col-md-6 col-sm-12 {% if space.is_deleted %}completed{% endif %}" style="padding: 8px; {% if space.is_deleted %}display: none{% endif %}">
     <div id="{{ space.id }}" class="card w-100 h-100 {% if not space.is_deleted %}ongoing{% endif %}" style="cursor: pointer">
         <div class="flip-front">
             <div class="card-body">
-                <h6 class="card-title">{{ space }}{% if incidence.is_deleted %} (Completed){% endif %}</h6>
+                <h6 class="card-title">{{ space }}{% if space.is_deleted %} (Completed){% endif %}</h6>
                 <p class="card-text">{{ space.field }}</p>
                 <p class="card-text">{{ space.price_per_hour }}</p>
                 <p class="card-text">{{ space.sqmt }}</p>

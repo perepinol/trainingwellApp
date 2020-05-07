@@ -1,0 +1,18 @@
+{% load i18n %}
+<div class="col-lg-4 col-md-6 col-sm-12 {% if season.is_deleted %}completed{% endif %}" style="padding: 8px; {% if season.is_deleted %}display: none{% endif %}">
+    <div id="{{ season.id }}" class="card w-100 h-100 {% if not season.is_deleted %}ongoing{% endif %}" style="cursor: pointer">
+        <div class="flip-front">
+            <div class="card-body">
+                <h6 class="card-title">{{ season.name }}{% if season.is_deleted %} (Completed){% endif %}</h6>
+                <p class="card-text">{{ season.start_date }}</p>
+                <p class="card-text">{{ season.end_date }}</p>
+                <p class="card-text">{{ season.open_time }}</p>
+                <p class="card-text">{{ season.close_time }}</p>
+            </div>
+        </div>
+
+        <div class="flip-back">
+
+        </div>
+    </div>
+</div>

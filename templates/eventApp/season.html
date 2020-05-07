@@ -7,7 +7,7 @@
 {% endblock %}
 {% block content %}
    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <h4 class="navbar-brand">{% trans 'Spaces' %}</h4>
+        <h4 class="navbar-brand">{% trans 'Season' %}</h4>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -15,7 +15,7 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item active">
-                    <button id="new" class="nav-link btn">{% trans 'New Space' %}</button>
+                    <button id="new" class="nav-link btn">{% trans 'New Season' %}</button>
                 </li>
                 <li class="nav-item">
                     <button id="show-completed" class="nav-link btn">{% trans 'Show completed' %}</button>
@@ -27,8 +27,8 @@
           </div>
     </nav>
     <div class="card-deck w-100 px-3" style="height: min-content">
-            {% for space in spaces %}
-                {% include 'eventApp/space_card.html' with space=space %}
+            {% for season in seasons %}
+                {% include 'eventApp/season_card.html' with season=season %}
             {% empty %}
             {% endfor %}
     </div>
