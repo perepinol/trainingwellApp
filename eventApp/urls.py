@@ -18,7 +18,7 @@ from eventApp.decorators import facility_responsible_only
 from django.urls import path
 
 from eventApp.views import TestView, IncidenceView, reservation_view, show_reservation_schedule_view, _ajax_change_view, \
-    reservation_detail, _ajax_mark_as_read, _ajax_mark_completed_incidence, delete_reservation, EventView
+    reservation_detail, _ajax_mark_as_read, _ajax_mark_completed_incidence, delete_reservation, EventView, SpaceView
 
 urlpatterns = [
     path('reservation/', reservation_view, name="reservations"),
@@ -31,4 +31,5 @@ urlpatterns = [
     path('schedule', EventView.as_view(), name='event_schedule'),
     path('incidences/', facility_responsible_only(IncidenceView.as_view()), name="incidences"),
     path('', TestView.as_view(), name='home'),
+    path('space/', SpaceView.as_view(), name="spaces")
 ]

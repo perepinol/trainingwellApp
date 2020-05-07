@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'CSS/incidence.css' %}">
+{% endblock %}
+{% block content %}
+   <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <h4 class="navbar-brand">{% trans 'Spaces' %}</h4>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <button id="new" class="nav-link btn">{% trans 'New Space' %}</button>
+                </li>
+                <li class="nav-item">
+                    <button id="show-completed" class="nav-link btn">{% trans 'Show completed' %}</button>
+                </li>
+                <li class="nav-item dropdown">
+                    <button class="nav-link dropdown-toggle btn" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {% trans 'Order by' %}
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                      <button id="filter-deadline" class="dropdown-item btn">{% trans 'Deadline date' %}</button>
+                      <button id="filter-created" class="dropdown-item btn">{% trans 'Creation date' %}</button>
+                      <button id="filter-disabled" class="dropdown-item btn">{% trans 'Disabled spaces' %}</button>
+                      <div class="dropdown-divider"></div>
+                      <button class="dropdown-item btn">{% trans 'DISABLED' %}</button>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <button id="mark-selected" class="nav-link btn">{% trans 'Set selected as completed' %}</button>
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0">
+              <input id="searcher" class="form-control mr-sm-2" type="search" placeholder="Search (by Name)" aria-label="Search"> <!--diferente a bootstrap-->
+            </form>
+          </div>
+    </nav>
+    <div class="card-deck w-100 px-3" style="height: min-content">  <!--linea de div id="incidences-content.. NO ENTIENDO-->
+            {% for space in spaces %}
+                {% include 'eventApp/space_card.html' with space=space %}
+            {% empty %}
+            {% endfor %}
+    </div>
+{% endblock %}

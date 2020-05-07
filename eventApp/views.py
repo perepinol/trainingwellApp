@@ -372,3 +372,14 @@ def _ajax_mark_completed_incidence(request):
         Incidence.objects.get(id=id_ins).soft_delete()
     return http.JsonResponse({})
 
+class SpaceView(TemplateView):
+    template_name = 'eventApp/space.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        spaces = Space.objects.all()
+        context['spaces'] = spaces
+        return context
