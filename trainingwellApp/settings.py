@@ -68,6 +68,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'eventApp.views.notification_context_processor'
             ],
         },
     },
@@ -111,13 +112,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Madrid'
 
 USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -150,45 +151,28 @@ LOGGING = {
     },
     'handlers': {
         'basic': {
-            'level' : 'INFO',
+            'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': 'logs/info_log.log',
             'formatter': 'standard',
         },
-        'error_handler': {
-            'level' : 'ERROR',
+        'warning': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/error_log.log',
+            'formatter': 'standard'
+        },
+        'error': {
+            'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': 'logs/error_log.log',
             'formatter': 'standard',
-        },
-        'mail_handler': {
-            'level' : 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'logs/mail_log.log',
-            'formatter': 'standard',
-        },
+        }
     },
     'root': {
-        'handlers': ['basic'],
+        'handlers': ['basic', 'warning'],
         'level': 'INFO',
-    },
-    'loggers': {
-        'basic': {
-            'handlers': ['basic'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-        'error': {
-            'handlers': ['error_handler'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
-        'mail': {
-            'handlers': ['mail_handler'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-    },
+    }
 }
 
 RESERVATION_GRANULARITY = timedelta(hours=1)

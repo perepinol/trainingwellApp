@@ -1,21 +1,22 @@
-from copy import deepcopy
 from datetime import date, datetime, timedelta
-from urllib.parse import parse_qs
 
+from django.contrib.auth.models import Group
+from django.http import HttpResponseForbidden
 from django.urls import reverse
-from django.utils import timezone
 
 from django import http
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404
+
+from django.shortcuts import render, get_object_or_404, redirect
 
 # Create your views here.
 from django.views.generic import TemplateView
 
 from eventApp import query, decorators
 from eventApp.forms import ReservationNameForm, DateForm
-from eventApp.models import Reservation, Timeblock, Space
+
+from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User, Season
 
 import json
 from functools import reduce
@@ -23,7 +24,17 @@ import logging
 
 from eventApp.query import AlreadyExistsException
 
+from datetime import datetime
+
 logger = logging.getLogger(__name__)
+
+
+def notification_context_processor(request):
+    return {
+        'notifications': Notification.objects.filter(
+            user=request.user,
+            is_deleted=False
+        )} if request.user.is_authenticated else {}
 
 
 class TestView(TemplateView):
@@ -31,29 +42,44 @@ class TestView(TemplateView):
 
 
 class EventView(TemplateView):
-    template_name = 'eventApp/reservation_list_view.html'
+    template_name = 'eventApp/event_schedule_view.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        chosen_date = date.today()
-        query_string = parse_qs(self.request.GET.urlencode())
-        if 'chosen_date' in query_string and len(query_string['chosen_date']) == 1:
+        current_week = datetime.now() - timedelta(days=datetime.now().weekday())
+        chosen_week = current_week
+        if self.request.GET.get('week'):
             try:
-                chosen_date = datetime.strptime(query_string['chosen_date'][0], "%d-%m-%Y").date()
-                if chosen_date < date.today():
-                    chosen_date = date.today()
+                chosen_week = datetime.fromtimestamp(int(self.request.GET.get('week')))
+                if chosen_week < current_week:
+                    chosen_week = current_week
             except ValueError:
                 pass  # Stick with current date
 
-        context['form'] = DateForm(chosen_date=chosen_date)
-        context['event_list'] = Reservation.objects.filter(event_date__exact=chosen_date)
+        # Week information for forwards and backwards navigation
+        context['chosen_week'] = chosen_week
+        context['weeks'] = {
+            'chosen': chosen_week,
+            'previous': chosen_week - timedelta(days=7),
+            'next': chosen_week + timedelta(days=7)
+        }
+        if context['weeks']['previous'].date() < current_week.date():
+            del context['weeks']['previous']
+
+        # Current moment to disable previous events
+        context['now'] = datetime.now()
+
+        # Timetable data
+        context['days'] = [chosen_week + timedelta(days=i) for i in range(7)]
+        timetable = []
+        for hour in Season.ongoing_season().open_hours():
+            hour_events = [hour] + [
+                query.get_all_timeblocks(d).filter(start_time__hour=hour.hour) for d in context['days']
+            ]
+            timetable.append(hour_events)
+        context['timetable'] = timetable
+
         return context
-
-
-def prova_view(request):
-    logger.info("SOC EL REI")
-    return http.HttpResponse("HOLA")
 
 
 def generate_timeblocks(post_data):
@@ -67,9 +93,6 @@ def generate_timeblocks(post_data):
         Space.DoesNotExist: If a space id is not in the database.
         AlreadyExistsException: If an identical Timeblock (except for its Reservation) is in the database.
     """
-    post_data = deepcopy(post_data)
-    if 'user' in post_data:
-        del post_data['user']
     if not post_data:
         raise ValueError()  # As if JSON verification failed
 
@@ -79,7 +102,7 @@ def generate_timeblocks(post_data):
             timestamp = int(timestamp)  # May throw ValueError
             tb = Timeblock(
                 space_id=space_id,
-                start_time=datetime.fromtimestamp(timestamp).astimezone(timezone.utc)
+                start_time=datetime.fromtimestamp(timestamp)
             )
             if not Space.objects.filter(id=space_id).count():
                 raise Space.DoesNotExist()
@@ -111,10 +134,11 @@ def reservation_view(request):
         res = Reservation.objects.create(
             event_name=res_name_form.cleaned_data['event_name'],
             price=reduce(lambda agg, tb: agg + tb.space.price_per_hour, timeblocks, 0),
-            organizer=request.user,
-            modified_by=request.user
+            user=request.user,
+            modified_by=request.user,
+            status=Reservation.UNPAID
         )
-        logger.info("Created new reservation (id: %d, user: %s)" % (res.id, res.organizer))
+        logger.info("Created new reservation (id: %d, user: %s)" % (res.id, res.user))
 
         # Save timeblocks
         for timeblock in timeblocks:
@@ -125,7 +149,7 @@ def reservation_view(request):
 
     return render(request, 'eventApp/reservation_list_view.html', {
         'res_list': sorted(
-            Reservation.objects.filter(organizer=request.user, is_deleted=False),
+            Reservation.objects.filter(user=request.user, is_deleted=False),
             key=lambda r: r.timeblock_set.first().start_time
         )
     })
@@ -146,6 +170,7 @@ def aggregate_timeblocks(timeblocks):
     """
     agg_list = []
     agg = {}
+    timeblocks.sort(key=lambda tb: tb.space.id)
     for timeblock in timeblocks:
         if len(agg.keys()) != 0:
             # If timeblocks are consecutive, just extend end_time
@@ -180,7 +205,6 @@ def show_reservation_schedule_view(request):
         # Remove session if available
         if 'timeblocks' in request.session:
             del request.session['timeblocks']
-
         context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()),
                    'back': 'reservations'}
         return render(request, 'eventApp/reservation_schedule_view.html', context)
@@ -204,6 +228,27 @@ def show_reservation_schedule_view(request):
             'price': reduce(lambda agg, tb: agg + tb.space.price_per_hour, requested_timeblocks, 0)
         }
         return render(request, 'eventApp/reservation_confirmation.html', context)
+
+
+class IncidenceView(TemplateView):
+    template_name = 'eventApp/incidence.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        incidences = Incidence.objects.all()
+        '''for inc in Incidence.objects.all():
+            incidencesJSON[inc.id] = {'name': inc.name,
+                                      'content': inc.content,
+                                      'deadline': inc.limit.strftime('%d/%m/%Y-%H:%M'),
+                                      'fields': [str(field) for field in inc.affected_fields.all()],
+                                      'disabled': inc.disable_fields,
+                                      'deleted': inc.is_deleted,
+                                      'date_created': inc.created_at.strftime('%d/%m/%Y-%H:%M')}'''
+        context['incidences'] = incidences
+        return context
 
 
 @decorators.ajax_required
@@ -276,8 +321,55 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
     return schedule
 
 
-def reservation_detail(request, id):
-    res = get_object_or_404(Reservation, pk=id)
-    if res.organizer != request.user:
-        return http.HttpResponseForbidden()
-    return render(request, 'eventApp/reservation_detail.html', {'reservation': res})
+@decorators.get_if_creator(Reservation)
+def reservation_detail(request, instance):
+    tbck = Timeblock.objects.filter(reservation=instance)
+
+    context = {'reservation': instance, 'timeblocks': aggregate_timeblocks(list(tbck))}
+    return render(request, 'eventApp/reservation_detail.html', context)
+
+
+@decorators.get_if_creator(Reservation)
+def delete_reservation(request, instance):
+    def create_manager_notification(content):
+        Notification.objects.create(title='Cancel Reserve', content=content, user=manager_user)
+
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+
+    group_id = Group.objects.get(name='manager')
+    manager_user = User.objects.filter(groups=group_id).first()
+    request_date = datetime.now()
+    days = (instance.timeblock_set.first().start_time - request_date).days
+    if days >= 7:
+        instance.status = Reservation.CANCELTOREFUND if instance.status == Reservation.PAID else Reservation.CANCEL
+        logger.info("Reservation " + str(instance.id) + " successfully canceled as " + instance.status)
+        create_manager_notification("Reserve " + str(instance.id) + " was canceled. You should check if needs to be refunded")
+    else:
+        instance.status = Reservation.CANCELOUTTIME
+        logger.info("Reservation " + str(instance.id) + " changed status to " + Reservation.CANCELOUTTIME)
+        create_manager_notification("Reserve " + str(instance.id) + " canceled out of time.")
+    instance.save()
+
+    return redirect('/events/reservation')
+
+  
+@login_required()
+@decorators.ajax_required
+@decorators.get_if_creator(Notification)
+def _ajax_mark_as_read(request, instance):
+    if instance.is_deleted:
+        return http.HttpResponseNotModified()
+    instance.soft_delete()
+    return http.HttpResponse()
+
+  
+@login_required()
+@decorators.facility_responsible_only
+@decorators.ajax_required
+def _ajax_mark_completed_incidence(request):
+    ids_list = request.GET.getlist('ids[]')
+    for id_ins in ids_list:
+        Incidence.objects.get(id=id_ins).soft_delete()
+    return http.JsonResponse({})
+
