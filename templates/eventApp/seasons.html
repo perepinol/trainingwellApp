@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+    <div class="col-md-auto">
+        <h1>{% trans 'Current seasons' %}</h1>
+    </div>
+    <div class="col d-flex align-items-center">
+        <button class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" >{% trans 'Add season' %}</button>
+    </div>
+
+    <div class="card-deck w-100 px-3" style="height: min-content">
+        <div class="row w-100 my-3">
+            {% for season in seasons %}
+                {% include 'eventApp/season_card.html' with s=season %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">{% trans 'Add New Season' %}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form action="{% url 'season' %}" method="post">
+              <div class="modal-body">
+                {% csrf_token %}
+                    <small>{% trans 'Season Name' %}</small><br>
+                    {{ form.name }}<br>
+                    <small>{% trans 'Starting date of the season' %}</small><br>
+                    {{ form.start_date }}<br>
+                    <small>{% trans 'Ending date of the season' %}</small><br>
+                    {{ form.end_date }}<br>
+                    <small>{% trans 'Open hour of the facilities' %}</small><br>
+                    {{ form.open_time }}<br>
+                    <small>{% trans 'Close hour of the facilities' %}</small><br>
+                    {{ form.close_time }}<br>
+
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Close' %}</button>
+                <input type="submit" class="btn btn-primary" value="{% trans 'Save' %}">
+              </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+{% endblock %}

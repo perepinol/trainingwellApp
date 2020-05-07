@@ -14,7 +14,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import TemplateView
 
 from eventApp import query, decorators
-from eventApp.forms import ReservationNameForm, DateForm
+from eventApp.forms import ReservationNameForm, DateForm, SeasonForm
 
 from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User, Season
 
@@ -351,6 +351,26 @@ def delete_reservation(request, pk):
     else:
         return HttpResponseForbidden()
     return redirect('/events/reservation')
+
+
+class SeasonListView(TemplateView):
+    template_name = 'eventApp/seasons.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        form = SeasonForm(data=request.POST)
+        if form.is_valid():
+            form.save(commit=True)
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        seasons = Season.objects.all()
+        context['seasons'] = seasons
+        context['form'] = SeasonForm()
+        return context
 
   
 @login_required()
