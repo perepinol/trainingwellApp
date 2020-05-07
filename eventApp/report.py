@@ -102,7 +102,6 @@ def as_charts(json_data):
         })
 
     if 'incomeoutcome' in json_data:
-        print(json_data['incomeoutcome'])
         chart = create_chart_json_view(
             title='Reservations of each space over number of reservation slots',
             datasets=['Income', 'Outcome', 'Profit'],
