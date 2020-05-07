@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib.auth.decorators import login_required
-from eventApp.decorators import facility_responsible_only, facility_manager_only
+from eventApp.decorators import facility_responsible_only
 from django.urls import path
 
 from eventApp.views import TestView, IncidenceView, reservation_view, show_reservation_schedule_view, _ajax_change_view, \
@@ -31,6 +31,6 @@ urlpatterns = [
     path('schedule', EventView.as_view(), name='event_schedule'),
     path('incidences/', facility_responsible_only(IncidenceView.as_view()), name="incidences"),
     path('', TestView.as_view(), name='home'),
-    path('space/', facility_manager_only(SpaceView.as_view()), name="spaces"),
-    path('season/', facility_manager_only(SeasonView.as_view()), name="seasons")
+    path('space/', facility_responsible_only(SpaceView.as_view()), name="spaces"),
+    path('season/', facility_responsible_only(SeasonView.as_view()), name="seasons")
 ]
