@@ -28,6 +28,7 @@ urlpatterns = [
     path('ajax/change_week/', _ajax_change_view, name='ajax_change_week'),
     path('ajax/mark_completed_incidende/', _ajax_mark_completed_incidence, name='ajax_completed'),
     path('notification/<int:obj_id>/', _ajax_mark_as_read, name='ajax_mark_read'),
+    path('schedule', EventView.as_view(), name='event_schedule'),
     path('incidences/', facility_responsible_only(IncidenceView.as_view()), name="incidences"),
     path('', TestView.as_view(), name='home'),
 ]

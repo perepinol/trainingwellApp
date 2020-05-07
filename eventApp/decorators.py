@@ -3,6 +3,7 @@ from functools import wraps
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404
+from django.template.defaulttags import register
 
 
 def ajax_required(f):
@@ -42,3 +43,10 @@ def get_if_creator(model, admin=False):
             return function(request, *args, **kwargs)
         return wrap
     return decorator
+
+
+@register.filter
+def lookup(lst, index):
+    if index >= len(lst):
+        return None
+    return lst[index]

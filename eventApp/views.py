@@ -1,5 +1,4 @@
 from datetime import date, datetime, timedelta
-from urllib.parse import parse_qs
 
 from django.contrib.auth.models import Group
 from django.http import HttpResponseForbidden
@@ -43,23 +42,43 @@ class TestView(TemplateView):
 
 
 class EventView(TemplateView):
-    template_name = 'eventApp/reservation_list_view.html'
+    template_name = 'eventApp/event_schedule_view.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        chosen_date = date.today()
-        query_string = parse_qs(self.request.GET.urlencode())
-        if 'chosen_date' in query_string and len(query_string['chosen_date']) == 1:
+        current_week = datetime.now() - timedelta(days=datetime.now().weekday())
+        chosen_week = current_week
+        if self.request.GET.get('week'):
             try:
-                chosen_date = datetime.strptime(query_string['chosen_date'][0], "%d-%m-%Y").date()
-                if chosen_date < date.today():
-                    chosen_date = date.today()
+                chosen_week = datetime.fromtimestamp(int(self.request.GET.get('week')))
+                if chosen_week < current_week:
+                    chosen_week = current_week
             except ValueError:
                 pass  # Stick with current date
 
-        context['form'] = DateForm(chosen_date=chosen_date)
-        context['event_list'] = Reservation.objects.filter(event_date__exact=chosen_date)
+        # Week information for forwards and backwards navigation
+        context['chosen_week'] = chosen_week
+        context['weeks'] = {
+            'chosen': chosen_week,
+            'previous': chosen_week - timedelta(days=7),
+            'next': chosen_week + timedelta(days=7)
+        }
+        if context['weeks']['previous'].date() < current_week.date():
+            del context['weeks']['previous']
+
+        # Current moment to disable previous events
+        context['now'] = datetime.now()
+
+        # Timetable data
+        context['days'] = [chosen_week + timedelta(days=i) for i in range(7)]
+        timetable = []
+        for hour in Season.ongoing_season().open_hours():
+            hour_events = [hour] + [
+                query.get_all_timeblocks(d).filter(start_time__hour=hour.hour) for d in context['days']
+            ]
+            timetable.append(hour_events)
+        context['timetable'] = timetable
+
         return context
 
 
