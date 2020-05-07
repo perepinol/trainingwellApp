@@ -13,7 +13,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 # Create your views here.
 from django.views.generic import TemplateView
 
-from eventApp import query, decorators
+from eventApp import query, decorators, report
 from eventApp.forms import ReservationNameForm, DateForm, ReportForm
 
 from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User, Season
@@ -112,7 +112,7 @@ def generate_timeblocks(post_data):
     return timeblocks
 
 
-@login_required()
+@login_required
 def reservation_view(request):
     """
     Render the user's reservation list.
@@ -192,7 +192,7 @@ def aggregate_timeblocks(timeblocks):
     return agg_list
 
 
-@login_required()
+@login_required
 def show_reservation_schedule_view(request):
     """
     Show the different views in the reservation process.
@@ -328,6 +328,7 @@ def reservation_detail(request, instance):
     return render(request, 'eventApp/reservation_detail.html', context)
 
 
+@decorators.manager_only
 def report_view(request):
     if request.method == 'GET':
         return render(request, 'eventApp/report_form.html', {'form': ReportForm()})
@@ -335,12 +336,20 @@ def report_view(request):
     if request.method == 'POST':
         rf = ReportForm(request.POST)
         if rf.is_valid():
-            rep_json = query.generate_report(
+            rep_json = report.generate_report(
                 rf.cleaned_data['start_date'],
                 rf.cleaned_data['end_date'],
                 rf.cleaned_data['include']
             )
-            print(rep_json)
+            charts = report.as_charts(rep_json)
+            for chart in charts:  # To allow frontend to parse the content properly
+                chart['chart'] = chart['chart'].replace('\\', '\\\\')
+
+            return render(request, 'eventApp/report_view.html', {
+                'charts': charts,
+                'from': rf.cleaned_data['start_date'],
+                'to': rf.cleaned_data['end_date']
+            })
         else:
             return http.HttpResponseRedirect(request.get_raw_uri())  # Do not move
 
@@ -380,8 +389,7 @@ def _ajax_mark_as_read(request, instance):
     instance.soft_delete()
     return http.HttpResponse()
 
-  
-@login_required
+
 @decorators.facility_responsible_only
 @decorators.ajax_required
 def _ajax_mark_completed_incidence(request):

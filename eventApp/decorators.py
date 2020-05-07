@@ -18,7 +18,7 @@ def ajax_required(f):
 
 def manager_only(f):
     def wrap(request, *args, **kwargs):
-        if not request.user.is_authenticated() or request.user.groups.filter(name='manager').count() == 0:
+        if not request.user.is_authenticated or request.user.groups.filter(name='manager').count() == 0:
             raise PermissionDenied
         return f(request, *args, **kwargs)
     wrap.__doc__ = f.__doc__
@@ -28,7 +28,7 @@ def manager_only(f):
 
 def facility_responsible_only(f):
     def wrap(request, *args, **kwargs):
-        if not request.user.is_authenticated() or request.user.groups.filter(name='facility').count() == 0:
+        if not request.user.is_authenticated or request.user.groups.filter(name='facility').count() == 0:
             raise PermissionDenied
         return f(request, *args, **kwargs)
     wrap.__doc__ = f.__doc__

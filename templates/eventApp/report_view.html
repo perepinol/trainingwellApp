@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+    <div class="row ml-3 mt-3">
+        <div class="col p-0">
+            <h1>{% trans 'TrainingWell usage report' %}</h1>
+        </div>
+        <div class="col mr-3 d-flex justify-content-end align-items-center">
+            <a role="button" type="button" class="btn btn-primary" href="">Back</a>
+        </div>
+    </div>
+    <div class="row ml-3">
+        <p>{% trans 'From' %} {{ from|date:"DATE_FORMAT" }} {% trans 'to' %} {{ to|date:"DATE_FORMAT" }}</p>
+    </div>
+    {% for chart in charts %}
+        <div class="row m-4 justify-content-center">
+            <h2>{{ chart.title }}</h2>
+        </div>
+        <div class="row mt-1 mb-5 mx-5 justify-content-center">
+            <canvas id="chart{{ forloop.counter0 }}" class="mw-100 mh-50"></canvas>
+        </div>
+    {% endfor %}
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script>
+<script>
+    $(function() {
+        Chart.scaleService.updateScaleDefaults('linear', {
+            ticks: {
+                min: 0,
+                max: 100
+            }
+        })
+        {% for chart in charts %}
+            console.log(JSON.parse($.parseHTML('{{ chart.chart }}')[0].textContent))
+            var context = $("#chart{{ forloop.counter0 }}").get(0).getContext("2d");
+            new Chart(context, {
+                type: '{{ chart.type }}' ? '{{ chart.type }}' : 'bar',
+                data: JSON.parse($.parseHTML('{{ chart.chart }}')[0].textContent),
+                options: {
+                    scales: {
+                        yAxes: [{
+                            scaleLabel: {
+                                display: true,
+                                labelString: '{{ chart.ylabel }}' ? '{{ chart.ylabel }}' : '',
+                                fontSize: 20
+                            },
+                            ticks: {
+                                max: '{{ chart.max_val }}' ? '{{ chart.max_val }}' : undefined
+                            }
+                        }]
+                    }
+                }
+            })
+        {% endfor %}
+    })
+</script>
+{% endblock %}
