@@ -23,6 +23,8 @@ def create_chart_json_view(title, datasets, data):
 
         def get_data(self):
             ret_val = []
+            if not len(data):
+                return []
             for i in range(1, len(data[0])):
                 ret_val.append(list(map(lambda row: row[i], data)))
             return ret_val
@@ -44,7 +46,7 @@ def generate_report(start_date, end_date, parts):
             counted_spaces
         ))
 
-        fill_with(result['use'], Space.objects.all(), 0, 0, mod=str)
+        fill_with(result['use'], Space.objects.all(), 0, [0], mod=str)
 
     if 'incomeoutcome' in parts:
         # Aggregate all income by date (takes into account day of reservation)
@@ -66,7 +68,7 @@ def generate_report(start_date, end_date, parts):
             date_incomes
         ))
 
-        fill_with(result['incomeoutcome'], days_between(start_date, end_date), 0, 0, mod=lambda d: d.isoformat())
+        fill_with(result['incomeoutcome'], days_between(start_date, end_date), 0, [0, 0, 0], mod=lambda d: d.isoformat())
         result['incomeoutcome'].sort()
 
     if 'performance' in parts:
@@ -82,8 +84,8 @@ def generate_report(start_date, end_date, parts):
             timeblock_counted_spaces
         ))
 
-        fill_with(result['performance'], Space.objects.all(), 0, 0, mod=str)
-
+        fill_with(result['performance'], Space.objects.all(), 0, [0], mod=str)
+    print(result)
     return result
 
 
@@ -136,12 +138,10 @@ def count_open_hours(space, start_date, end_date):
     for day in days_between(start_date, end_date):
         if space.is_available_in_season(day):
             hour_count += len(space.current_season(day).open_hours())
-    return hour_count
+    return hour_count if hour_count else 1
 
 
 def fill_with(struct, items, position, value, mod=lambda x: x):
-    if len(struct) == 0 or len(struct[0]) == 0:
-        return struct
     for instance in items:
         if mod(instance) not in map(lambda row: row[position], struct):
-            struct.append([mod(instance)] + [value] * (len(struct[0]) - 1))
+            struct.append([mod(instance)] + value)
