@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 from chartjs.views.base import JSONResponseMixin
-from chartjs.views.columns import BaseColumnsHighChartsView
 from chartjs.views.lines import BaseLineChartView
 from django.db.models import Count, Sum
 
@@ -85,7 +84,6 @@ def generate_report(start_date, end_date, parts):
         ))
 
         fill_with(result['performance'], Space.objects.all(), 0, [0], mod=str)
-    print(result)
     return result
 
 
