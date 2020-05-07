@@ -11,11 +11,10 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 
 # Create your views here.
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, ListView
 
 from eventApp import query, decorators
-from eventApp.forms import ReservationNameForm, DateForm
-
+from eventApp.forms import ReservationNameForm, DateForm, IncidenceForm
 from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User, Season
 
 import json
@@ -236,18 +235,18 @@ class IncidenceView(TemplateView):
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name, self.get_context_data())
 
+    def post(self, request):
+        form = IncidenceForm(data=request.POST)
+        if form.is_valid():
+            incidence = form.save(commit=False)
+            incidence.disable_fields = not incidence.disable_fields
+            incidence.save()
+        return render(request, self.template_name, self.get_context_data())
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        incidences = Incidence.objects.all()
-        '''for inc in Incidence.objects.all():
-            incidencesJSON[inc.id] = {'name': inc.name,
-                                      'content': inc.content,
-                                      'deadline': inc.limit.strftime('%d/%m/%Y-%H:%M'),
-                                      'fields': [str(field) for field in inc.affected_fields.all()],
-                                      'disabled': inc.disable_fields,
-                                      'deleted': inc.is_deleted,
-                                      'date_created': inc.created_at.strftime('%d/%m/%Y-%H:%M')}'''
-        context['incidences'] = incidences
+        context['incidences'] = Incidence.objects.all()
+        context['form'] = IncidenceForm()
         return context
 
 
@@ -272,14 +271,20 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
     def get_int_hour(_timedelta):
         return int(_timedelta.seconds/3600)
 
-    def get_day_all_spaces_free_(start_h, end_h, _spaces):
+    def get_day_all_spaces_free_(start_h, end_h, _spaces, _day):
         _today_sch = {}
         for _hour in range(get_int_hour(start_h), get_int_hour(end_h)):
-            _today_sch[str(_hour)+':00'] = _spaces
+            _hour_spaces = deepcopy(_spaces)
+            for _incidence in incidences:
+                if _incidence.limit > (datetime.combine(start_day+timedelta(days=_day), datetime.min.time()) + timedelta(hours=_hour)):
+                    for _sp in _incidence.affected_fields.all():
+                        del _hour_spaces[_sp.id]
+            _today_sch[str(_hour)+':00'] = _hour_spaces
         return _today_sch
 
     schedule = {}
     spaces = {}
+    incidences = query.get_all_incidences(limit=start_day+timedelta(days=num_days+1))
 
     open_season_hour = None
     end_season_hour = None
@@ -306,7 +311,7 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
                     timeblock.start_time.year == _date.year:
                 today_timeblocks.append(timeblock)
         if not today_timeblocks:
-            schedule[str(start_day + timedelta(days=day))] = get_day_all_spaces_free_(open_season_hour, end_season_hour, spaces)
+            schedule[str(start_day + timedelta(days=day))] = get_day_all_spaces_free_(open_season_hour, end_season_hour, spaces, day)
         else:
             schedule[str(start_day + timedelta(days=day))] = {}
             while open_season_hour + timedelta(hours=hour) < end_season_hour:
@@ -315,6 +320,10 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
                 for timeblock in today_timeblocks:
                     if timeblock.start_time.hour == get_int_hour(current_hour):
                         del free_spaces_per_hour[timeblock.space.id]
+                for incidence in incidences:
+                    if incidence.limit > (datetime.combine(start_day + timedelta(days=day), datetime.min.time()) + timedelta(hours=current_hour)):
+                        for sp in incidence.affected_fields.all():
+                            del free_spaces_per_hour[sp.id]
                 schedule[str(start_day + timedelta(days=day))][str(get_int_hour(current_hour))+':00'] = free_spaces_per_hour
                 hour += 1
 
@@ -353,7 +362,7 @@ def delete_reservation(request, instance):
 
     return redirect('/events/reservation')
 
-  
+
 @login_required()
 @decorators.ajax_required
 @decorators.get_if_creator(Notification)
@@ -363,7 +372,7 @@ def _ajax_mark_as_read(request, instance):
     instance.soft_delete()
     return http.HttpResponse()
 
-  
+
 @login_required()
 @decorators.facility_responsible_only
 @decorators.ajax_required
