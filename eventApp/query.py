@@ -55,7 +55,7 @@ def generate_report(start_date, end_date, parts):
         ).annotate(usage=Count('timeblock'))
 
         result['use'] = get_dict_from_iterator(map(
-            lambda space: (str(space), int(space.usage / count_open_hours(space, start_date, end_date) * 100)),
+            lambda space: (str(space), space.usage / count_open_hours(space, start_date, end_date) * 100),
             counted_spaces
         ))
 
@@ -91,7 +91,11 @@ def generate_report(start_date, end_date, parts):
 
 
 def count_open_hours(space, start_date, end_date):
-    return 1  # TODO: implement
+    hour_count = 0
+    for day in map(lambda i: start_date + timedelta(days=i), range((end_date - start_date).days + 1)):
+        if space.is_available_in_season(day):
+            hour_count += len(space.current_season(day).open_hours())
+    return hour_count
 
 
 def get_dict_from_iterator(iterator):
