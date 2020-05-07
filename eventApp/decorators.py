@@ -26,7 +26,6 @@ def facility_responsible_only(f):
     return wrap
 
 
-
 def get_if_creator(model, admin=False):
     def decorator(function):
         @wraps(function)

@@ -16,7 +16,7 @@ from django.views.generic import TemplateView
 from eventApp import query, decorators
 from eventApp.forms import ReservationNameForm, DateForm
 
-from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User
+from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User, Season
 
 import json
 from functools import reduce
@@ -319,14 +319,12 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
 
     return schedule
 
-  
-def reservation_detail(request, id):
-    res = get_object_or_404(Reservation, pk=id)
-    tbck = Timeblock.objects.filter(reservation=id)
 
-    context = {'reservation': res, 'timeblocks': aggregate_timeblocks(tbck)}
-    if res.organizer != request.user:
-        return http.HttpResponseForbidden()
+@decorators.get_if_creator(Reservation)
+def reservation_detail(request, instance):
+    tbck = Timeblock.objects.filter(reservation=instance)
+
+    context = {'reservation': instance, 'timeblocks': aggregate_timeblocks(list(tbck))}
     return render(request, 'eventApp/reservation_detail.html', context)
 
 
