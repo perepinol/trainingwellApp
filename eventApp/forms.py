@@ -2,7 +2,8 @@ from bootstrap_datepicker_plus import DatePickerInput
 from django.forms import ModelForm, ModelChoiceField, Form, DateField
 from datetime import date
 
-from eventApp.models import Reservation, Season
+
+from eventApp.models import Reservation, Season, Incidence
 
 
 class ReservationNameForm(ModelForm):
@@ -53,3 +54,23 @@ class SeasonForm(ModelForm):
             'showClear': False,
         })
         self.fields['close_time'].input_formats = ['%H:%M']
+
+class IncidenceForm(ModelForm):
+    class Meta:
+        model = Incidence
+        fields = ['name', 'content', 'limit', 'affected_fields', 'disable_fields']
+
+    def __init__(self, *args, **kwargs):
+        super(IncidenceForm, self).__init__(*args, **kwargs)
+        self.fields['limit'].widget = DatePickerInput(options={
+            'format': 'DD/MM/YYYY HH:mm',
+            'showClear': False,
+            'minDate': date.today().strftime('%Y-%m-%d'),
+        })
+        self.fields['limit'].input_formats = ['%d/%m/%Y %H:%M']
+
+    def save(self, commit=True):
+        incidence = super(IncidenceForm, self).save(commit=False)
+        if commit:
+            incidence.save()
+        return incidence
