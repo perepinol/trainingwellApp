@@ -2,7 +2,7 @@ from bootstrap_datepicker_plus import DatePickerInput
 from django.forms import ModelForm, ModelChoiceField, Form, DateField
 from datetime import date
 
-from eventApp.models import Reservation, Season
+from eventApp.models import Reservation, Season, Space
 
 
 class ReservationNameForm(ModelForm):
@@ -53,3 +53,11 @@ class SeasonForm(ModelForm):
             'showClear': False,
         })
         self.fields['close_time'].input_formats = ['%H:%M']
+
+class SpaceForm(ModelForm):
+    class Meta:
+        model = Space
+        fields = ['field', 'season', 'price_per_hour', 'sqmt', 'photo', 'description', 'offer']
+
+
+

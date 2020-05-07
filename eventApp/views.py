@@ -14,7 +14,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import TemplateView
 
 from eventApp import query, decorators
-from eventApp.forms import ReservationNameForm, DateForm, SeasonForm
+from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, SpaceForm
 
 from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User, Season
 
@@ -372,6 +372,24 @@ class SeasonListView(TemplateView):
         context['form'] = SeasonForm()
         return context
 
+class SpacesListView(TemplateView):
+    template_name = 'eventApp/spaces.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        form = SpaceForm(data=request.POST)
+        if form.is_valid():
+            form.save(commit=True)
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        spaces = Space.objects.all()
+        context['spaces'] = spaces
+        context['form'] = SpaceForm()
+        return context
   
 @login_required()
 @decorators.ajax_required
