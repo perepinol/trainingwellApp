@@ -14,8 +14,8 @@ from django.shortcuts import render, get_object_or_404
 from django.views.generic import TemplateView, ListView
 
 from eventApp import query, decorators
-from eventApp.forms import ReservationNameForm, DateForm
-from eventApp.models import Reservation, Timeblock, Space, Notification
+from eventApp.forms import ReservationNameForm, DateForm, IncidenceForm
+from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence
 
 import json
 from functools import reduce
@@ -210,6 +210,27 @@ def show_reservation_schedule_view(request):
         return render(request, 'eventApp/reservation_confirmation.html', context)
 
 
+class IncidenceView(TemplateView):
+    template_name = 'eventApp/incidence.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def post(self, request):
+        form = IncidenceForm(data=request.POST)
+        if form.is_valid():
+            incidence = form.save(commit=False)
+            incidence.disable_fields = not incidence.disable_fields
+            incidence.save()
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['incidences'] = Incidence.objects.all()
+        context['form'] = IncidenceForm()
+        return context
+
+
 @decorators.ajax_required
 def _ajax_change_view(request):
     start_day = date(year=int(request.GET.get('year', 2020)),
@@ -228,17 +249,27 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
     """
     from copy import deepcopy
 
+    # After updating timezone support, erase this
+    import pytz
+    spain = pytz.timezone('Europe/Madrid')
+
     def get_int_hour(_timedelta):
         return int(_timedelta.seconds/3600)
 
-    def get_day_all_spaces_free_(start_h, end_h, _spaces):
+    def get_day_all_spaces_free_(start_h, end_h, _spaces, _day):
         _today_sch = {}
         for _hour in range(get_int_hour(start_h), get_int_hour(end_h)):
-            _today_sch[str(_hour)+':00'] = _spaces
+            _hour_spaces = deepcopy(_spaces)
+            for _incidence in incidences:
+                if _incidence.limit > (datetime.combine(start_day+timedelta(days=_day), datetime.min.time()) + timedelta(hours=_hour)).replace(tzinfo=spain):
+                    for _sp in _incidence.affected_fields.all():
+                        del _hour_spaces[_sp.id]
+            _today_sch[str(_hour)+':00'] = _hour_spaces
         return _today_sch
 
     schedule = {}
     spaces = {}
+    incidences = query.get_all_incidences(limit=start_day+timedelta(days=num_days+1))
 
     open_season_hour = None
     end_season_hour = None
@@ -265,7 +296,7 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
                     timeblock.start_time.year == _date.year:
                 today_timeblocks.append(timeblock)
         if not today_timeblocks:
-            schedule[str(start_day + timedelta(days=day))] = get_day_all_spaces_free_(open_season_hour, end_season_hour, spaces)
+            schedule[str(start_day + timedelta(days=day))] = get_day_all_spaces_free_(open_season_hour, end_season_hour, spaces, day)
         else:
             schedule[str(start_day + timedelta(days=day))] = {}
             while open_season_hour + timedelta(hours=hour) < end_season_hour:
@@ -274,20 +305,19 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
                 for timeblock in today_timeblocks:
                     if timeblock.start_time.hour == get_int_hour(current_hour):
                         del free_spaces_per_hour[timeblock.space.id]
+                for incidence in incidences:
+                    if incidence.limit > (datetime.combine(start_day + timedelta(days=day), datetime.min.time()) + timedelta(hours=current_hour)).replace(tzinfo=spain):
+                        for sp in incidence.affected_fields.all():
+                            del free_spaces_per_hour[sp.id]
                 schedule[str(start_day + timedelta(days=day))][str(get_int_hour(current_hour))+':00'] = free_spaces_per_hour
                 hour += 1
 
     return schedule
 
-  
-def reservation_detail(request, id):
-    res = get_object_or_404(Reservation, pk=id)
-    tbck = Timeblock.objects.filter(reservation=id)
 
-    context = {'reservation': res, 'timeblocks': aggregate_timeblocks(tbck)}
-    if res.organizer != request.user:
-        return http.HttpResponseForbidden()
-    return render(request, 'eventApp/reservation_detail.html', context)
+@decorators.get_if_creator(Reservation)
+def reservation_detail(request, instance):
+    return render(request, 'eventApp/reservation_detail.html', {'reservation': instance})
 
 
 @login_required()
@@ -299,3 +329,11 @@ def _ajax_mark_as_read(request, instance):
     instance.soft_delete()
     return http.HttpResponse()
 
+
+@decorators.facility_responsible_only
+@decorators.ajax_required
+def _ajax_mark_completed_incidence(request):
+    ids_list = request.GET.getlist('ids[]')
+    for id_ins in ids_list:
+        Incidence.objects.get(id=id_ins).soft_delete()
+    return http.JsonResponse({})
