@@ -1,0 +1,19 @@
+{% load i18n %}
+<div class="col-lg-4 col-md-6 col-sm-12 {% if incidence.is_deleted %}completed{% endif %}" style="padding: 8px; {% if incidence.is_deleted %}display: none{% endif %}">
+    <div id="{{ incidence.id }}" class="card w-100 h-100 {% if not incidence.is_deleted %}ongoing{% endif %}" style="cursor: pointer">
+        <div class="flip-front">
+            <div class="card-body">
+                <h6 class="card-title">{{ incidence }}{% if incidence.is_deleted %} (Completed){% endif %}</h6>
+                <p class="card-text">{{ incidence.content }}</p>
+                <p class="card-text">{% blocktrans with d=incidence.limit|date:"DATE_FORMAT" t=incidence.limit|time:"TIME_FORMAT" %}Deadline: {{ d }} at {{ t }}{% endblocktrans %}</p>
+            </div>
+            <div class="card-footer">
+                <small class="text-muted">{% if incidence.disable_fields %}{% trans 'Fields are not disabled' %}{%  else %}{% trans 'Fields are disabled' %}{% endif %}</small>
+            </div>
+        </div>
+
+        <div class="flip-back">
+
+        </div>
+    </div>
+</div>

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+    <div class="row m-3">
+        <div class="align-center mr-auto">
+            <h3 class="m-0">Search here?</h3>
+        </div>
+        <div class="mx-1">
+            <a role="button" type="button" class="btn btn-secondary {{ weeks.previous|yesno:",disabled" }}" href="{% url 'event_schedule' %}?week={{ weeks.previous|date:"U" }}">{% trans 'Previous week' %}</a>
+        </div>
+        <div class="mx-1">
+            <a role="button" type="button" class="btn btn-secondary" href="{% url 'event_schedule' %}">{% trans 'Now' %}</a>
+        </div>
+        <div class="mx-1">
+            <a role="button" type="button" class="btn btn-secondary" href="{% url 'event_schedule' %}?week={{ weeks.next|date:"U" }}">{% trans 'Next week' %}</a>
+        </div>
+    </div>
+    <div class="table-responsive table-striped table-bordered">
+        <table class="table mb-0">
+            <tr>
+                <th style="width: 1%; white-space: nowrap">{% trans 'Hour' %} / {% trans 'Day' %}</th>
+                {% for day in days %}
+                    <th>{{ day|date:"DATE_FORMAT" }}</th>
+                {% endfor %}
+            </tr>
+            {% for row in timetable %}
+                <tr>
+                    <td>{{ row|first|time:"TIME_FORMAT" }}</td>
+                    {% for day in row|slice:"1:" %}
+                        <td id="card-container"
+                            {% if days|lookup:forloop.counter0|date:"U" < now|date:"U" %}class="disabled"{% endif %}
+                            {% if days|lookup:forloop.counter0|date:"U" == now|date:"U" and row|first|time:"H" < now|time:"H" %}class="disabled"{% endif %}
+                            {% if days|lookup:forloop.counter0|date:"U" == now|date:"U" and row|first|time:"H" == now|time:"H" %}class="current"{% endif %}
+                        style="width: 200px">
+                            {% for timeblock in day %}
+                                {% include 'eventApp/timeblock_card.html' with tb=timeblock %}
+                            {% endfor %}
+                        </td>
+                    {% empty %}
+                        <td></td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}

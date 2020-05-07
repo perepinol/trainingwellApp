@@ -1,27 +1,30 @@
-from copy import deepcopy
 from datetime import date, datetime, timedelta
-from urllib.parse import parse_qs
 
+from django.contrib.auth.models import Group
+from django.http import HttpResponseForbidden
 from django.urls import reverse
-from django.utils import timezone
 
 from django import http
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404
+
+from django.shortcuts import render, get_object_or_404, redirect
 
 # Create your views here.
-from django.views.generic import TemplateView, ListView
+from django.views.generic import TemplateView
 
 from eventApp import query, decorators
-from eventApp.forms import ReservationNameForm, DateForm, IncidenceForm
-from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence
+from eventApp.forms import ReservationNameForm, DateForm
+
+from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User, Season
 
 import json
 from functools import reduce
 import logging
 
 from eventApp.query import AlreadyExistsException
+
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -39,23 +42,43 @@ class TestView(TemplateView):
 
 
 class EventView(TemplateView):
-    template_name = 'eventApp/reservation_list_view.html'
+    template_name = 'eventApp/event_schedule_view.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        chosen_date = date.today()
-        query_string = parse_qs(self.request.GET.urlencode())
-        if 'chosen_date' in query_string and len(query_string['chosen_date']) == 1:
+        current_week = datetime.now() - timedelta(days=datetime.now().weekday())
+        chosen_week = current_week
+        if self.request.GET.get('week'):
             try:
-                chosen_date = datetime.strptime(query_string['chosen_date'][0], "%d-%m-%Y").date()
-                if chosen_date < date.today():
-                    chosen_date = date.today()
+                chosen_week = datetime.fromtimestamp(int(self.request.GET.get('week')))
+                if chosen_week < current_week:
+                    chosen_week = current_week
             except ValueError:
                 pass  # Stick with current date
 
-        context['form'] = DateForm(chosen_date=chosen_date)
-        context['event_list'] = Reservation.objects.filter(event_date__exact=chosen_date)
+        # Week information for forwards and backwards navigation
+        context['chosen_week'] = chosen_week
+        context['weeks'] = {
+            'chosen': chosen_week,
+            'previous': chosen_week - timedelta(days=7),
+            'next': chosen_week + timedelta(days=7)
+        }
+        if context['weeks']['previous'].date() < current_week.date():
+            del context['weeks']['previous']
+
+        # Current moment to disable previous events
+        context['now'] = datetime.now()
+
+        # Timetable data
+        context['days'] = [chosen_week + timedelta(days=i) for i in range(7)]
+        timetable = []
+        for hour in Season.ongoing_season().open_hours():
+            hour_events = [hour] + [
+                query.get_all_timeblocks(d).filter(start_time__hour=hour.hour) for d in context['days']
+            ]
+            timetable.append(hour_events)
+        context['timetable'] = timetable
+
         return context
 
 
@@ -70,9 +93,6 @@ def generate_timeblocks(post_data):
         Space.DoesNotExist: If a space id is not in the database.
         AlreadyExistsException: If an identical Timeblock (except for its Reservation) is in the database.
     """
-    post_data = deepcopy(post_data)
-    if 'user' in post_data:
-        del post_data['user']
     if not post_data:
         raise ValueError()  # As if JSON verification failed
 
@@ -82,7 +102,7 @@ def generate_timeblocks(post_data):
             timestamp = int(timestamp)  # May throw ValueError
             tb = Timeblock(
                 space_id=space_id,
-                start_time=datetime.fromtimestamp(timestamp).astimezone(timezone.utc)
+                start_time=datetime.fromtimestamp(timestamp)
             )
             if not Space.objects.filter(id=space_id).count():
                 raise Space.DoesNotExist()
@@ -184,7 +204,6 @@ def show_reservation_schedule_view(request):
         # Remove session if available
         if 'timeblocks' in request.session:
             del request.session['timeblocks']
-
         context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()),
                    'back': 'reservations'}
         return render(request, 'eventApp/reservation_schedule_view.html', context)
@@ -216,18 +235,18 @@ class IncidenceView(TemplateView):
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name, self.get_context_data())
 
-    def post(self, request):
-        form = IncidenceForm(data=request.POST)
-        if form.is_valid():
-            incidence = form.save(commit=False)
-            incidence.disable_fields = not incidence.disable_fields
-            incidence.save()
-        return render(request, self.template_name, self.get_context_data())
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['incidences'] = Incidence.objects.all()
-        context['form'] = IncidenceForm()
+        incidences = Incidence.objects.all()
+        '''for inc in Incidence.objects.all():
+            incidencesJSON[inc.id] = {'name': inc.name,
+                                      'content': inc.content,
+                                      'deadline': inc.limit.strftime('%d/%m/%Y-%H:%M'),
+                                      'fields': [str(field) for field in inc.affected_fields.all()],
+                                      'disabled': inc.disable_fields,
+                                      'deleted': inc.is_deleted,
+                                      'date_created': inc.created_at.strftime('%d/%m/%Y-%H:%M')}'''
+        context['incidences'] = incidences
         return context
 
 
@@ -249,27 +268,17 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
     """
     from copy import deepcopy
 
-    # After updating timezone support, erase this
-    import pytz
-    spain = pytz.timezone('Europe/Madrid')
-
     def get_int_hour(_timedelta):
         return int(_timedelta.seconds/3600)
 
-    def get_day_all_spaces_free_(start_h, end_h, _spaces, _day):
+    def get_day_all_spaces_free_(start_h, end_h, _spaces):
         _today_sch = {}
         for _hour in range(get_int_hour(start_h), get_int_hour(end_h)):
-            _hour_spaces = deepcopy(_spaces)
-            for _incidence in incidences:
-                if _incidence.limit > (datetime.combine(start_day+timedelta(days=_day), datetime.min.time()) + timedelta(hours=_hour)).replace(tzinfo=spain):
-                    for _sp in _incidence.affected_fields.all():
-                        del _hour_spaces[_sp.id]
-            _today_sch[str(_hour)+':00'] = _hour_spaces
+            _today_sch[str(_hour)+':00'] = _spaces
         return _today_sch
 
     schedule = {}
     spaces = {}
-    incidences = query.get_all_incidences(limit=start_day+timedelta(days=num_days+1))
 
     open_season_hour = None
     end_season_hour = None
@@ -296,7 +305,7 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
                     timeblock.start_time.year == _date.year:
                 today_timeblocks.append(timeblock)
         if not today_timeblocks:
-            schedule[str(start_day + timedelta(days=day))] = get_day_all_spaces_free_(open_season_hour, end_season_hour, spaces, day)
+            schedule[str(start_day + timedelta(days=day))] = get_day_all_spaces_free_(open_season_hour, end_season_hour, spaces)
         else:
             schedule[str(start_day + timedelta(days=day))] = {}
             while open_season_hour + timedelta(hours=hour) < end_season_hour:
@@ -305,10 +314,6 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
                 for timeblock in today_timeblocks:
                     if timeblock.start_time.hour == get_int_hour(current_hour):
                         del free_spaces_per_hour[timeblock.space.id]
-                for incidence in incidences:
-                    if incidence.limit > (datetime.combine(start_day + timedelta(days=day), datetime.min.time()) + timedelta(hours=current_hour)).replace(tzinfo=spain):
-                        for sp in incidence.affected_fields.all():
-                            del free_spaces_per_hour[sp.id]
                 schedule[str(start_day + timedelta(days=day))][str(get_int_hour(current_hour))+':00'] = free_spaces_per_hour
                 hour += 1
 
@@ -317,9 +322,37 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
 
 @decorators.get_if_creator(Reservation)
 def reservation_detail(request, instance):
-    return render(request, 'eventApp/reservation_detail.html', {'reservation': instance})
+    tbck = Timeblock.objects.filter(reservation=instance)
+
+    context = {'reservation': instance, 'timeblocks': aggregate_timeblocks(list(tbck))}
+    return render(request, 'eventApp/reservation_detail.html', context)
 
 
+def delete_reservation(request, pk):
+    group_id = Group.objects.get(name='manager')
+    manager_user = User.objects.filter(groups=group_id).first()
+
+    def create_manager_notification(content):
+        Notification.objects.create(title='Cancel Reserve', content=content, user=manager_user)
+
+    item = Reservation.objects.get(id=pk)
+    if request.user == item.user:
+        request_date = datetime.now()
+        days = (item.timeblock_set.first().start_time - request_date).days
+        if days >= 7:
+            item.status = Reservation.CANCELTOREFUND if item.status == Reservation.PAID else Reservation.CANCEL
+            logger.info("Reservation " + str(item.id) + " successfully canceled as " + item.status)
+            create_manager_notification("Reserve " + str(item.id) + " was canceled. You should check if needs to be refunded")
+        else:
+            item.status = Reservation.CANCELOUTTIME
+            logger.info("Reservation " + item.id + " changed status to " + Reservation.CANCELOUTTIME)
+            create_manager_notification("Reserve " + str(item.id) + " canceled out of time.")
+        item.save()
+    else:
+        return HttpResponseForbidden()
+    return redirect('/events/reservation')
+
+  
 @login_required()
 @decorators.ajax_required
 @decorators.get_if_creator(Notification)
@@ -329,7 +362,8 @@ def _ajax_mark_as_read(request, instance):
     instance.soft_delete()
     return http.HttpResponse()
 
-
+  
+@login_required()
 @decorators.facility_responsible_only
 @decorators.ajax_required
 def _ajax_mark_completed_incidence(request):
@@ -337,3 +371,4 @@ def _ajax_mark_completed_incidence(request):
     for id_ins in ids_list:
         Incidence.objects.get(id=id_ins).soft_delete()
     return http.JsonResponse({})
+
