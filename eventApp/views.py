@@ -381,16 +381,49 @@ class SpacesListView(TemplateView):
     def post(self, request, *args, **kwargs):
         form = SpaceForm(data=request.POST)
         if form.is_valid():
-            form.save(commit=True)
+            space = form.save(commit=True)
+            logger.info("Created space: " + str(space.id) )
         return render(request, self.template_name, self.get_context_data())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        spaces = Space.objects.all()
+        spaces = Space.objects.filter(is_deleted=False)
         context['spaces'] = spaces
         context['form'] = SpaceForm()
         return context
-  
+
+
+class SpaceView(TemplateView):
+    template_name = 'eventApp/space_detail.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        space = get_object_or_404(Space, id=self.kwargs.get('obj_id'))
+        form = SpaceForm(data=request.POST, instance=space)
+        if form.is_valid():
+            form.save(commit=True)
+            logger.info("Edited space: " + str(space.id))
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['s'] = get_object_or_404(Space, id=self.kwargs.get('obj_id'))
+        context['form'] = SpaceForm(instance=context['s'])
+        return context
+
+
+@login_required()
+@decorators.facility_responsible_only
+def delete_space(request, obj_id):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    space = get_object_or_404(Space, id=obj_id)
+    space.soft_delete()
+    logger.info("Deleted space: " + str(space.id))
+    return redirect('/events/spaces/')
+
 @login_required()
 @decorators.ajax_required
 @decorators.get_if_creator(Notification)

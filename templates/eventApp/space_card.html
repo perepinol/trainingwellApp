@@ -6,11 +6,11 @@
             <p class="card-text">{% blocktrans with f=s.field %}Field: {{ f }}{% endblocktrans %}</p>
             <p class="card-text">{% trans 'Season:' %} {% for sea in s.season.all %} {{sea}}, {% endfor %}</p>
             <p class="card-text">{% blocktrans with p=s.price_per_hour%}Price per hour: {{ p }}{% endblocktrans %}</p>
-            <p class="card-text">{% blocktrans with sqmt=s.sqmt %}Square metres: {{ t }}{% endblocktrans %}</p>
+            <p class="card-text">{% blocktrans with sqmt=s.sqmt %}Square metres: {{ sqmt }}{% endblocktrans %}</p>
             <p class="card-text">{% blocktrans with o=s.offer %}Offer: {{ o }}{% endblocktrans %}</p>
         </div>
         <div class="card-footer">
-            <a href="#" class="card-link">Edit</a>
+            <a href="{% url 'space_detail' s.id %}" class="card-link">View</a>
         </div>
     </div>
 </div>

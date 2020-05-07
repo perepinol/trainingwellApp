@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+    <div class="card-body">
+            <h6 class="card-title">{{ s.name }}</h6>
+            <p class="card-text">{% blocktrans with f=s.field %}Field: {{ f }}{% endblocktrans %}</p>
+            <p class="card-text">{% trans 'Season:' %} {% for sea in s.season.all %} {{sea}}, {% endfor %}</p>
+            <p class="card-text">{% blocktrans with p=s.price_per_hour%}Price per hour: {{ p }}{% endblocktrans %}</p>
+            <p class="card-text">{% blocktrans with sqmt=s.sqmt %}Square metres: {{ sqmt }}{% endblocktrans %}</p>
+            <p class="card-text">{% blocktrans with d=s.description%}Description: {{ d }}{% endblocktrans %}</p>
+            <p class="card-text">{% blocktrans with o=s.offer %}Offer: {{ o }}{% endblocktrans %}</p>
+    </div>
+    <div class="card-footer">
+        <button class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" >{% trans 'Edit space' %}</button>
+        <button class="btn btn-danger" data-toggle="modal" data-target="#delete" >{% trans 'Delete space' %}</button>
+    </div>
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">{% trans 'Add New Space' %}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form action="{% url 'spaces' %}" method="post">
+              <div class="modal-body">
+                {% csrf_token %}
+                    <small>{% trans 'Field' %}</small><br>
+                    {{ form.field }}<br>
+                    <small>{% trans 'Season' %}</small><br>
+                    {{ form.season }}<br>
+                    <small>{% trans 'Price per hour' %}</small><br>
+                    {{ form.price_per_hour }}<br>
+                    <small>{% trans 'Square metres' %}</small><br>
+                    {{ form.sqmt }}<br>
+                    <small>{% trans 'Photo' %}</small><br>
+                    {{ form.photo }}<br>
+                    <small>{% trans 'Description' %}</small><br>
+                    {{ form.description }}<br>
+                    <small>{% trans 'Offer' %}</small><br>
+                    {{ form.offer }}<br>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Close' %}</button>
+                <input type="submit" class="btn btn-primary" value="{% trans 'Save' %}">
+              </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="delete" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">{% trans 'Do you want to permanently delete this space?' %}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Cancel' %}</button>
+                  <form action="{% url 'space_delete' s.id %}" method="post">
+                      {% csrf_token %}
+                      <input type="submit" class="btn btn-danger" value="{% trans 'Delete' %}">
+                  </form>
+              </div>
+        </div>
+      </div>
+    </div>
+{% endblock %} 
