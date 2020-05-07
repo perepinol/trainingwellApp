@@ -61,7 +61,7 @@ class DateForm(Form):
         self.fields['chosen_date'].widget = DatePickerInput(options={
             'format': 'DD-MM-YYYY',
             'minDate': date.today().strftime('%Y-%m-%d'),
-            'defaultDate': self.chosen_date.strftime('%Y-%m-%d'),
+            'defaultDate': self.chosen_date.date().strftime('%Y-%m-%d'),
             'showClear': False
         })
 

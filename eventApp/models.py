@@ -71,6 +71,18 @@ class Season(models.Model):
     def __str__(self):
         return u"%s" % self.name
 
+    @staticmethod
+    def ongoing_season():
+        return Season.objects.filter(start_date__lte=date.today(), end_date__gt=date.today()).first()
+
+    def open_hours(self):
+        hours = [self.open_time]
+        next_datetime = datetime.combine(date.today(), hours[-1]) + settings.RESERVATION_GRANULARITY
+        while next_datetime.time() < self.close_time:
+            hours.append(next_datetime.time())
+            next_datetime = datetime.combine(date.today(), hours[-1]) + settings.RESERVATION_GRANULARITY
+        return hours
+
 
 class Space(models.Model):
     field = models.ForeignKey(Field, on_delete=models.PROTECT)
@@ -109,6 +121,15 @@ class Space(models.Model):
 
 
 class Reservation(models.Model):
+    PAID = 'P'
+    UNPAID = 'U'
+    CANCELTOREFUND = 'CTR'
+    CANCELANDREFUND = 'CR'
+    CANCELOUTTIME = 'COT'
+    CANCEL = 'C'
+    STATUS = ((PAID, 'Paid'), (UNPAID, 'Unpaid'), (CANCELTOREFUND, 'Canceled, waiting refund'),
+              (CANCELANDREFUND, 'Canceled and refunded'), (CANCELOUTTIME, 'Canceled out of time'), (CANCEL, 'Canceled'))
+    status = models.CharField(max_length=100, choices=STATUS)
     event_name = models.CharField(max_length=100)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     reservation_date = models.DateTimeField(auto_now_add=True)
@@ -129,6 +150,10 @@ class Reservation(models.Model):
         self.is_deleted = True
         self.save()
 
+    def current_state(self):
+        for s in self.STATUS:
+            if self.status == s[0]: return s[1]
+
 
 def get_timeblock_space(timeblock):
     def callable_func():
@@ -140,9 +165,14 @@ class Timeblock(models.Model):
     reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE)
     space = models.ForeignKey(Space, on_delete=models.SET(get_timeblock_space('self').__str__()))
     start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
 
     class Meta:
         ordering = ['start_time']
+
+    def save(self, *args, **kwargs):
+        self.end_time = self.start_time + settings.RESERVATION_GRANULARITY
+        super(Timeblock, self).save(*args, **kwargs)
 
     def __str__(self):
         return u"%s at %s" % (self.space, self.start_time.isoformat())

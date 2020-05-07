@@ -1,0 +1,8 @@
+{% load i18n %}
+
+<div class="card{% if tb.end_time|date:"U" < now|date:"U" %} card--disabled{% endif %}">
+    <div class="card-body p-1 pl-2">
+        <h5 class="card-title m-0">{{ tb.reservation.event_name }}</h5>
+        <p class="card-text">{{ tb.space }}</p>
+    </div>
+</div>
