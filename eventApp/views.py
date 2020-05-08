@@ -11,11 +11,13 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 
 # Create your views here.
+
+from eventApp import query, decorators
+from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, SpaceForm
 from django.views.generic import TemplateView, ListView
 
-
 from eventApp import query, decorators, report
-from eventApp.forms import ReservationNameForm, DateForm, IncidenceForm, ReportForm
+from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, IncidenceForm, ReportForm
 from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User, Season
 
 import json
@@ -389,6 +391,110 @@ def delete_reservation(request, instance):
     return redirect('/events/reservation')
 
 
+class SeasonListView(TemplateView):
+    template_name = 'eventApp/seasons.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        form = SeasonForm(data=request.POST)
+        if form.is_valid():
+            season = form.save(commit=True)
+            logger.info("Created season: " + str(season.id) + ' ' + season.name)
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        seasons = Season.objects.filter(is_deleted=False)
+        context['seasons'] = seasons
+        context['form'] = SeasonForm()
+        return context
+
+class SpacesListView(TemplateView):
+    template_name = 'eventApp/spaces.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        form = SpaceForm(data=request.POST)
+        if form.is_valid():
+            space = form.save(commit=True)
+            logger.info("Created space: " + str(space.id) )
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        spaces = Space.objects.filter(is_deleted=False)
+        context['spaces'] = spaces
+        context['form'] = SpaceForm()
+        return context
+
+
+class SpaceView(TemplateView):
+    template_name = 'eventApp/space_detail.html'
+    
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        space = get_object_or_404(Space, id=self.kwargs.get('obj_id'))
+        form = SpaceForm(data=request.POST, instance=space)
+        if form.is_valid():
+            form.save(commit=True)
+            logger.info("Edited space: " + str(space.id))
+        return render(request, self.template_name, self.get_context_data())
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['s'] = get_object_or_404(Space, id=self.kwargs.get('obj_id'))
+        context['form'] = SpaceForm(instance=context['s'])
+        return context
+
+class SeasonView(TemplateView):
+    template_name = 'eventApp/season_detail.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        season = get_object_or_404(Season, id=self.kwargs.get('obj_id'))
+        form = SeasonForm(data=request.POST, instance=season)
+        if form.is_valid():
+            form.save(commit=True)
+            logger.info("Edited season: " + str(season.id) + ' ' + season.name)
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['s'] = get_object_or_404(Season, id=self.kwargs.get('obj_id'))
+        context['form'] = SeasonForm(instance=context['s'])
+        return context
+
+
+@login_required()
+@decorators.facility_responsible_only
+def delete_space(request, obj_id):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    space = get_object_or_404(Space, id=obj_id)
+    space.soft_delete()
+    logger.info("Deleted space: " + str(space.id))
+    return redirect('/events/spaces/')
+
+  
+@login_required
+@decorators.facility_responsible_only
+def delete_season(request, obj_id):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    season = get_object_or_404(Season, id=obj_id)
+    season.soft_delete()
+    logger.info("Deleted season: " + str(season.id) + ' ' + season.name)
+    return redirect('/events/seasons/')
+
+  
 @login_required
 @decorators.ajax_required
 @decorators.get_if_creator(Notification)
