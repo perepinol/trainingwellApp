@@ -71,6 +71,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'eventApp.views.notification_context_processor'
             ],
+
         },
     },
 ]
