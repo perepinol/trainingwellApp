@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+     <div class="card-body">
+        <h6 class="card-title">{{ s.name }}</h6>
+        <p class="card-text">{% blocktrans with d=s.start_date|date:"DATE_FORMAT" %}Start Date: {{ d }}{% endblocktrans %}</p>
+        <p class="card-text">{% blocktrans with d=s.end_date|date:"DATE_FORMAT" %}End Date: {{ d }}{% endblocktrans %}</p>
+        <p class="card-text">{% blocktrans with t=s.open_time|time:"TIME_FORMAT" %}Facilities open hour: {{ t }}{% endblocktrans %}</p>
+        <p class="card-text">{% blocktrans with t=s.close_time|time:"TIME_FORMAT" %}Facilities close hour: {{ t }}{% endblocktrans %}</p>
+     </div>
+    <div class="card-footer">
+        <button class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" >{% trans 'Edit season' %}</button>
+        <button class="btn btn-danger" data-toggle="modal" data-target="#delete" >{% trans 'Delete season' %}</button>
+    </div>
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">{% trans 'Edit Season' %}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form action="{% url 'season_detail' s.id %}" method="post">
+              <div class="modal-body">
+                {% csrf_token %}
+                    <small>{% trans 'Season Name' %}</small><br>
+                    {{ form.name }}<br>
+                    <small>{% trans 'Starting date of the season' %}</small><br>
+                    {{ form.start_date }}<br>
+                    <small>{% trans 'Ending date of the season' %}</small><br>
+                    {{ form.end_date }}<br>
+                    <small>{% trans 'Open hour of the facilities' %}</small><br>
+                    {{ form.open_time }}<br>
+                    <small>{% trans 'Close hour of the facilities' %}</small><br>
+                    {{ form.close_time }}<br>
+
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Close' %}</button>
+                <input type="submit" class="btn btn-primary" value="{% trans 'Save' %}">
+              </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="delete" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">{% trans 'Do you want to permanently delete this season?' %}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Cancel' %}</button>
+                  <form action="{% url 'season_delete' s.id %}" method="post">
+                      {% csrf_token %}
+                      <input type="submit" class="btn btn-danger" value="{% trans 'Delete' %}">
+                  </form>
+              </div>
+        </div>
+      </div>
+    </div>
+{% endblock %}
