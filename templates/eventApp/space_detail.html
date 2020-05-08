@@ -24,7 +24,7 @@
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
-          <form action="{% url 'spaces' %}" method="post">
+          <form action="{% url 'space_detail' obj_id=s.id %}" method="post">
               <div class="modal-body">
                 {% csrf_token %}
                     <small>{% trans 'Field' %}</small><br>
