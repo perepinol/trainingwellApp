@@ -31,6 +31,21 @@
                         <a class="nav-link" href="{% url 'incidences' %}">{% trans 'Incidences' %}</a>
                     </li>
                 {% endif %}
+                {% if request.user|has_group:"facility" %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'season' %}">{% trans 'Seasons' %}</a>
+                    </li>
+                {% endif %}
+                {% if request.user|has_group:"facility" %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'spaces' %}">{% trans 'Spaces' %}</a>
+                    </li>
+                {% endif %}
+                {% if request.user|has_group:"manager" %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'report' %}">{% trans 'Report' %}</a>
+                    </li>
+                {% endif %}
             </ul>
             {% if user.is_authenticated %}
                 <div class="mr-5">
