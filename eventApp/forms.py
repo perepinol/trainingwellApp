@@ -3,7 +3,7 @@ from django.forms import ModelForm, ModelChoiceField, Form, DateField, DateTimeF
     SelectMultiple
 from datetime import date, datetime, timedelta
 
-from eventApp.models import Reservation
+from eventApp.models import Reservation, Incidence
 
 
 class ReservationNameForm(ModelForm):
@@ -66,3 +66,24 @@ class DateForm(Form):
         })
 
     chosen_date = DateField()
+
+
+class IncidenceForm(ModelForm):
+    class Meta:
+        model = Incidence
+        fields = ['name', 'content', 'limit', 'affected_fields', 'disable_fields']
+
+    def __init__(self, *args, **kwargs):
+        super(IncidenceForm, self).__init__(*args, **kwargs)
+        self.fields['limit'].widget = DatePickerInput(options={
+            'format': 'DD/MM/YYYY HH:mm',
+            'showClear': False,
+            'minDate': date.today().strftime('%Y-%m-%d'),
+        })
+        self.fields['limit'].input_formats = ['%d/%m/%Y %H:%M']
+
+    def save(self, commit=True):
+        incidence = super(IncidenceForm, self).save(commit=False)
+        if commit:
+            incidence.save()
+        return incidence
