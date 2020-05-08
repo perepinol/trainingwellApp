@@ -10,7 +10,7 @@
                 {{ form.as_p }}
                 <div class="row mt-5">
                     <div class="col-5">
-                        <a href="{{ back }}" class="btn btn-danger">Cancel</a>
+                        <a href="{% url 'home' %}" class="btn btn-danger">Cancel</a>
                     </div>
                     <div class="col-7 p-0">
                         <button type="submit" class="btn btn-primary">{% trans 'Generate report' %}</button>

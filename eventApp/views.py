@@ -366,6 +366,7 @@ def report_view(request):
         else:
             return http.HttpResponseRedirect(request.get_raw_uri())  # Do not move
 
+
 @decorators.get_if_creator(Reservation)
 def delete_reservation(request, instance):
     def create_manager_notification(content):
@@ -388,7 +389,7 @@ def delete_reservation(request, instance):
         create_manager_notification("Reserve " + str(instance.id) + " canceled out of time.")
     instance.save()
 
-    return redirect('/events/reservation')
+    return redirect(reverse('reservations'))
 
 
 class SeasonListView(TemplateView):
@@ -410,6 +411,7 @@ class SeasonListView(TemplateView):
         context['seasons'] = seasons
         context['form'] = SeasonForm()
         return context
+
 
 class SpacesListView(TemplateView):
     template_name = 'eventApp/spaces.html'
@@ -452,6 +454,7 @@ class SpaceView(TemplateView):
         context['form'] = SpaceForm(instance=context['s'])
         return context
 
+
 class SeasonView(TemplateView):
     template_name = 'eventApp/season_detail.html'
 
@@ -481,7 +484,7 @@ def delete_space(request, obj_id):
     space = get_object_or_404(Space, id=obj_id)
     space.soft_delete()
     logger.info("Deleted space: " + str(space.id))
-    return redirect('/events/spaces/')
+    return redirect(reverse('spaces'))
 
   
 @login_required
@@ -492,7 +495,7 @@ def delete_season(request, obj_id):
     season = get_object_or_404(Season, id=obj_id)
     season.soft_delete()
     logger.info("Deleted season: " + str(season.id) + ' ' + season.name)
-    return redirect('/events/seasons/')
+    return redirect(reverse('season'))
 
   
 @login_required
