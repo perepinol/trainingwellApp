@@ -72,8 +72,8 @@ class Season(models.Model):
         return u"%s" % self.name
 
     @staticmethod
-    def ongoing_season():
-        return Season.objects.filter(start_date__lte=date.today(), end_date__gt=date.today()).first()
+    def ongoing_season(day=date.today()):
+        return Season.objects.filter(start_date__lte=day, end_date__gt=day).first()
 
     def open_hours(self):
         hours = [self.open_time]
@@ -107,17 +107,17 @@ class Space(models.Model):
         self.is_deleted = True
         self.save()
 
-    def current_season(self):
-        return self.season.filter(start_date__lte=date.today(), end_date__gt=date.today()).first()
+    def current_season(self, day=date.today()):
+        return self.season.filter(start_date__lte=day, end_date__gt=day).first()
 
-    def is_available_in_season(self):
-        return self.current_season() is not None
+    def is_available_in_season(self, day=date.today()):
+        return self.current_season(day) is not None
 
-    def get_season_open_hour(self):
-        return self.current_season().open_time.hour
+    def get_season_open_hour(self, day=date.today()):
+        return self.current_season(day).open_time.hour
 
-    def get_season_close_hour(self):
-        return self.current_season().close_time.hour
+    def get_season_close_hour(self, day=date.today()):
+        return self.current_season(day).close_time.hour
 
 
 class Reservation(models.Model):
@@ -182,7 +182,7 @@ class Incidence(models.Model):
     name = models.CharField(max_length=50)
     content = models.TextField()
     limit = models.DateTimeField()
-    affected_fields = models.ManyToManyField(Space)
+    affected_fields = models.ManyToManyField(Space, blank=True)
     disable_fields = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)

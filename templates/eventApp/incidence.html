@@ -4,6 +4,8 @@
 
 {% block head %}
     <link rel="stylesheet" href="{% static 'CSS/incidence.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.min.css" integrity="sha256-DOS9W6NR+NFe1fUhEE0PGKY/fubbUCnOfTje2JMDw3Y=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js" integrity="sha256-FEqEelWI3WouFOo2VWP/uJfs1y8KJ++FLh2Lbqc8SJk=" crossorigin="anonymous"></script>
 {% endblock %}
 {% block content %}
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -15,7 +17,7 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item">
-                    <button id="new" class="nav-link btn">{% trans 'New Incidence' %}</button>
+                    <button id="new" class="nav-link btn" data-toggle="modal" data-target="#exampleModal" >{% trans 'New Incidence' %}</button>
                 </li>
                 <li class="nav-item">
                     <button id="show-completed" class="nav-link btn">{% trans 'Show completed' %}</button>
@@ -50,6 +52,38 @@
         </div>
     </div>
 
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">{% trans 'New Incidence' %}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form action="{% url 'incidences' %}" method="post">
+              <div class="modal-body">
+                {% csrf_token %}
+                    <small>{% trans 'Incidence Name' %}</small><br>
+                    {{ form.name }}<br>
+                    <small>{% trans 'Description' %}</small><br>
+                    {{ form.content }}<br>
+                    <small>{% trans 'Limit day/time to solve' %}</small><br>
+                    {{ form.limit }}
+
+                    <small>{% trans 'Which fields are affected?' %}</small><br>
+                    {{ form.affected_fields }}<br>
+                    <small>{% trans 'Should you disbale these fields?' %}</small>
+                    {{ form.disable_fields }}
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Close' %}</button>
+                <input type="submit" class="btn btn-primary" value="{% trans 'Save' %}">
+              </div>
+          </form>
+        </div>
+      </div>
+    </div>
 {% endblock %}
 
 {% block scripts %}

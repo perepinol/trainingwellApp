@@ -11,11 +11,13 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 
 # Create your views here.
-from django.views.generic import TemplateView
 
 from eventApp import query, decorators
 from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, SpaceForm
+from django.views.generic import TemplateView, ListView
 
+from eventApp import query, decorators, report
+from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, IncidenceForm, ReportForm
 from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User, Season
 
 import json
@@ -112,7 +114,7 @@ def generate_timeblocks(post_data):
     return timeblocks
 
 
-@login_required()
+@login_required
 def reservation_view(request):
     """
     Render the user's reservation list.
@@ -135,7 +137,8 @@ def reservation_view(request):
             event_name=res_name_form.cleaned_data['event_name'],
             price=reduce(lambda agg, tb: agg + tb.space.price_per_hour, timeblocks, 0),
             user=request.user,
-            modified_by=request.user
+            modified_by=request.user,
+            status=Reservation.UNPAID
         )
         logger.info("Created new reservation (id: %d, user: %s)" % (res.id, res.user))
 
@@ -192,7 +195,7 @@ def aggregate_timeblocks(timeblocks):
     return agg_list
 
 
-@login_required()
+@login_required
 def show_reservation_schedule_view(request):
     """
     Show the different views in the reservation process.
@@ -235,18 +238,18 @@ class IncidenceView(TemplateView):
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name, self.get_context_data())
 
+    def post(self, request):
+        form = IncidenceForm(data=request.POST)
+        if form.is_valid():
+            incidence = form.save(commit=False)
+            incidence.disable_fields = not incidence.disable_fields
+            incidence.save()
+        return render(request, self.template_name, self.get_context_data())
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        incidences = Incidence.objects.all()
-        '''for inc in Incidence.objects.all():
-            incidencesJSON[inc.id] = {'name': inc.name,
-                                      'content': inc.content,
-                                      'deadline': inc.limit.strftime('%d/%m/%Y-%H:%M'),
-                                      'fields': [str(field) for field in inc.affected_fields.all()],
-                                      'disabled': inc.disable_fields,
-                                      'deleted': inc.is_deleted,
-                                      'date_created': inc.created_at.strftime('%d/%m/%Y-%H:%M')}'''
-        context['incidences'] = incidences
+        context['incidences'] = Incidence.objects.all()
+        context['form'] = IncidenceForm()
         return context
 
 
@@ -271,14 +274,20 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
     def get_int_hour(_timedelta):
         return int(_timedelta.seconds/3600)
 
-    def get_day_all_spaces_free_(start_h, end_h, _spaces):
+    def get_day_all_spaces_free_(start_h, end_h, _spaces, _day):
         _today_sch = {}
         for _hour in range(get_int_hour(start_h), get_int_hour(end_h)):
-            _today_sch[str(_hour)+':00'] = _spaces
+            _hour_spaces = deepcopy(_spaces)
+            for _incidence in incidences:
+                if _incidence.limit > (datetime.combine(start_day+timedelta(days=_day), datetime.min.time()) + timedelta(hours=_hour)):
+                    for _sp in _incidence.affected_fields.all():
+                        del _hour_spaces[_sp.id]
+            _today_sch[str(_hour)+':00'] = _hour_spaces
         return _today_sch
 
     schedule = {}
     spaces = {}
+    incidences = query.get_all_incidences(limit=start_day+timedelta(days=num_days+1))
 
     open_season_hour = None
     end_season_hour = None
@@ -305,7 +314,7 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
                     timeblock.start_time.year == _date.year:
                 today_timeblocks.append(timeblock)
         if not today_timeblocks:
-            schedule[str(start_day + timedelta(days=day))] = get_day_all_spaces_free_(open_season_hour, end_season_hour, spaces)
+            schedule[str(start_day + timedelta(days=day))] = get_day_all_spaces_free_(open_season_hour, end_season_hour, spaces, day)
         else:
             schedule[str(start_day + timedelta(days=day))] = {}
             while open_season_hour + timedelta(hours=hour) < end_season_hour:
@@ -314,6 +323,10 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
                 for timeblock in today_timeblocks:
                     if timeblock.start_time.hour == get_int_hour(current_hour):
                         del free_spaces_per_hour[timeblock.space.id]
+                for incidence in incidences:
+                    if incidence.limit > (datetime.combine(start_day + timedelta(days=day), datetime.min.time()) + timedelta(hours=current_hour)):
+                        for sp in incidence.affected_fields.all():
+                            del free_spaces_per_hour[sp.id]
                 schedule[str(start_day + timedelta(days=day))][str(get_int_hour(current_hour))+':00'] = free_spaces_per_hour
                 hour += 1
 
@@ -328,28 +341,53 @@ def reservation_detail(request, instance):
     return render(request, 'eventApp/reservation_detail.html', context)
 
 
-def delete_reservation(request, pk):
-    group_id = Group.objects.get(name='manager')
-    manager_user = User.objects.filter(groups=group_id).first()
+@decorators.manager_only
+def report_view(request):
+    if request.method == 'GET':
+        return render(request, 'eventApp/report_form.html', {'form': ReportForm()})
 
+    if request.method == 'POST':
+        rf = ReportForm(request.POST)
+        if rf.is_valid():
+            rep_json = report.generate_report(
+                rf.cleaned_data['start_date'],
+                rf.cleaned_data['end_date'],
+                rf.cleaned_data['include']
+            )
+            charts = report.as_charts(rep_json)
+            for chart in charts:  # To allow frontend to parse the content properly
+                chart['chart'] = chart['chart'].replace('\\', '\\\\')
+
+            return render(request, 'eventApp/report_view.html', {
+                'charts': charts,
+                'from': rf.cleaned_data['start_date'],
+                'to': rf.cleaned_data['end_date']
+            })
+        else:
+            return http.HttpResponseRedirect(request.get_raw_uri())  # Do not move
+
+@decorators.get_if_creator(Reservation)
+def delete_reservation(request, instance):
     def create_manager_notification(content):
         Notification.objects.create(title='Cancel Reserve', content=content, user=manager_user)
 
-    item = Reservation.objects.get(id=pk)
-    if request.user == item.user:
-        request_date = datetime.now()
-        days = (item.timeblock_set.first().start_time - request_date).days
-        if days >= 7:
-            item.status = Reservation.CANCELTOREFUND if item.status == Reservation.PAID else Reservation.CANCEL
-            logger.info("Reservation " + str(item.id) + " successfully canceled as " + item.status)
-            create_manager_notification("Reserve " + str(item.id) + " was canceled. You should check if needs to be refunded")
-        else:
-            item.status = Reservation.CANCELOUTTIME
-            logger.info("Reservation " + item.id + " changed status to " + Reservation.CANCELOUTTIME)
-            create_manager_notification("Reserve " + str(item.id) + " canceled out of time.")
-        item.save()
-    else:
+    if request.method != 'POST':
         return HttpResponseForbidden()
+
+    group_id = Group.objects.get(name='manager')
+    manager_user = User.objects.filter(groups=group_id).first()
+    request_date = datetime.now()
+    days = (instance.timeblock_set.first().start_time - request_date).days
+    if days >= 7:
+        instance.status = Reservation.CANCELTOREFUND if instance.status == Reservation.PAID else Reservation.CANCEL
+        logger.info("Reservation " + str(instance.id) + " successfully canceled as " + instance.status)
+        create_manager_notification("Reserve " + str(instance.id) + " was canceled. You should check if needs to be refunded")
+    else:
+        instance.status = Reservation.CANCELOUTTIME
+        logger.info("Reservation " + str(instance.id) + " changed status to " + Reservation.CANCELOUTTIME)
+        create_manager_notification("Reserve " + str(instance.id) + " canceled out of time.")
+    instance.save()
+
     return redirect('/events/reservation')
 
 
@@ -362,12 +400,13 @@ class SeasonListView(TemplateView):
     def post(self, request, *args, **kwargs):
         form = SeasonForm(data=request.POST)
         if form.is_valid():
-            form.save(commit=True)
+            season = form.save(commit=True)
+            logger.info("Created season: " + str(season.id) + ' ' + season.name)
         return render(request, self.template_name, self.get_context_data())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        seasons = Season.objects.all()
+        seasons = Season.objects.filter(is_deleted=False)
         context['seasons'] = seasons
         context['form'] = SeasonForm()
         return context
@@ -395,7 +434,7 @@ class SpacesListView(TemplateView):
 
 class SpaceView(TemplateView):
     template_name = 'eventApp/space_detail.html'
-
+    
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name, self.get_context_data())
 
@@ -406,11 +445,31 @@ class SpaceView(TemplateView):
             form.save(commit=True)
             logger.info("Edited space: " + str(space.id))
         return render(request, self.template_name, self.get_context_data())
-
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['s'] = get_object_or_404(Space, id=self.kwargs.get('obj_id'))
         context['form'] = SpaceForm(instance=context['s'])
+        return context
+
+class SeasonView(TemplateView):
+    template_name = 'eventApp/season_detail.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        season = get_object_or_404(Season, id=self.kwargs.get('obj_id'))
+        form = SeasonForm(data=request.POST, instance=season)
+        if form.is_valid():
+            form.save(commit=True)
+            logger.info("Edited season: " + str(season.id) + ' ' + season.name)
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['s'] = get_object_or_404(Season, id=self.kwargs.get('obj_id'))
+        context['form'] = SeasonForm(instance=context['s'])
         return context
 
 
@@ -424,7 +483,19 @@ def delete_space(request, obj_id):
     logger.info("Deleted space: " + str(space.id))
     return redirect('/events/spaces/')
 
-@login_required()
+  
+@login_required
+@decorators.facility_responsible_only
+def delete_season(request, obj_id):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    season = get_object_or_404(Season, id=obj_id)
+    season.soft_delete()
+    logger.info("Deleted season: " + str(season.id) + ' ' + season.name)
+    return redirect('/events/seasons/')
+
+  
+@login_required
 @decorators.ajax_required
 @decorators.get_if_creator(Notification)
 def _ajax_mark_as_read(request, instance):
@@ -433,8 +504,8 @@ def _ajax_mark_as_read(request, instance):
     instance.soft_delete()
     return http.HttpResponse()
 
-  
-@login_required()
+
+@login_required
 @decorators.facility_responsible_only
 @decorators.ajax_required
 def _ajax_mark_completed_incidence(request):
