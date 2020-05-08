@@ -3,6 +3,7 @@ from functools import wraps
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404
+from django.template.defaulttags import register
 
 
 def ajax_required(f):
@@ -15,9 +16,9 @@ def ajax_required(f):
     return wrap
 
 
-def facility_responsible_only(f):
+def manager_only(f):
     def wrap(request, *args, **kwargs):
-        if request.user.groups.filter(name='facility').count() == 0:
+        if not request.user.is_authenticated or request.user.groups.filter(name='manager').count() == 0:
             raise PermissionDenied
         return f(request, *args, **kwargs)
     wrap.__doc__ = f.__doc__
@@ -25,9 +26,9 @@ def facility_responsible_only(f):
     return wrap
 
 
-def organizer_responsible_only(f):
+def facility_responsible_only(f):
     def wrap(request, *args, **kwargs):
-        if request.user.groups.filter(name='organizers').count() == 0:
+        if not request.user.is_authenticated or request.user.groups.filter(name='facility').count() == 0:
             raise PermissionDenied
         return f(request, *args, **kwargs)
     wrap.__doc__ = f.__doc__
@@ -51,3 +52,10 @@ def get_if_creator(model, admin=False):
             return function(request, *args, **kwargs)
         return wrap
     return decorator
+
+
+@register.filter
+def lookup(lst, index):
+    if index >= len(lst):
+        return None
+    return lst[index]

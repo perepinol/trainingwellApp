@@ -71,6 +71,18 @@ class Season(models.Model):
     def __str__(self):
         return u"%s" % self.name
 
+    @staticmethod
+    def ongoing_season(day=date.today()):
+        return Season.objects.filter(start_date__lte=day, end_date__gt=day).first()
+
+    def open_hours(self):
+        hours = [self.open_time]
+        next_datetime = datetime.combine(date.today(), hours[-1]) + settings.RESERVATION_GRANULARITY
+        while next_datetime.time() < self.close_time:
+            hours.append(next_datetime.time())
+            next_datetime = datetime.combine(date.today(), hours[-1]) + settings.RESERVATION_GRANULARITY
+        return hours
+
 
 class Space(models.Model):
     field = models.ForeignKey(Field, on_delete=models.PROTECT)
@@ -95,17 +107,17 @@ class Space(models.Model):
         self.is_deleted = True
         self.save()
 
-    def current_season(self):
-        return self.season.filter(start_date__lte=date.today(), end_date__gt=date.today()).first()
+    def current_season(self, day=date.today()):
+        return self.season.filter(start_date__lte=day, end_date__gt=day).first()
 
-    def is_available_in_season(self):
-        return self.current_season() is not None
+    def is_available_in_season(self, day=date.today()):
+        return self.current_season(day) is not None
 
-    def get_season_open_hour(self):
-        return self.current_season().open_time.hour
+    def get_season_open_hour(self, day=date.today()):
+        return self.current_season(day).open_time.hour
 
-    def get_season_close_hour(self):
-        return self.current_season().close_time.hour
+    def get_season_close_hour(self, day=date.today()):
+        return self.current_season(day).close_time.hour
 
 
 class Reservation(models.Model):
@@ -153,9 +165,14 @@ class Timeblock(models.Model):
     reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE)
     space = models.ForeignKey(Space, on_delete=models.SET(get_timeblock_space('self').__str__()))
     start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
 
     class Meta:
         ordering = ['start_time']
+
+    def save(self, *args, **kwargs):
+        self.end_time = self.start_time + settings.RESERVATION_GRANULARITY
+        super(Timeblock, self).save(*args, **kwargs)
 
     def __str__(self):
         return u"%s at %s" % (self.space, self.start_time.isoformat())
@@ -165,7 +182,7 @@ class Incidence(models.Model):
     name = models.CharField(max_length=50)
     content = models.TextField()
     limit = models.DateTimeField()
-    affected_fields = models.ManyToManyField(Space)
+    affected_fields = models.ManyToManyField(Space, blank=True)
     disable_fields = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)

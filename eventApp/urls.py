@@ -18,16 +18,18 @@ from eventApp.decorators import facility_responsible_only
 from django.urls import path
 
 from eventApp.views import TestView, IncidenceView, reservation_view, show_reservation_schedule_view, _ajax_change_view, \
-    reservation_detail, _ajax_mark_as_read, _ajax_mark_completed_incidence, delete_reservation
+    reservation_detail, _ajax_mark_as_read, _ajax_mark_completed_incidence, delete_reservation, EventView, report_view
 
 urlpatterns = [
     path('reservation/', reservation_view, name="reservations"),
     path('reservation/new', show_reservation_schedule_view, name="schedule_view"),
     path('reservation/<int:obj_id>/', reservation_detail, name='reservation_detail'),
-    path('reservation/delete/<int:pk>/', delete_reservation, name='delete_reservation'),
+    path('reservation/delete/<int:obj_id>/', delete_reservation, name='delete_reservation'),
     path('ajax/change_week/', _ajax_change_view, name='ajax_change_week'),
     path('ajax/mark_completed_incidence/', _ajax_mark_completed_incidence, name='ajax_completed'),
     path('notification/<int:obj_id>/', _ajax_mark_as_read, name='ajax_mark_read'),
+    path('schedule', EventView.as_view(), name='event_schedule'),
     path('incidences/', facility_responsible_only(IncidenceView.as_view()), name="incidences"),
+    path('report/', report_view, name="report"),
     path('', TestView.as_view(), name='home'),
 ]
