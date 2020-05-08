@@ -13,8 +13,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 # Create your views here.
 from django.views.generic import TemplateView, ListView
 
-from eventApp import query, decorators
-from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, IncidenceForm
+from eventApp import query, decorators, report
+from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, IncidenceForm, ReportForm
 from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User, Season
 
 import json
@@ -111,7 +111,7 @@ def generate_timeblocks(post_data):
     return timeblocks
 
 
-@login_required()
+@login_required
 def reservation_view(request):
     """
     Render the user's reservation list.
@@ -192,7 +192,7 @@ def aggregate_timeblocks(timeblocks):
     return agg_list
 
 
-@login_required()
+@login_required
 def show_reservation_schedule_view(request):
     """
     Show the different views in the reservation process.
@@ -338,6 +338,31 @@ def reservation_detail(request, instance):
     return render(request, 'eventApp/reservation_detail.html', context)
 
 
+@decorators.manager_only
+def report_view(request):
+    if request.method == 'GET':
+        return render(request, 'eventApp/report_form.html', {'form': ReportForm()})
+
+    if request.method == 'POST':
+        rf = ReportForm(request.POST)
+        if rf.is_valid():
+            rep_json = report.generate_report(
+                rf.cleaned_data['start_date'],
+                rf.cleaned_data['end_date'],
+                rf.cleaned_data['include']
+            )
+            charts = report.as_charts(rep_json)
+            for chart in charts:  # To allow frontend to parse the content properly
+                chart['chart'] = chart['chart'].replace('\\', '\\\\')
+
+            return render(request, 'eventApp/report_view.html', {
+                'charts': charts,
+                'from': rf.cleaned_data['start_date'],
+                'to': rf.cleaned_data['end_date']
+            })
+        else:
+            return http.HttpResponseRedirect(request.get_raw_uri())  # Do not move
+
 @decorators.get_if_creator(Reservation)
 def delete_reservation(request, instance):
     def create_manager_notification(content):
@@ -405,7 +430,7 @@ class SeasonView(TemplateView):
         return context
 
 
-@login_required()
+@login_required
 @decorators.facility_responsible_only
 def delete_season(request, obj_id):
     if request.method != 'POST':
@@ -416,7 +441,7 @@ def delete_season(request, obj_id):
     return redirect('/events/seasons/')
 
   
-@login_required()
+@login_required
 @decorators.ajax_required
 @decorators.get_if_creator(Notification)
 def _ajax_mark_as_read(request, instance):
@@ -426,7 +451,7 @@ def _ajax_mark_as_read(request, instance):
     return http.HttpResponse()
 
 
-@login_required()
+@login_required
 @decorators.facility_responsible_only
 @decorators.ajax_required
 def _ajax_mark_completed_incidence(request):
