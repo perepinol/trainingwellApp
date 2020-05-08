@@ -3,8 +3,7 @@ from django.forms import ModelForm, ModelChoiceField, Form, DateField, DateTimeF
     SelectMultiple
 from datetime import date, datetime, timedelta
 
-
-from eventApp.models import Reservation, Season, Incidence
+from eventApp.models import Reservation, Season, Space, Incidence
 
 
 class ReservationNameForm(ModelForm):
@@ -97,6 +96,13 @@ class SeasonForm(ModelForm):
         })
         self.fields['close_time'].input_formats = ['%H:%M']
 
+class SpaceForm(ModelForm):
+    class Meta:
+        model = Space
+        fields = ['field', 'season', 'price_per_hour', 'sqmt', 'photo', 'description', 'offer']
+
+
+        
 class IncidenceForm(ModelForm):
     class Meta:
         model = Incidence

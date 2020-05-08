@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+    <div class="col-md-auto">
+        <h1>{% trans 'Current spaces' %}</h1>
+    </div>
+    <div class="col d-flex align-items-center">
+        <button class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" >{% trans 'Add space' %}</button>
+    </div>
+
+    <div class="card-deck w-100 px-3" style="height: min-content">
+        <div class="row w-100 my-3">
+            {% for space in spaces %}
+                {% include 'eventApp/space_card.html' with s=space %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">{% trans 'Add New Space' %}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form action="{% url 'spaces' %}" method="post">
+              <div class="modal-body">
+                {% csrf_token %}
+                    <small>{% trans 'Field' %}</small><br>
+                    {{ form.field }}<br>
+                    <small>{% trans 'Season' %}</small><br>
+                    {{ form.season }}<br>
+                    <small>{% trans 'Price per hour' %}</small><br>
+                    {{ form.price_per_hour }}<br>
+                    <small>{% trans 'Square metres' %}</small><br>
+                    {{ form.sqmt }}<br>
+                    <small>{% trans 'Photo' %}</small><br>
+                    {{ form.photo }}<br>
+                    <small>{% trans 'Description' %}</small><br>
+                    {{ form.description }}<br>
+                    <small>{% trans 'Offer' %}</small><br>
+                    {{ form.offer }}<br>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Close' %}</button>
+                <input type="submit" class="btn btn-primary" value="{% trans 'Save' %}">
+              </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+{% endblock %}
