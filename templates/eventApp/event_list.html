@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+    {% for event_obj in event_agg %}
+        <div class="row m-4">
+            <div class="col-12"><h1>{% trans event_obj.title %} ({{ event_obj.start_time|time:"TIME_FORMAT" }} - {{ event_obj.end_time|time:"TIME_FORMAT" }})</h1></div>
+            <div class="card-deck col-12">
+                {% for event in event_obj.events %}
+                    <div class="card m-3" style="min-width: 300px; max-width: 300px;">
+                        <div class="card-body">
+                            <h3 class="card-title">{{ event.reservation.event_name }}</h3>
+                            <p class="card-text">{{ event.space }}</p>
+                        </div>
+                        <div class="card-footer">
+                            <a class="card-text" href="{% url 'space_detail' obj_id=event.space.id %}">Directions</a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>{% trans 'No events to show' %}</p>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}
