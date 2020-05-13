@@ -16,9 +16,14 @@
                         </div>
                     </div>
                 {% empty %}
-                    <p>{% trans 'No events to show' %}</p>
+                    <h5 class="ml-4">{% trans 'No events to show' %}</h5>
                 {% endfor %}
             </div>
         </div>
     {% endfor %}
+    <div class="row ml-4 mb-4">
+        <div class="col">
+            <a type="button" role="button" class="btn btn-primary" href="{% url 'event_schedule' %}">Further events</a>
+        </div>
+    </div>
 {% endblock %}
