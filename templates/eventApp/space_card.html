@@ -1,0 +1,16 @@
+{% load i18n %}
+<div class="col-lg-4 col-md-6 col-sm-12">
+    <div class="card w-100 h-100">
+        <div class="card-body">
+            <h6 class="card-title">{{ s.name }}</h6>
+            <p class="card-text">{% blocktrans with f=s.field %}Field: {{ f }}{% endblocktrans %}</p>
+            <p class="card-text">{% trans 'Season:' %} {% for sea in s.season.all %} {{sea}}, {% endfor %}</p>
+            <p class="card-text">{% blocktrans with p=s.price_per_hour%}Price per hour: {{ p }}{% endblocktrans %}</p>
+            <p class="card-text">{% blocktrans with sqmt=s.sqmt %}Square metres: {{ sqmt }}{% endblocktrans %}</p>
+            <p class="card-text">{% blocktrans with o=s.offer %}Offer: {{ o }}{% endblocktrans %}</p>
+        </div>
+        <div class="card-footer">
+            <a href="{% url 'space_detail' s.id %}" class="card-link">View</a>
+        </div>
+    </div>
+</div>

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'eventApp.apps.EventappConfig',
     'bootstrap_datepicker_plus',
+    'chartjs'
 ]
 
 MIDDLEWARE = [
@@ -70,6 +71,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'eventApp.views.notification_context_processor'
             ],
+
         },
     },
 ]

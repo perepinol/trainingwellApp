@@ -11,10 +11,13 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 
 # Create your views here.
-from django.views.generic import TemplateView, ListView
 
 from eventApp import query, decorators
-from eventApp.forms import ReservationNameForm, DateForm, IncidenceForm
+from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, SpaceForm
+from django.views.generic import TemplateView, ListView
+
+from eventApp import query, decorators, report
+from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, IncidenceForm, ReportForm
 from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User, Season
 
 import json
@@ -111,7 +114,7 @@ def generate_timeblocks(post_data):
     return timeblocks
 
 
-@login_required()
+@login_required
 def reservation_view(request):
     """
     Render the user's reservation list.
@@ -192,7 +195,7 @@ def aggregate_timeblocks(timeblocks):
     return agg_list
 
 
-@login_required()
+@login_required
 def show_reservation_schedule_view(request):
     """
     Show the different views in the reservation process.
@@ -338,6 +341,32 @@ def reservation_detail(request, instance):
     return render(request, 'eventApp/reservation_detail.html', context)
 
 
+@decorators.manager_only
+def report_view(request):
+    if request.method == 'GET':
+        return render(request, 'eventApp/report_form.html', {'form': ReportForm()})
+
+    if request.method == 'POST':
+        rf = ReportForm(request.POST)
+        if rf.is_valid():
+            rep_json = report.generate_report(
+                rf.cleaned_data['start_date'],
+                rf.cleaned_data['end_date'],
+                rf.cleaned_data['include']
+            )
+            charts = report.as_charts(rep_json)
+            for chart in charts:  # To allow frontend to parse the content properly
+                chart['chart'] = chart['chart'].replace('\\', '\\\\')
+
+            return render(request, 'eventApp/report_view.html', {
+                'charts': charts,
+                'from': rf.cleaned_data['start_date'],
+                'to': rf.cleaned_data['end_date']
+            })
+        else:
+            return http.HttpResponseRedirect(request.get_raw_uri())  # Do not move
+
+
 @decorators.get_if_creator(Reservation)
 def delete_reservation(request, instance):
     def create_manager_notification(content):
@@ -360,10 +389,116 @@ def delete_reservation(request, instance):
         create_manager_notification("Reserve " + str(instance.id) + " canceled out of time.")
     instance.save()
 
-    return redirect('/events/reservation')
+    return redirect(reverse('reservations'))
+
+
+class SeasonListView(TemplateView):
+    template_name = 'eventApp/seasons.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        form = SeasonForm(data=request.POST)
+        if form.is_valid():
+            season = form.save(commit=True)
+            logger.info("Created season: " + str(season.id) + ' ' + season.name)
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        seasons = Season.objects.filter(is_deleted=False)
+        context['seasons'] = seasons
+        context['form'] = SeasonForm()
+        return context
+
+
+class SpacesListView(TemplateView):
+    template_name = 'eventApp/spaces.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        form = SpaceForm(data=request.POST)
+        if form.is_valid():
+            space = form.save(commit=True)
+            logger.info("Created space: " + str(space.id) )
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        spaces = Space.objects.filter(is_deleted=False)
+        context['spaces'] = spaces
+        context['form'] = SpaceForm()
+        return context
+
+
+class SpaceView(TemplateView):
+    template_name = 'eventApp/space_detail.html'
+    
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        space = get_object_or_404(Space, id=self.kwargs.get('obj_id'))
+        form = SpaceForm(data=request.POST, instance=space)
+        if form.is_valid():
+            form.save(commit=True)
+            logger.info("Edited space: " + str(space.id))
+        return render(request, self.template_name, self.get_context_data())
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['s'] = get_object_or_404(Space, id=self.kwargs.get('obj_id'))
+        context['form'] = SpaceForm(instance=context['s'])
+        return context
+
+
+class SeasonView(TemplateView):
+    template_name = 'eventApp/season_detail.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        season = get_object_or_404(Season, id=self.kwargs.get('obj_id'))
+        form = SeasonForm(data=request.POST, instance=season)
+        if form.is_valid():
+            form.save(commit=True)
+            logger.info("Edited season: " + str(season.id) + ' ' + season.name)
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['s'] = get_object_or_404(Season, id=self.kwargs.get('obj_id'))
+        context['form'] = SeasonForm(instance=context['s'])
+        return context
 
 
 @login_required()
+@decorators.facility_responsible_only
+def delete_space(request, obj_id):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    space = get_object_or_404(Space, id=obj_id)
+    space.soft_delete()
+    logger.info("Deleted space: " + str(space.id))
+    return redirect(reverse('spaces'))
+
+  
+@login_required
+@decorators.facility_responsible_only
+def delete_season(request, obj_id):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    season = get_object_or_404(Season, id=obj_id)
+    season.soft_delete()
+    logger.info("Deleted season: " + str(season.id) + ' ' + season.name)
+    return redirect(reverse('season'))
+
+  
+@login_required
 @decorators.ajax_required
 @decorators.get_if_creator(Notification)
 def _ajax_mark_as_read(request, instance):
@@ -373,7 +508,7 @@ def _ajax_mark_as_read(request, instance):
     return http.HttpResponse()
 
 
-@login_required()
+@login_required
 @decorators.facility_responsible_only
 @decorators.ajax_required
 def _ajax_mark_completed_incidence(request):
