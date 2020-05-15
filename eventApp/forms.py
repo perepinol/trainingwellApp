@@ -1,8 +1,7 @@
 from bootstrap_datepicker_plus import DatePickerInput
-from django.core.exceptions import ValidationError
-from django.forms import ModelForm, ModelChoiceField, Form, DateField, DateTimeField, MultipleChoiceField, \
-    SelectMultiple
-from datetime import date, datetime, timedelta
+from django.forms import ModelForm, Form, DateField, MultipleChoiceField
+from django.utils.translation import gettext as _
+from datetime import date, timedelta
 from eventApp.models import Reservation, Season, Space, Incidence
 
 
@@ -18,9 +17,9 @@ class ReportForm(Form):
     start_date = DateField(required=True)
     end_date = DateField(required=True)
     include = MultipleChoiceField(label=False, choices=[
-        ("use", "Space usage"),  # TODO: internationalize
-        ("incomeoutcome", "Income/outcome"),
-        ("performance", "Performance")
+        ("use", _("Space usage")),
+        ("incomeoutcome", _("Income/outcome")),
+        ("performance", _("Performance"))
     ])
 
     def __init__(self, *args, **kwargs):
@@ -105,16 +104,24 @@ class SeasonForm(ModelForm):
         # Check order of elements
         if clean['start_date'] > clean['end_date']:
             valid = False
-            self.add_error('end_date', 'End date should come after start date')
+            self.add_error('end_date', _('End date should come after start date'))
         if clean['open_time'] > clean['close_time']:
             valid = False
-            self.add_error('end_time', 'End time should come after start time')
+            self.add_error('close_time', _('End time should come after start time'))
+
+        if not valid:
+            return False
 
         # Check season overlapping
-        if Season.objects.filter(start_date__lte=clean['start_date'], end_date__gte=clean['start_date']).count() or \
-                Season.objects.filter(start_date__lte=clean['end_date'], end_date__gte=clean['end_date']).count():
+        overlappings = \
+            Season.objects.filter(start_date__lte=clean['start_date'], end_date__gte=clean['start_date']).union(
+                Season.objects.filter(start_date__lte=clean['end_date'], end_date__gte=clean['end_date'])
+            )
+        if overlappings.count():
             valid = False
-            self.add_error(None, 'This date range overlaps with that of an existing season')
+            self.add_error(None, _('This date range overlaps with season') + '%s' % ', '.join(
+                map(lambda o: str(o), overlappings)
+            ))
 
         return valid
 
@@ -131,10 +138,10 @@ class SpaceForm(ModelForm):
         valid = True
 
         if clean['sqmt'] <= 0:
-            self.add_error('sqmt', 'Space size has to be a natural number')
+            self.add_error('sqmt', _('Space size has to be a natural number'))
             valid = False
-        if clean['offer'] <= 0:
-            self.add_error('offer', 'Offer has to be a natural number')
+        if clean['offer'] < 0:
+            self.add_error('offer', _('Offer cannot be negative'))
             valid = False
         return valid
 
