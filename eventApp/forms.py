@@ -1,8 +1,8 @@
 from bootstrap_datepicker_plus import DatePickerInput
+from django.core.exceptions import ValidationError
 from django.forms import ModelForm, ModelChoiceField, Form, DateField, DateTimeField, MultipleChoiceField, \
     SelectMultiple
 from datetime import date, datetime, timedelta
-
 from eventApp.models import Reservation, Season, Space, Incidence
 
 
@@ -96,13 +96,49 @@ class SeasonForm(ModelForm):
         })
         self.fields['close_time'].input_formats = ['%H:%M']
 
+    def is_valid(self):
+        if not super().is_valid():
+            return False
+        clean = self.cleaned_data
+        valid = True
+
+        # Check order of elements
+        if clean['start_date'] > clean['end_date']:
+            valid = False
+            self.add_error('end_date', 'End date should come after start date')
+        if clean['open_time'] > clean['close_time']:
+            valid = False
+            self.add_error('end_time', 'End time should come after start time')
+
+        # Check season overlapping
+        if Season.objects.filter(start_date__lte=clean['start_date'], end_date__gte=clean['start_date']).count() or \
+                Season.objects.filter(start_date__lte=clean['end_date'], end_date__gte=clean['end_date']).count():
+            valid = False
+            self.add_error(None, 'This date range overlaps with that of an existing season')
+
+        return valid
+
+
 class SpaceForm(ModelForm):
     class Meta:
         model = Space
-        fields = ['field', 'season', 'price_per_hour', 'sqmt', 'photo', 'description', 'offer']
+        fields = ['field', 'season', 'sqmt', 'photo', 'description', 'offer']
+
+    def is_valid(self):
+        if not super(SpaceForm, self).is_valid():
+            return False
+        clean = self.cleaned_data
+        valid = True
+
+        if clean['sqmt'] <= 0:
+            self.add_error('sqmt', 'Space size has to be a natural number')
+            valid = False
+        if clean['offer'] <= 0:
+            self.add_error('offer', 'Offer has to be a natural number')
+            valid = False
+        return valid
 
 
-        
 class IncidenceForm(ModelForm):
     class Meta:
         model = Incidence
