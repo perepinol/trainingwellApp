@@ -40,6 +40,7 @@ def get_all_spaces(field=None, only_active=True):
     :return: a QuerySet of Space model
     """
     space_qs = Space.objects.filter(field=field) if field else Space.objects.all()
+    space_qs = space_qs.filter(price_per_hour__gt=0)
     return space_qs.filter(is_deleted=False) if only_active else space_qs
 
 
