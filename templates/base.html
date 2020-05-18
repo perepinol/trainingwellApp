@@ -30,13 +30,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'incidences' %}">{% trans 'Incidences' %}</a>
                     </li>
-                {% endif %}
-                {% if request.user|has_group:"facility" %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'season' %}">{% trans 'Seasons' %}</a>
                     </li>
-                {% endif %}
-                {% if request.user|has_group:"facility" %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'spaces' %}">{% trans 'Spaces' %}</a>
                     </li>
@@ -44,6 +40,9 @@
                 {% if request.user|has_group:"manager" %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'report' %}">{% trans 'Report' %}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'reservation_status' %}">{% trans 'Manage Reservations' %}</a>
                     </li>
                 {% endif %}
             </ul>

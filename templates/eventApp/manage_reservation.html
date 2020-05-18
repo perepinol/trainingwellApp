@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+    {% if reservation %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          {% trans 'Reservation' %}: {{ reservation }} (#{{ reservation.id }}) {% trans 'successfully changed to' %}: {{ reservation.current_state }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+    {% endif %}
+    {% for r in res %}
+    <div class="row" style="margin-top: 8px">
+        <div class="col-3"></div>
+        <div class="list-group col-md-5 col-10">
+          <div class="list-group-item list-group-item-action flex-column align-items-start">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">{{ r }} (#{{ r.id }})</h5>
+                <small>3 days ago</small>
+            </div>
+            <p class="mb-1">{% trans 'Organizer name'%}: {{ r.user }} (ID: {{ r.user.id }})</p>
+              <p class="mb-1">{% trans 'Price' %}: {{ r.price }}€</p>
+            <p class="text-muted"><i>{{ r.current_state }}</i></p>
+          </div>
+        </div>
+        <div class="col-md-1 col-2">
+            <form action="{% url 'reservation_status' %}" method="post">
+                {% csrf_token %}
+                <label for="status">{% trans 'Change status to' %}:</label>
+                <select name="status">
+                    {% if r.status == 'U' %}
+                    <option value="P">Paid</option>
+                    {% else %}
+                    <option value="CR">Canceled and refunded</option>
+                    {% endif %}
+                </select>
+                <input type="submit" class="btn btn-primary btn-sm" value="{% trans 'Save status' %}">
+                <input type="hidden" name="id" value="{{ r.id }}">
+            </form>
+        </div>
+        <div class="col-3"></div>
+    </div>
+    {% empty %}
+
+    {% endfor %}
+{% endblock %}

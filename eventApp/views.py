@@ -367,6 +367,27 @@ def report_view(request):
             return http.HttpResponseRedirect(request.get_raw_uri())  # Do not move
 
 
+class ReservationStatusView(TemplateView):
+    template_name = 'eventApp/manage_reservation.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context_data())
+
+    def post(self, request):
+        _id = int(request.POST.get('id', "-1"))
+        res = get_object_or_404(Reservation, id=_id)
+        res.status = request.POST.get('status', "")
+        res.save()
+        context = self.get_context_data()
+        context['reservation'] = res
+        return render(request, self.template_name, context)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['res'] = query.get_all_reservations(status=['U', 'CTR'])
+        return context
+
+
 @decorators.get_if_creator(Reservation)
 def delete_reservation(request, instance):
     def create_manager_notification(content):
