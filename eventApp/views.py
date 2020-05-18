@@ -467,7 +467,7 @@ class SpacePrice(TemplateView):
         space.price_per_hour = int(request.POST.get('price', space.price_per_hour))
         space.offer = float(request.POST.get('offer', space.offer))
         space.save()
-        logger.info("Changed price and/or offer of '"+str(space)+"' to "+str(space.price_per_hour)+"€/"+str(space.offer+"%"))
+        logger.info("Changed price and/or offer of '"+str(space)+"' to "+str(space.price_per_hour)+"€/"+str(space.offer)+"%")
         return render(request, self.template_name, self.get_context_data())
 
     def get_context_data(self, **kwargs):

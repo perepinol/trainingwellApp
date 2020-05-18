@@ -26,7 +26,7 @@
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
-          <form action="" method="post">
+          <form method="post">
               <div class="modal-body">
                 {% csrf_token %}
                   {% trans 'Identifier' %}: <p class="text-muted"> {{ s.id }}</p>
@@ -35,9 +35,9 @@
                   {% trans 'Square meters' %}: <p class="text-muted"> {{ s.sqmt }}</p>
                   {% trans 'Description' %}: <p class="text-muted"> {{ s.description }}</p>
                   <label for="price">{% trans 'Price' %}:</label><br>
-                  <input type="number" id="price" name="price" value="{{ s.price_per_hour }}">€<br>
+                  <input type="number" id="price" min="0" name="price" value="{{ s.price_per_hour }}">€<br>
                   <label for="offer">{% trans 'Offer (percentatge)' %}:</label><br>
-                  <input type="number" step=".01" id="offer" name="offer" value="{{ s.offer }}"><br>
+                  <input type="number" step=".01" min="0" id="offer" name="offer" value="{{ s.offer }}"><br>
                   <input type="hidden" name="id" value="{{ s.id }}">
               </div>
               <div class="modal-footer">
