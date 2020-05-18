@@ -458,6 +458,15 @@ class SpaceView(TemplateView):
         return context
 
 
+class SpacePrice(TemplateView):
+    template_name = 'eventApp/space_price.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['spaces'] = query.get_all_spaces().order_by('field')
+        return context
+
+
 class SeasonView(TemplateView):
     template_name = 'eventApp/season_detail.html'
 

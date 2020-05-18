@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="list-group">
+{% for s in spaces %}
+    <div class="row">
+        <div class="col-3"></div>
+        <div id="{{ forloop.counter }}" class="list-group-item list-group-item-action flex-column align-items-start col-md-6 col-12 {% if s.price_per_hour == 0 %}list-group-item-warning{% endif %}"
+             style="cursor: pointer">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">{{ s }} (#{{ s.id }})</h5>
+            </div>
+            <p class="mb-1">{% trans 'Price per hour' %}: {{ s.price_per_hour }}€</p>
+            <p class="text-muted"><i>{{ s.current_season }}</i></p>
+        </div>
+        <div class="col-3"></div>
+    </div>
+    <div class="modal fade" id="mod-{{ forloop.counter }}" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="title">{{ s }}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form action="" method="post">
+              <div class="modal-body">
+                {% csrf_token %}
+                  {% trans 'Identifier' %}: <p class="text-muted"> {{ s.id }}</p>
+                  {% trans 'Field' %}: <p class="text-muted"> {{ s.field }}</p>
+                  {% trans 'Season' %}: <p class="text-muted"> {{ s.current_season }}</p>
+                  {% trans 'Square meters' %}: <p class="text-muted"> {{ s.sqmt }}</p>
+                  {% trans 'Description' %}: <p class="text-muted"> {{ s.description }}</p>
+                  <label for="price">{% trans 'Price' %}:</label><br>
+                  <input type="text" id="price" name="price" value="{{ s.price_per_hour }}">€<br>
+                  <label for="offer">{% trans 'Offer (percentatge)' %}:</label><br>
+                  <input type="text" id="offer" name="offer" value="{{ s.offer }}"><br>
+                  <input type="hidden" name="id" value="{{ s.id }}">
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Close' %}</button>
+                <input type="submit" class="btn btn-primary" value="{% trans 'Save' %}">
+              </div>
+          </form>
+        </div>
+      </div>
+    </div>
+{% empty %}
+    <h1>{% trans 'There are not any spaces' %}</h1>
+{% endfor %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+    $('.list-group-item').on('click',(elem) => {
+        let id = elem.currentTarget.id;
+        $('#mod-'+id).modal('show');
+    })
+</script>
+{% endblock %}
