@@ -26,7 +26,7 @@
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
-          <form action="{% url 'season' %}" method="post">
+          <form action="{% url 'season' %}" method="post" class="js-modal-form">
               <div class="modal-body">
                 {% csrf_token %}
                     <small>{% trans 'Season Name' %}</small><br>
@@ -39,7 +39,7 @@
                     {{ form.open_time }}<br>
                     <small>{% trans 'Close hour of the facilities' %}</small><br>
                     {{ form.close_time }}<br>
-
+                    <small class="js-form-error text-danger m-0"></small>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Close' %}</button>
@@ -49,5 +49,20 @@
         </div>
       </div>
     </div>
-
+{% endblock %}
+{% block scripts %}
+<script>
+    $(function() {
+        $("#exampleModal").on('shown.bs.modal', () => {
+            $(".js-modal-form").submit(event => {
+                event.preventDefault();
+                $.post($(event.target).url, $(event.target).serialize(), () => {location.reload()})
+                    .fail((result) => {
+                        $(".js-form-error").html(result.responseText);
+                        setTimeout(() => $(".js-form-error").text(""), 5000);
+                    });
+            });
+        });
+    });
+</script>
 {% endblock %}

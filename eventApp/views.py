@@ -403,7 +403,8 @@ class SeasonListView(TemplateView):
         if form.is_valid():
             season = form.save(commit=True)
             logger.info("Created season: " + str(season.id) + ' ' + season.name)
-        return render(request, self.template_name, self.get_context_data())
+            return http.HttpResponse()
+        return http.HttpResponseBadRequest(list(form.errors.values()))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -424,7 +425,8 @@ class SpacesListView(TemplateView):
         if form.is_valid():
             space = form.save(commit=True)
             logger.info("Created space: " + str(space.id) )
-        return render(request, self.template_name, self.get_context_data())
+            return http.HttpResponse()
+        return http.HttpResponseBadRequest(list(form.errors.values()))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -446,7 +448,8 @@ class SpaceView(TemplateView):
         if form.is_valid():
             form.save(commit=True)
             logger.info("Edited space: " + str(space.id))
-        return render(request, self.template_name, self.get_context_data())
+            return http.HttpResponse()
+        return http.HttpResponseBadRequest(list(form.errors.values()))
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -467,7 +470,8 @@ class SeasonView(TemplateView):
         if form.is_valid():
             form.save(commit=True)
             logger.info("Edited season: " + str(season.id) + ' ' + season.name)
-        return render(request, self.template_name, self.get_context_data())
+            return http.HttpResponse()
+        return http.HttpResponseBadRequest(list(form.errors.values()))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

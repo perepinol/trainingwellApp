@@ -47,3 +47,7 @@ td.disabled {
 td.current {
     background-color: #ffd1d1;
 }
+
+ul.errorlist {
+    margin-bottom: 0
+}

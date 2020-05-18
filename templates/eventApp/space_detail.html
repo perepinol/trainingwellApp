@@ -24,15 +24,13 @@
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
-          <form action="{% url 'space_detail' obj_id=s.id %}" method="post">
+          <form action="{% url 'space_detail' obj_id=s.id %}" method="post" class="js-modal-form">
               <div class="modal-body">
                 {% csrf_token %}
                     <small>{% trans 'Field' %}</small><br>
                     {{ form.field }}<br>
                     <small>{% trans 'Season' %}</small><br>
                     {{ form.season }}<br>
-                    <small>{% trans 'Price per hour' %}</small><br>
-                    {{ form.price_per_hour }}<br>
                     <small>{% trans 'Square metres' %}</small><br>
                     {{ form.sqmt }}<br>
                     <small>{% trans 'Photo' %}</small><br>
@@ -40,7 +38,8 @@
                     <small>{% trans 'Description' %}</small><br>
                     {{ form.description }}<br>
                     <small>{% trans 'Offer' %}</small><br>
-                    {{ form.offer }}<br>
+                    {{ form.offer }}<br><br>
+                    <small class="js-form-error text-danger m-0"></small>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Close' %}</button>
@@ -69,4 +68,20 @@
         </div>
       </div>
     </div>
-{% endblock %} 
+{% endblock %}
+{% block scripts %}
+<script>
+    $(function() {
+        $("#exampleModal").on('shown.bs.modal', () => {
+            $(".js-modal-form").submit(event => {
+                event.preventDefault();
+                $.post($(event.target).url, $(event.target).serialize(), () => {location.reload()})
+                    .fail((result) => {
+                        $(".js-form-error").html(result.responseText);
+                        setTimeout(() => $(".js-form-error").text(""), 5000);
+                    });
+            });
+        });
+    })
+</script>
+{% endblock %}
