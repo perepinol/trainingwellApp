@@ -12,6 +12,7 @@
                 <h5 class="mb-1">{{ s }} (#{{ s.id }})</h5>
             </div>
             <p class="mb-1">{% trans 'Price per hour' %}: {{ s.price_per_hour }}€</p>
+            <p class="mb-1">{% trans 'Offer' %}: {{ s.offer }}%</p>
             <p class="text-muted"><i>{{ s.current_season }}</i></p>
         </div>
         <div class="col-3"></div>
@@ -34,9 +35,9 @@
                   {% trans 'Square meters' %}: <p class="text-muted"> {{ s.sqmt }}</p>
                   {% trans 'Description' %}: <p class="text-muted"> {{ s.description }}</p>
                   <label for="price">{% trans 'Price' %}:</label><br>
-                  <input type="text" id="price" name="price" value="{{ s.price_per_hour }}">€<br>
+                  <input type="number" id="price" name="price" value="{{ s.price_per_hour }}">€<br>
                   <label for="offer">{% trans 'Offer (percentatge)' %}:</label><br>
-                  <input type="text" id="offer" name="offer" value="{{ s.offer }}"><br>
+                  <input type="number" step=".01" id="offer" name="offer" value="{{ s.offer }}"><br>
                   <input type="hidden" name="id" value="{{ s.id }}">
               </div>
               <div class="modal-footer">
