@@ -472,7 +472,7 @@ class SpacePrice(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['spaces'] = query.get_all_spaces().order_by('field')
+        context['spaces'] = query.get_all_spaces(hasPrice=False).order_by('field')
         return context
 
 
