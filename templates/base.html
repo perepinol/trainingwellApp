@@ -45,6 +45,11 @@
                         <a class="nav-link" href="{% url 'reservation_status' %}">{% trans 'Manage Reservations' %}</a>
                     </li>
                 {% endif %}
+                {% if request.user|has_group:"manager" %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'space_price' %}">{% trans 'Add prices' %}</a>
+                    </li>
+                {% endif %}
             </ul>
             {% if user.is_authenticated %}
                 <div class="mr-5">

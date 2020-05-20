@@ -424,7 +424,8 @@ class SeasonListView(TemplateView):
         if form.is_valid():
             season = form.save(commit=True)
             logger.info("Created season: " + str(season.id) + ' ' + season.name)
-        return render(request, self.template_name, self.get_context_data())
+            return http.HttpResponse()
+        return http.HttpResponseBadRequest(list(form.errors.values()))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -445,7 +446,8 @@ class SpacesListView(TemplateView):
         if form.is_valid():
             space = form.save(commit=True)
             logger.info("Created space: " + str(space.id) )
-        return render(request, self.template_name, self.get_context_data())
+            return http.HttpResponse()
+        return http.HttpResponseBadRequest(list(form.errors.values()))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -467,12 +469,31 @@ class SpaceView(TemplateView):
         if form.is_valid():
             form.save(commit=True)
             logger.info("Edited space: " + str(space.id))
-        return render(request, self.template_name, self.get_context_data())
+            return http.HttpResponse()
+        return http.HttpResponseBadRequest(list(form.errors.values()))
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['s'] = get_object_or_404(Space, id=self.kwargs.get('obj_id'))
         context['form'] = SpaceForm(instance=context['s'])
+        return context
+
+
+class SpacePrice(TemplateView):
+    template_name = 'eventApp/space_price.html'
+
+    def post(self, request):
+        _id = int(request.POST.get("id", "-1"))
+        space = get_object_or_404(Space, id=_id)
+        space.price_per_hour = int(request.POST.get('price', space.price_per_hour))
+        space.offer = float(request.POST.get('offer', space.offer))
+        space.save()
+        logger.info("Changed price and/or offer of '"+str(space)+"' to "+str(space.price_per_hour)+"€/"+str(space.offer)+"%")
+        return render(request, self.template_name, self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['spaces'] = query.get_all_spaces(hasPrice=False).order_by('field')
         return context
 
 
@@ -488,7 +509,8 @@ class SeasonView(TemplateView):
         if form.is_valid():
             form.save(commit=True)
             logger.info("Edited season: " + str(season.id) + ' ' + season.name)
-        return render(request, self.template_name, self.get_context_data())
+            return http.HttpResponse()
+        return http.HttpResponseBadRequest(list(form.errors.values()))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
