@@ -20,13 +20,13 @@ from django.urls import path
 from eventApp.views import TestView, IncidenceView, SeasonListView, reservation_view, show_reservation_schedule_view, \
     _ajax_change_view, \
     reservation_detail, _ajax_mark_as_read, _ajax_mark_completed_incidence, delete_reservation, EventView, \
-    SpacesListView, SpaceView, delete_space, report_view, SeasonView, delete_season
-    
+    SpacesListView, SpaceView, delete_space, report_view, SeasonView, delete_season, reservation_bill
 
 urlpatterns = [
     path('reservation/', reservation_view, name="reservations"),
     path('reservation/new', show_reservation_schedule_view, name="schedule_view"),
     path('reservation/<int:obj_id>/', reservation_detail, name='reservation_detail'),
+    path('reservation/<int:obj_id>/bill', reservation_bill, name='reservation_bill'),
     path('reservation/delete/<int:obj_id>/', delete_reservation, name='delete_reservation'),
     path('season/', facility_responsible_only(SeasonListView.as_view()), name='season'),
     path('season/<int:obj_id>', facility_responsible_only(SeasonView.as_view()), name='season_detail'),

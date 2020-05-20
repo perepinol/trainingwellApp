@@ -45,7 +45,7 @@ class TestView(TemplateView):
 
 class EventView(TemplateView):
     template_name = 'eventApp/event_schedule_view.html'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         current_week = datetime.now() - timedelta(days=datetime.now().weekday())
@@ -261,7 +261,7 @@ def _ajax_change_view(request):
     return http.JsonResponse(_get_schedule(start_day=start_day))
 
 
-def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
+def _get_schedule(start_day=date.today() + timedelta(days=1), num_days=6):
     """Gets the schedule for one week from the specified day as a parameter (inclusive).
     Should no parameter given, 'tomorrow' is used as default and schedule for a week time.
 
@@ -272,22 +272,24 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
     from copy import deepcopy
 
     def get_int_hour(_timedelta):
-        return int(_timedelta.seconds/3600)
+        return int(_timedelta.seconds / 3600)
 
     def get_day_all_spaces_free_(start_h, end_h, _spaces, _day):
         _today_sch = {}
         for _hour in range(get_int_hour(start_h), get_int_hour(end_h)):
             _hour_spaces = deepcopy(_spaces)
             for _incidence in incidences:
-                if _incidence.limit > (datetime.combine(start_day+timedelta(days=_day), datetime.min.time()) + timedelta(hours=_hour)):
+                if _incidence.limit > (
+                        datetime.combine(start_day + timedelta(days=_day), datetime.min.time()) + timedelta(
+                        hours=_hour)):
                     for _sp in _incidence.affected_fields.all():
                         del _hour_spaces[_sp.id]
-            _today_sch[str(_hour)+':00'] = _hour_spaces
+            _today_sch[str(_hour) + ':00'] = _hour_spaces
         return _today_sch
 
     schedule = {}
     spaces = {}
-    incidences = query.get_all_incidences(limit=start_day+timedelta(days=num_days+1))
+    incidences = query.get_all_incidences(limit=start_day + timedelta(days=num_days + 1))
 
     open_season_hour = None
     end_season_hour = None
@@ -314,7 +316,8 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
                     timeblock.start_time.year == _date.year:
                 today_timeblocks.append(timeblock)
         if not today_timeblocks:
-            schedule[str(start_day + timedelta(days=day))] = get_day_all_spaces_free_(open_season_hour, end_season_hour, spaces, day)
+            schedule[str(start_day + timedelta(days=day))] = get_day_all_spaces_free_(open_season_hour, end_season_hour,
+                                                                                      spaces, day)
         else:
             schedule[str(start_day + timedelta(days=day))] = {}
             while open_season_hour + timedelta(hours=hour) < end_season_hour:
@@ -324,10 +327,13 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
                     if timeblock.start_time.hour == get_int_hour(current_hour):
                         del free_spaces_per_hour[timeblock.space.id]
                 for incidence in incidences:
-                    if incidence.limit > (datetime.combine(start_day + timedelta(days=day), datetime.min.time()) + timedelta(hours=current_hour)):
+                    if incidence.limit > (
+                            datetime.combine(start_day + timedelta(days=day), datetime.min.time()) + timedelta(
+                            hours=current_hour)):
                         for sp in incidence.affected_fields.all():
                             del free_spaces_per_hour[sp.id]
-                schedule[str(start_day + timedelta(days=day))][str(get_int_hour(current_hour))+':00'] = free_spaces_per_hour
+                schedule[str(start_day + timedelta(days=day))][
+                    str(get_int_hour(current_hour)) + ':00'] = free_spaces_per_hour
                 hour += 1
 
     return schedule
@@ -382,7 +388,8 @@ def delete_reservation(request, instance):
     if days >= 7:
         instance.status = Reservation.CANCELTOREFUND if instance.status == Reservation.PAID else Reservation.CANCEL
         logger.info("Reservation " + str(instance.id) + " successfully canceled as " + instance.status)
-        create_manager_notification("Reserve " + str(instance.id) + " was canceled. You should check if needs to be refunded")
+        create_manager_notification(
+            "Reserve " + str(instance.id) + " was canceled. You should check if needs to be refunded")
     else:
         instance.status = Reservation.CANCELOUTTIME
         logger.info("Reservation " + str(instance.id) + " changed status to " + Reservation.CANCELOUTTIME)
@@ -423,7 +430,7 @@ class SpacesListView(TemplateView):
         form = SpaceForm(data=request.POST)
         if form.is_valid():
             space = form.save(commit=True)
-            logger.info("Created space: " + str(space.id) )
+            logger.info("Created space: " + str(space.id))
         return render(request, self.template_name, self.get_context_data())
 
     def get_context_data(self, **kwargs):
@@ -436,7 +443,7 @@ class SpacesListView(TemplateView):
 
 class SpaceView(TemplateView):
     template_name = 'eventApp/space_detail.html'
-    
+
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name, self.get_context_data())
 
@@ -447,7 +454,7 @@ class SpaceView(TemplateView):
             form.save(commit=True)
             logger.info("Edited space: " + str(space.id))
         return render(request, self.template_name, self.get_context_data())
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['s'] = get_object_or_404(Space, id=self.kwargs.get('obj_id'))
@@ -486,7 +493,7 @@ def delete_space(request, obj_id):
     logger.info("Deleted space: " + str(space.id))
     return redirect(reverse('spaces'))
 
-  
+
 @login_required
 @decorators.facility_responsible_only
 def delete_season(request, obj_id):
@@ -497,7 +504,7 @@ def delete_season(request, obj_id):
     logger.info("Deleted season: " + str(season.id) + ' ' + season.name)
     return redirect(reverse('season'))
 
-  
+
 @login_required
 @decorators.ajax_required
 @decorators.get_if_creator(Notification)
@@ -517,3 +524,8 @@ def _ajax_mark_completed_incidence(request):
         Incidence.objects.get(id=id_ins).soft_delete()
     return http.JsonResponse({})
 
+
+def reservation_bill(request, obj_id):
+    reservation = Reservation.objects.filter(id=obj_id)
+    context = {'reservation': reservation}
+    return render(request, 'eventApp/reservation_bill.html', context)

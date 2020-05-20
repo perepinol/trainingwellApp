@@ -37,5 +37,6 @@
             Price: {{ p }}€ ({{ state }})
         {% endblocktrans %}</p>
         <a class="stretched-link" href={% url 'reservation_detail' obj_id=res.id %}>{% trans 'Details' %}</a>
+        <a class="stretched-link" href={% url 'reservation_bill' obj_id=res.id %}>{% trans 'Bill' %}</a>
     </div>
 </div>
