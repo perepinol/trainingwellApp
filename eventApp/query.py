@@ -32,7 +32,7 @@ def get_all_timeblocks(start_date, num_days=1, space=None, field=None):
     return timeblock_qs
 
 
-def get_all_spaces(field=None, only_active=True):
+def get_all_spaces(field=None, hasPrice = True, only_active=True):
     """Returns a QuerySet of Space. If no filter parameters are provided it will return the whole model table.
 
     :param field: Field of the desired Spaces
@@ -40,6 +40,7 @@ def get_all_spaces(field=None, only_active=True):
     :return: a QuerySet of Space model
     """
     space_qs = Space.objects.filter(field=field) if field else Space.objects.all()
+    if hasPrice: space_qs = space_qs.filter(price_per_hour__gt=0)
     return space_qs.filter(is_deleted=False) if only_active else space_qs
 
 
