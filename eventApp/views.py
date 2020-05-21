@@ -43,6 +43,29 @@ class TestView(TemplateView):
     template_name = 'eventApp/test.html'
 
 
+class EventListView(TemplateView):
+    template_name = 'eventApp/event_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        t = datetime.now().replace(minute=0, second=0, microsecond=0)
+        curr_events = {
+            'title': 'Current events',
+            'start_time': t,
+            'end_time': t + settings.RESERVATION_GRANULARITY,
+            'events': Timeblock.objects.filter(start_time=t)
+        }
+        t += settings.RESERVATION_GRANULARITY
+        coming_events = {
+            'title': 'Coming events',
+            'start_time': t,
+            'end_time': t + settings.RESERVATION_GRANULARITY,
+            'events': Timeblock.objects.filter(start_time=t)
+        }
+        context['event_agg'] = [curr_events, coming_events]
+        return context
+
+
 class EventView(TemplateView):
     template_name = 'eventApp/event_schedule_view.html'
     
