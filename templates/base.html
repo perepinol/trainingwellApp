@@ -64,9 +64,11 @@
         <div class="container mw-100 h-100 d-flex flex-column p-0">
             {% block content %}
             {% endblock %}
-            <div class="row footer mx-5 border-top border-light" style="height: 3em;">
-                {% block footer %}
-                {% endblock %}
+            <hr>
+            <div class="container">
+            <footer class=footer">
+                <p class="service">Web page created by Geiade Software S.A. Copyright 2020 ©</p>
+            </footer>
             </div>
         </div>
     {% if user.is_authenticated %}
