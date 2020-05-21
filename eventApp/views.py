@@ -524,8 +524,9 @@ def _ajax_mark_completed_incidence(request):
         Incidence.objects.get(id=id_ins).soft_delete()
     return http.JsonResponse({})
 
-
+@login_required
 def reservation_bill(request, obj_id):
-    reservation = Reservation.objects.filter(id=obj_id)
-    context = {'reservation': reservation}
+    reservation = get_object_or_404(Reservation, id=obj_id)
+    timeblock = get_object_or_404(Timeblock, reservation = obj_id)
+    context = {'reservation': reservation, 'timeblock': timeblock}
     return render(request, 'eventApp/reservation_bill.html', context)
