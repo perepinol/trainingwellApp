@@ -11,9 +11,6 @@
                             <h3 class="card-title">{{ event.reservation.event_name }}</h3>
                             <p class="card-text">{{ event.space }}</p>
                         </div>
-                        <div class="card-footer">
-                            <a class="card-text" href="{% url 'space_detail' obj_id=event.space.id %}">Directions</a>
-                        </div>
                     </div>
                 {% empty %}
                     <h5 class="ml-4">{% trans 'No events to show' %}</h5>

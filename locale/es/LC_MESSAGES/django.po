@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-03-27 21:44+0000\n"
+"POT-Creation-Date: 2020-05-22 11:26+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,9 +18,333 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: templates/base.html:21
+#: eventApp/forms.py:20
+msgid "Space usage"
+msgstr "Uso de espacios"
+
+#: eventApp/forms.py:21
+msgid "Income/outcome"
+msgstr "Ingresos/gastos"
+
+#: eventApp/forms.py:22
+msgid "Performance"
+msgstr "Rendimiento"
+
+#: eventApp/forms.py:107
+msgid "End date should come after start date"
+msgstr "La fecha final debería ser posterior a la inicial"
+
+#: eventApp/forms.py:110
+msgid "End time should come after start time"
+msgstr "La hora final debería ser posterior a la inicial"
+
+#: eventApp/forms.py:122
+msgid "This date range overlaps with season"
+msgstr "Este rango de fechas se superpone con una Estación"
+
+#: eventApp/forms.py:141
+msgid "Space size has to be a natural number"
+msgstr "El tamaño del espacio debe ser un número natural"
+
+#: eventApp/forms.py:144
+msgid "Offer cannot be negative"
+msgstr "La oferta no puede ser negativa"
+
+#: templates/base.html:26
 msgid "Reservations"
 msgstr "Reservas"
+
+#: templates/base.html:31 templates/eventApp/incidence.html:12
+msgid "Incidences"
+msgstr "Incidencias"
+
+#: templates/base.html:36
+msgid "Seasons"
+msgstr "Estaciones"
+
+#: templates/base.html:41
+#, fuzzy
+#| msgid "Desired Spaces"
+msgid "Spaces"
+msgstr "Espacios"
+
+#: templates/base.html:46
+msgid "Report"
+msgstr "Informe"
+
+#: templates/base.html:51
+msgid "Add prices"
+msgstr "Añadir precios"
+
+#: templates/base.html:98
+msgid "No unread notifications"
+msgstr "No hay nuevas notificaciones"
+
+#: templates/base.html:101
+msgid "Mark all as read"
+msgstr "Marcar todas como leído"
+
+#: templates/concurrency_error.html:6
+msgid "Oops"
+msgstr "Oops"
+
+#: templates/concurrency_error.html:7
+msgid "A block you requested has already been reserved"
+msgstr "Un bloque solicitado ya se reservó"
+
+#: templates/concurrency_error.html:8
+msgid "You will be redirected to the schedule page"
+msgstr "Se te redirigirá a la página del horario"
+
+#: templates/eventApp/event_list.html:16
+msgid "No events to show"
+msgstr "No hay eventos para mostrar"
+
+#: templates/eventApp/event_schedule_view.html:10
+msgid "Previous week"
+msgstr "Semana pasada"
+
+#: templates/eventApp/event_schedule_view.html:13
+msgid "Now"
+msgstr "Ahora"
+
+#: templates/eventApp/event_schedule_view.html:16
+msgid "Next week"
+msgstr "Semana siguiente"
+
+#: templates/eventApp/event_schedule_view.html:22
+msgid "Hour"
+msgstr "Hora"
+
+#: templates/eventApp/event_schedule_view.html:22
+msgid "Day"
+msgstr "Dia"
+
+#: templates/eventApp/incidence.html:20 templates/eventApp/incidence.html:59
+msgid "New Incidence"
+msgstr "Nueva Incidencia"
+
+#: templates/eventApp/incidence.html:23 templates/eventApp/incidence.html:104
+msgid "Show completed"
+msgstr "Mostrar completadas"
+
+#: templates/eventApp/incidence.html:27
+msgid "Order by"
+msgstr "Ordenar por"
+
+#: templates/eventApp/incidence.html:30
+msgid "Deadline date"
+msgstr "Fecha límite"
+
+#: templates/eventApp/incidence.html:31
+msgid "Creation date"
+msgstr "Fecha creación"
+
+#: templates/eventApp/incidence.html:32
+#, fuzzy
+#| msgid "Desired Spaces"
+msgid "Disabled spaces"
+msgstr "Espacios deseados"
+
+#: templates/eventApp/incidence.html:34
+msgid "DISABLED"
+msgstr "INHABILITADO"
+
+#: templates/eventApp/incidence.html:38
+msgid "Set selected as completed"
+msgstr "Marcar seleccionadas como completadas"
+
+#: templates/eventApp/incidence.html:67
+msgid "Incidence Name"
+msgstr "Nombre incidencia"
+
+#: templates/eventApp/incidence.html:69 templates/eventApp/space_detail.html:39
+#: templates/eventApp/space_price.html:36 templates/eventApp/spaces.html:40
+#, fuzzy
+#| msgid "Reservations"
+msgid "Description"
+msgstr "Descripción"
+
+#: templates/eventApp/incidence.html:71
+msgid "Limit day/time to solve"
+msgstr "Límite día/hora para completar"
+
+#: templates/eventApp/incidence.html:74
+msgid "Which fields are affected?"
+msgstr "Qué campos afecta?"
+
+#: templates/eventApp/incidence.html:76
+msgid "Should you disbale these fields?"
+msgstr "Se deberían desactivar los campos?"
+
+#: templates/eventApp/incidence.html:80
+#: templates/eventApp/season_detail.html:42 templates/eventApp/seasons.html:45
+#: templates/eventApp/space_detail.html:46
+#: templates/eventApp/space_price.html:44 templates/eventApp/spaces.html:47
+msgid "Close"
+msgstr "Cerrar"
+
+#: templates/eventApp/incidence.html:81
+#: templates/eventApp/season_detail.html:43 templates/eventApp/seasons.html:46
+#: templates/eventApp/space_detail.html:47
+#: templates/eventApp/space_price.html:45 templates/eventApp/spaces.html:48
+msgid "Save"
+msgstr "Guardar"
+
+#: templates/eventApp/incidence.html:104
+msgid "Hide completed"
+msgstr "Esconder completadas"
+
+#: templates/eventApp/incidence.html:121
+msgid "You did not select any incidence"
+msgstr "No ha seleccionado ninguna incidencia"
+
+#: templates/eventApp/incidence.html:123
+msgid "Are you sure you want to mark as completed?"
+msgstr "Estás seguro que quieres completarlas?"
+
+#: templates/eventApp/incidence_card.html:8
+#, python-format
+msgid "Deadline: %(d)s at %(t)s"
+msgstr "Límite: %(d)s a las %(t)s"
+#: templates/eventApp/incidence_card.html:11
+msgid "Fields are not disabled"
+msgstr "Los campos no están desactivados"
+
+#: templates/eventApp/incidence_card.html:11
+msgid "Fields are disabled"
+msgstr "Los campos están desactivados"
+
+#: templates/eventApp/report_form.html:6 templates/eventApp/report_form.html:16
+msgid "Generate report"
+msgstr "Generar informe"
+
+#: templates/eventApp/report_view.html:8
+msgid "TrainingWell usage report"
+msgstr "Informe de uso TrainingWell"
+
+#: templates/eventApp/report_view.html:15
+msgid "From"
+msgstr "De"
+
+#: templates/eventApp/report_view.html:15
+msgid "to"
+msgstr "para"
+
+#: templates/eventApp/reservation_card.html:6
+#, python-format
+msgid "First reservation: %(d)s, %(t)s"
+msgstr "Primera reserva: %(d)s, %(t)s"
+
+#: templates/eventApp/reservation_card.html:8
+#, python-format
+msgid "Last reservation: %(d)s, %(t)s"
+msgstr "Última reserva: %(d)s, %(t)s"
+
+#: templates/eventApp/reservation_card.html:10
+#, python-format
+msgid "Includes %(num)s reservations"
+msgstr "Incluye %(num)s reservas"
+
+#: templates/eventApp/reservation_card.html:36
+#, python-format
+msgid ""
+"\n"
+"            Price: %(p)s€ (%(state)s)\n"
+"        "
+msgstr ""
+
+#: templates/eventApp/reservation_card.html:39
+msgid "Details"
+msgstr "Detalles"
+
+#: templates/eventApp/reservation_confirmation.html:7
+#, fuzzy
+#| msgid "Reservations"
+msgid "Reservation confirmation"
+msgstr "Confirmación reserva"
+
+#: templates/eventApp/reservation_confirmation.html:12
+#: templates/eventApp/reservation_detail.html:10
+#: templates/eventApp/space_price.html:37
+msgid "Price"
+msgstr "Precio"
+
+#: templates/eventApp/reservation_confirmation.html:13
+msgid "Spaces included in the reservation"
+msgstr "Espacios incluidos en la reserva"
+
+#: templates/eventApp/reservation_confirmation.html:19
+#: templates/eventApp/reservation_detail.html:21
+msgid "Date"
+msgstr "Fecha"
+
+#: templates/eventApp/reservation_confirmation.html:20
+#: templates/eventApp/reservation_detail.html:22
+msgid "Start time"
+msgstr "Hora inicio"
+
+#: templates/eventApp/reservation_confirmation.html:21
+#: templates/eventApp/reservation_detail.html:23
+msgid "End time"
+msgstr "Hora fin"
+
+#: templates/eventApp/reservation_confirmation.html:25
+#: templates/eventApp/reservation_detail.html:27
+msgid "No spaces reserved"
+msgstr "No hay espacios reservados"
+
+#: templates/eventApp/reservation_confirmation.html:30
+#: templates/eventApp/reservation_detail.html:63
+#: templates/eventApp/reservation_schedule_view.html:51
+#: templates/eventApp/season_detail.html:59
+#: templates/eventApp/space_detail.html:63
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: templates/eventApp/reservation_confirmation.html:33
+#, fuzzy
+#| msgid "Reservations"
+msgid "Make reservation"
+msgstr "Crear reserva"
+
+#: templates/eventApp/reservation_detail.html:9
+#, fuzzy
+#| msgid "Reservations"
+msgid "Reservation date"
+msgstr "Fecha reserva"
+
+#: templates/eventApp/reservation_detail.html:12
+msgid "The reservation is already paid"
+msgstr "La reserva está pagada"
+
+#: templates/eventApp/reservation_detail.html:14
+msgid "The reservation has not been paid yet"
+msgstr "La reserva no se ha pagado aún"
+
+#: templates/eventApp/reservation_detail.html:39
+#: templates/eventApp/reservation_detail.html:50
+#: templates/eventApp/reservation_detail.html:61
+#: templates/eventApp/season_detail.html:62
+#: templates/eventApp/space_detail.html:66
+msgid "Delete"
+msgstr "Borrar"
+
+#: templates/eventApp/reservation_detail.html:56
+msgid "Are you sure you want to delete your reservation?"
+msgstr "Seguro que quiere borrar la reserva?"
+
+#: templates/eventApp/reservation_list_view.html:6
+#, fuzzy
+#| msgid "Reservations"
+msgid "Your reservations"
+msgstr "Tus reservas"
+
+#: templates/eventApp/reservation_list_view.html:9
+#, fuzzy
+#| msgid "Reservations"
+msgid "New reservation"
+msgstr "Nueva reserva"
 
 #: templates/eventApp/reservation_schedule_view.html:8
 msgid "Reserve Now!"
@@ -30,9 +354,208 @@ msgstr "Reserva Ahora!"
 msgid "Not available"
 msgstr "No disponible"
 
-#: templates/eventApp/reservation_schedule_view.html:22
-msgid "Desired Spaces"
-msgstr "Espacios deseados"
+#: templates/eventApp/reservation_schedule_view.html:18
+msgid "Previous"
+msgstr "Anterior"
+
+#: templates/eventApp/reservation_schedule_view.html:21
+msgid "Next"
+msgstr "Siguiente"
+
+#: templates/eventApp/reservation_schedule_view.html:57
+msgid "Confirm"
+msgstr "Confirmar"
+
+#: templates/eventApp/reservation_schedule_view.html:66
+#, fuzzy
+#| msgid "Desired Spaces"
+msgid "Available Spaces"
+msgstr "Espacios libres"
+
+#: templates/eventApp/reservation_schedule_view.html:118
+#, fuzzy
+#| msgid "Desired Spaces"
+msgid "Select Spaces at"
+msgstr "Espacios seleccionados"
+
+#: templates/eventApp/reservation_schedule_view.html:162
+msgid "You did not select any block"
+msgstr "No seleccionaste ningún bloque"
+
+#: templates/eventApp/reservation_schedule_view.html:173
+msgid "Do you want to cancel and return?"
+msgstr "Quieres cancelar y volver?"
+
+#: templates/eventApp/season_card.html:6
+#: templates/eventApp/season_detail.html:7
+#, python-format
+msgid "Start Date: %(d)s"
+msgstr "Fecha inicio: %(d)s"
+
+#: templates/eventApp/season_card.html:7
+#: templates/eventApp/season_detail.html:8
+#, python-format
+msgid "End Date: %(d)s"
+msgstr "Fecha fin: %(d)s"
+
+#: templates/eventApp/season_card.html:8
+#: templates/eventApp/season_detail.html:9
+#, python-format
+msgid "Facilities open hour: %(t)s"
+msgstr "Hora apertura: %(t)s"
+
+#: templates/eventApp/season_card.html:9
+#: templates/eventApp/season_detail.html:10
+#, python-format
+msgid "Facilities close hour: %(t)s"
+msgstr "Hora de cerrar: %(t)s"
+
+#: templates/eventApp/season_detail.html:14
+msgid "Edit season"
+msgstr "Editar estación"
+
+#: templates/eventApp/season_detail.html:15
+msgid "Delete season"
+msgstr "Borrar estación"
+
+#: templates/eventApp/season_detail.html:21
+msgid "Edit Season"
+msgstr "Editar estación"
+
+#: templates/eventApp/season_detail.html:29 templates/eventApp/seasons.html:32
+msgid "Season Name"
+msgstr "Nombre estación"
+
+#: templates/eventApp/season_detail.html:31 templates/eventApp/seasons.html:34
+msgid "Starting date of the season"
+msgstr "Fecha inicio de la estación"
+
+#: templates/eventApp/season_detail.html:33 templates/eventApp/seasons.html:36
+msgid "Ending date of the season"
+msgstr "Fecha fin de la estación"
+
+#: templates/eventApp/season_detail.html:35 templates/eventApp/seasons.html:38
+msgid "Open hour of the facilities"
+msgstr "Horario apertura de las instalaciones"
+
+#: templates/eventApp/season_detail.html:37 templates/eventApp/seasons.html:40
+msgid "Close hour of the facilities"
+msgstr "Horario de cerrar instalaciones"
+
+#: templates/eventApp/season_detail.html:53
+msgid "Do you want to permanently delete this season?"
+msgstr "Quieres borrar permanentemente la estación?"
+
+#: templates/eventApp/seasons.html:6
+msgid "Current seasons"
+msgstr "Estaciones actuales"
+
+#: templates/eventApp/seasons.html:9
+msgid "Add season"
+msgstr "Añadir estación"
+
+#: templates/eventApp/seasons.html:24
+msgid "Add New Season"
+msgstr "Añadir nueva estación"
+
+#: templates/eventApp/space_card.html:6 templates/eventApp/space_detail.html:7
+#, python-format
+msgid "Field: %(f)s"
+msgstr "Field: %(f)s"
+
+#: templates/eventApp/space_card.html:7 templates/eventApp/space_detail.html:8
+msgid "Season:"
+msgstr "Estación:"
+
+#: templates/eventApp/space_card.html:8 templates/eventApp/space_detail.html:9
+#, python-format
+msgid "Price per hour: %(p)s"
+msgstr "Precio por hora: %(p)s"
+
+#: templates/eventApp/space_card.html:9 templates/eventApp/space_detail.html:10
+#, python-format
+msgid "Square metres: %(sqmt)s"
+msgstr "Metros cuadrados: %(sqmt)s"
+
+#: templates/eventApp/space_card.html:10
+#: templates/eventApp/space_detail.html:12
+#, python-format
+msgid "Offer: %(o)s"
+msgstr "Offer: %(o)s"
+
+#: templates/eventApp/space_detail.html:11
+#, python-format
+msgid "Description: %(d)s"
+msgstr "Descripción: %(d)s"
+
+#: templates/eventApp/space_detail.html:16
+msgid "Edit space"
+msgstr "Editar espacio"
+
+#: templates/eventApp/space_detail.html:17
+#, fuzzy
+#| msgid "Desired Spaces"
+msgid "Delete space"
+msgstr "Borrar espacio"
+
+#: templates/eventApp/space_detail.html:23 templates/eventApp/spaces.html:24
+msgid "Add New Space"
+msgstr "Añadir espacio"
+
+#: templates/eventApp/space_detail.html:31
+#: templates/eventApp/space_price.html:33 templates/eventApp/spaces.html:32
+msgid "Field"
+msgstr "Campo"
+
+#: templates/eventApp/space_detail.html:33
+#: templates/eventApp/space_price.html:34 templates/eventApp/spaces.html:34
+msgid "Season"
+msgstr "Estación"
+
+#: templates/eventApp/space_detail.html:35 templates/eventApp/spaces.html:36
+msgid "Square metres"
+msgstr "Metros cuadrados"
+
+#: templates/eventApp/space_detail.html:37 templates/eventApp/spaces.html:38
+msgid "Photo"
+msgstr "Fotografía"
+
+#: templates/eventApp/space_detail.html:41
+#: templates/eventApp/space_price.html:15 templates/eventApp/spaces.html:42
+msgid "Offer"
+msgstr "Oferta"
+
+#: templates/eventApp/space_detail.html:57
+msgid "Do you want to permanently delete this space?"
+msgstr "Quieres borrar permanentemente el espacio?"
+
+#: templates/eventApp/space_price.html:14
+msgid "Price per hour"
+msgstr "Precio por hora"
+
+#: templates/eventApp/space_price.html:32
+msgid "Identifier"
+msgstr "Identificador"
+
+#: templates/eventApp/space_price.html:35
+msgid "Square meters"
+msgstr "Metros cuadrados"
+
+#: templates/eventApp/space_price.html:39
+msgid "Offer (percentatge)"
+msgstr "Oferta (porcentaje)"
+
+#: templates/eventApp/space_price.html:52
+msgid "There are not any spaces"
+msgstr "No hay espacios"
+
+#: templates/eventApp/spaces.html:6
+msgid "Current spaces"
+msgstr "Espacios actuales"
+
+#: templates/eventApp/spaces.html:9
+msgid "Add space"
+msgstr "Añadir espacio"
 
 #: templates/eventApp/test.html:7
 msgid "This is a test page"
