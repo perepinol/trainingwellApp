@@ -44,6 +44,12 @@ def get_all_spaces(field=None, hasPrice = True, only_active=True):
     return space_qs.filter(is_deleted=False) if only_active else space_qs
 
 
+def get_all_reservations(status=None, only_active=True):
+    reserv_qs = Reservation.objects.all()
+    if status: reserv_qs = reserv_qs.filter(status__in=status)
+    return reserv_qs.filter(is_deleted=False) if only_active else reserv_qs
+
+
 def get_all_incidences(limit=None, only_disabling_fields=True, only_active=True):
     incidences = Incidence.objects.filter(limit__lte=limit) if limit else Incidence.objects.all()
     if only_disabling_fields: incidences = incidences.filter(disable_fields=True)
