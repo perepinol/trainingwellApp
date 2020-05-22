@@ -132,7 +132,7 @@ class Reservation(models.Model):
     status = models.CharField(max_length=100, choices=STATUS)
     event_name = models.CharField(max_length=100)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
-    reservation_date = models.DateTimeField(auto_now_add=True)
+    reservation_date = models.DateTimeField()
     price = models.IntegerField()
     is_paid = models.BooleanField(default=False)
     last_update = models.DateTimeField()
