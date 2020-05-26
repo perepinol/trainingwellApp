@@ -1,5 +1,5 @@
 {% load i18n %}
-<div class="col-lg-4 col-md-6 col-sm-12 {% if incidence.is_deleted %}completed{% endif %}" style="padding: 8px; {% if incidence.is_deleted %}display: none{% endif %}">
+<div class="col-lg-4 col-md-6 col-sm-12 shadow p-3 mb-5 bg-white rounded {% if incidence.is_deleted %}completed{% endif %}" style="padding: 8px; {% if incidence.is_deleted %}display: none{% endif %}">
     <div id="{{ incidence.id }}" class="card w-100 h-100 {% if not incidence.is_deleted %}ongoing{% endif %}" style="cursor: pointer">
         <div class="flip-front">
             <div class="card-body">

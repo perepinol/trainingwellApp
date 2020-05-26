@@ -1,6 +1,6 @@
 {% load static %}
 {% load i18n %}
-
+{% load template_tags %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -27,7 +27,7 @@
               </div>
           </div>
         </header>
-        <div class="reservation">
+        <t class="reservation">
             <main>
               <table>
                 <thead>
@@ -43,24 +43,22 @@
                   <tr>
                     <td class="service">Reservation</td>
                     <td class="desc">{{ timeblock.space }} booked from {{ timeblock.start_time }} to {{ timeblock.end_time }}</td>
-                    {% with i=reservation.price %}
-                    <html>
-                        <td class="unit">{{  i }}</td>
-                    </html>
-                    {% endwith %}
+                    <td class="unit"></td>
+                  <!--  <td class="unit"> str(reservation.price)|multiply:"3"</td>-->
+                    <td class="unit"> </td>
                     <td class="qty">{{ timeblock.space.price_per_hour }}€</td>
-                    <td class="total">$1,040.00</td>
+                    <td class="total">{{ reservation.price }}</td>
                   </tr>
                   <tr>
                     <td class="service">Discount</td>
                     {% if  reservation.is_paid %}
-                        <td class="desc">No disount is applied.</td>
+                        <td class="desc">No discount is applied.</td>
                     {% else %}
                         <td class="desc">The field is in offer.</td>
                     {% endif %}
                     <td class="unit"></td>
                     <td class="qty">{{ timeblock.space.offer }}</td>
-                    <td class="total">-</td>
+                    <td class="total">-{% widthratio reservation.price 1 timeblock.space.offer %}</td>
                   </tr>
                   <tr>
                     <td colspan="4">SUBTOTAL</td>
