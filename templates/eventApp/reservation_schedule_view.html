@@ -68,7 +68,8 @@
 {% block scripts %}
     <script type="text/javascript">
         let json_string = JSON.parse('{{ scheduleJSON | escapejs }}');
-        console.log(json_string)
+        let json_space_description = JSON.parse('{{ spaceDescrJSON | escapejs }}');
+        console.log(json_space_description)
         let firstDaySchedule = new Date(Object.keys(json_string)[0]);
         let day, hour;
         let selected = {};
@@ -99,12 +100,14 @@
             for (let [space_id, space_name] of Object.entries(buttonData)) {
                 let key = timeToSeconds(day, hour);
                 let is_checked = selected.hasOwnProperty(key) && selected[key].includes(space_id) ? "checked" : "";
-
-                innerHtml += "<label id='"+space_id.toString()+"' class='container-checkbox'>" +
-                        "<input id='"+space_id.toString()+"' type='checkbox' "+is_checked+">" + space_name +
-                        "<span class='checkmark'></span></label>"
+                let desc = json_space_description[space_name];
+                innerHtml += "<label class='container-checkbox more-info'>" + space_name +
+                    "<span class='more-info-text'>"+desc+"</span>" +
+                    "<input id='" + space_id.toString() + "' type='checkbox' " + is_checked + ">" +
+                    "<span class='checkmark'></span></label></br>"
             }
             $('#modal-spaces').html(innerHtml);
+
         }
         function canGoPreviousWeek() {
             if (-new Date().daysDifference(firstDaySchedule) < 1) {
