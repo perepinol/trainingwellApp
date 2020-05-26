@@ -84,3 +84,5 @@ function createSuccessButton(id, content) {
 function createSpan(content) {
     return "<span>"+content+"</span>";
 }
+
+changeSchedule();

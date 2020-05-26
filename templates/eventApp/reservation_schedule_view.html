@@ -23,29 +23,9 @@
             </ul>
         </div>
     </div>
-    <div id="schedule" class="row d-flex justify-content-center" style="position: relative">
 
-        {% for day, daily_info in schedule.items %}
-            <div class="col-xl-2 col-lg-4 col-md-6 col-sm-12">
-                <div class="col-12" style="text-align: center; display: block; margin-left: 2%; margin-right: 2%; margin-top: 2%">
-                    <h6>{{ day }}</h6>
-                </div>
-                {% for hour, free_spaces in daily_info.items %}
-                    {% if free_spaces|length > 0 %}
-                    <div class="col-12" style="margin: 2%">
-                        <button id='{{ day }} {{ hour }}' class="w-100 rounded bg-success text-white can-reserve" data-toggle="modal" data-target="#exampleModal" style="text-align: center; display: block"><span>{{ hour }}</span></button>
-                    </div>
-                    {% else %}
-                    <div class="col-12" style="margin: 2%">
-                        <div class="w-100 rounded bg-danger text-white cannot-reserve" style="text-align: center; display: block; padding: 2px"><span>{{ hour }}</span></div>
-                    </div>
-                    {% endif %}
-                {% endfor%}
-            </div>
-        {% empty %}
-            No schedule for this week
-        {% endfor %}
-    </div>
+    <div id="schedule" class="row d-flex justify-content-center" style="position: relative"></div>
+
     <div class="row d-flex justify-content-center" style="margin-top: 2%">
         <div class="col-1">
             <button id="cancel" class="btn btn-secondary w-100" style="display: block">{% trans 'Cancel' %}</button>
@@ -88,6 +68,7 @@
 {% block scripts %}
     <script type="text/javascript">
         let json_string = JSON.parse('{{ scheduleJSON | escapejs }}');
+        console.log(json_string)
         let firstDaySchedule = new Date(Object.keys(json_string)[0]);
         let day, hour;
         let selected = {};
@@ -106,9 +87,6 @@
                 return -this.MAX_DAYS;
             }
         };
-
-        canGoPreviousWeek();
-        restartListeners();
 
         function click_reserve(elem) {
             let id = elem.id.split(' ');
