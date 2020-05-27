@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-05-22 11:26+0200\n"
+"POT-Creation-Date: 2020-05-27 21:07+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -49,6 +49,10 @@ msgstr "El tamaño del espacio debe ser un número natural"
 #: eventApp/forms.py:144
 msgid "Offer cannot be negative"
 msgstr "La oferta no puede ser negativa"
+
+#: templates/base.html:22
+msgid "Schedule"
+msgstr "Calendario"
 
 #: templates/base.html:26
 msgid "Reservations"
@@ -100,23 +104,27 @@ msgstr "Se te redirigirá a la página del horario"
 msgid "No events to show"
 msgstr "No hay eventos para mostrar"
 
-#: templates/eventApp/event_schedule_view.html:10
+#: templates/eventApp/event_list.html:23
+msgid "Further events"
+msgstr "Más eventos"
+
+#: templates/eventApp/event_schedule_view.html:7
 msgid "Previous week"
 msgstr "Semana pasada"
 
-#: templates/eventApp/event_schedule_view.html:13
+#: templates/eventApp/event_schedule_view.html:10
 msgid "Now"
 msgstr "Ahora"
 
-#: templates/eventApp/event_schedule_view.html:16
+#: templates/eventApp/event_schedule_view.html:13
 msgid "Next week"
 msgstr "Semana siguiente"
 
-#: templates/eventApp/event_schedule_view.html:22
+#: templates/eventApp/event_schedule_view.html:19
 msgid "Hour"
 msgstr "Hora"
 
-#: templates/eventApp/event_schedule_view.html:22
+#: templates/eventApp/event_schedule_view.html:19
 msgid "Day"
 msgstr "Dia"
 
@@ -178,6 +186,7 @@ msgid "Should you disbale these fields?"
 msgstr "Se deberían desactivar los campos?"
 
 #: templates/eventApp/incidence.html:80
+#: templates/eventApp/reservation_schedule_view.html:79
 #: templates/eventApp/season_detail.html:42 templates/eventApp/seasons.html:45
 #: templates/eventApp/space_detail.html:46
 #: templates/eventApp/space_price.html:44 templates/eventApp/spaces.html:47
@@ -207,6 +216,7 @@ msgstr "Estás seguro que quieres completarlas?"
 #, python-format
 msgid "Deadline: %(d)s at %(t)s"
 msgstr "Límite: %(d)s a las %(t)s"
+
 #: templates/eventApp/incidence_card.html:11
 msgid "Fields are not disabled"
 msgstr "Los campos no están desactivados"
@@ -219,9 +229,24 @@ msgstr "Los campos están desactivados"
 msgid "Generate report"
 msgstr "Generar informe"
 
+#: templates/eventApp/report_form.html:13
+#: templates/eventApp/reservation_confirmation.html:30
+#: templates/eventApp/reservation_detail.html:63
+#: templates/eventApp/reservation_schedule_view.html:51
+#: templates/eventApp/season_detail.html:59
+#: templates/eventApp/space_detail.html:63
+msgid "Cancel"
+msgstr "Cancelar"
+
 #: templates/eventApp/report_view.html:8
 msgid "TrainingWell usage report"
 msgstr "Informe de uso TrainingWell"
+
+#: templates/eventApp/report_view.html:11
+#: templates/eventApp/season_detail.html:13
+#: templates/eventApp/space_detail.html:15
+msgid "Back"
+msgstr "Volver"
 
 #: templates/eventApp/report_view.html:15
 msgid "From"
@@ -294,14 +319,6 @@ msgstr "Hora fin"
 msgid "No spaces reserved"
 msgstr "No hay espacios reservados"
 
-#: templates/eventApp/reservation_confirmation.html:30
-#: templates/eventApp/reservation_detail.html:63
-#: templates/eventApp/reservation_schedule_view.html:51
-#: templates/eventApp/season_detail.html:59
-#: templates/eventApp/space_detail.html:63
-msgid "Cancel"
-msgstr "Cancelar"
-
 #: templates/eventApp/reservation_confirmation.html:33
 #, fuzzy
 #| msgid "Reservations"
@@ -362,6 +379,10 @@ msgstr "Anterior"
 msgid "Next"
 msgstr "Siguiente"
 
+#: templates/eventApp/reservation_schedule_view.html:46
+msgid "No schedule for this week"
+msgstr "No hay horario para esta semana"
+
 #: templates/eventApp/reservation_schedule_view.html:57
 msgid "Confirm"
 msgstr "Confirmar"
@@ -409,6 +430,10 @@ msgstr "Hora apertura: %(t)s"
 #, python-format
 msgid "Facilities close hour: %(t)s"
 msgstr "Hora de cerrar: %(t)s"
+
+#: templates/eventApp/season_card.html:12
+msgid "Edit"
+msgstr "Editar"
 
 #: templates/eventApp/season_detail.html:14
 msgid "Edit season"

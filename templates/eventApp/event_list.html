@@ -20,7 +20,7 @@
     {% endfor %}
     <div class="row ml-4 mb-4">
         <div class="col">
-            <a type="button" role="button" class="btn btn-primary" href="{% url 'event_schedule' %}">Further events</a>
+            <a type="button" role="button" class="btn btn-primary" href="{% url 'event_schedule' %}">{% trans 'Further events'%}</a>
         </div>
     </div>
 {% endblock %}
