@@ -11,28 +11,28 @@
         {% endwith %}
     </div>
     <div class="card-footer d-flex justify-content-between {% if  res.status == "P" %}
-                                                                        bg-success
+                                                                bg-success
+                                                            {% else %}
+                                                                {% if  res.status == "U" %}
+                                                                    bg-warning
+                                                                {% else %}
+                                                                    {% if  res.status == "CTR" %}
+                                                                        bg-secondary
                                                                     {% else %}
-                                                                       {% if  res.status == "U" %}
-                                                                           bg-warning
+                                                                        {% if  res.status == "CR" %}
+                                                                            bg-primary
                                                                         {% else %}
-                                                                           {% if  res.status == "CTR" %}
-                                                                                bg-secondary
+                                                                            {% if  res.status == "COT" %}
+                                                                                bg-danger
                                                                             {% else %}
-                                                                               {% if  res.status == "CR" %}
-                                                                                    bg-primary
-                                                                                {% else %}
-                                                                                   {% if  res.status == "COT" %}
-                                                                                        bg-danger
-                                                                                    {% else %}
-                                                                                        {% if  res.status == "C" %}
-                                                                                            bg-light
-                                                                                        {% endif %}
-                                                                                    {% endif %}
+                                                                                {% if  res.status == "C" %}
+                                                                                    bg-light
                                                                                 {% endif %}
                                                                             {% endif %}
                                                                         {% endif %}
-                                                                    {% endif %}">
+                                                                    {% endif %}
+                                                                {% endif %}
+                                                            {% endif %}">
         <p class="card-text m-0 {% if  res.status == "P" %}
                                     text-white
                                 {% else %}
