@@ -11,6 +11,7 @@ class User(AbstractUser):
     last_update = models.DateTimeField()
     modified_by = models.ForeignKey('self', on_delete=models.PROTECT, null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
+    passw_changed = models.BooleanField(default=False)
 
     def __str__(self):
         return u"%s" % self.username

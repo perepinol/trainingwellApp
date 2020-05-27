@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta
 
 from django.contrib.auth.models import Group
+from django.contrib.auth.views import LoginView
 from django.http import HttpResponseForbidden
 from django.urls import reverse
 
@@ -17,7 +18,7 @@ from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, SpaceForm
 from django.views.generic import TemplateView, ListView
 
 from eventApp import query, decorators, report
-from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, IncidenceForm, ReportForm
+from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, IncidenceForm, ReportForm, ChangePassword
 from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User, Season
 
 import json
@@ -29,6 +30,35 @@ from eventApp.query import AlreadyExistsException
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
+
+class LoginUser(LoginView):
+    template_name = "login.html"
+
+    def get_success_url(self):
+        user = self.request.user
+        if not user.passw_changed:
+            pass
+        return super().get_success_url()
+
+
+class ChangePasswordView(TemplateView):
+    template_name = ""
+
+    def post(self):
+        form = ChangePassword()
+        if form.is_valid():
+            req_user = self.request.user
+            user = get_object_or_404(User, req_user.id)
+            user.password = form.password
+            user.passw_changed = True
+
+        return
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = ChangePassword()
+        return context
 
 
 def notification_context_processor(request):
