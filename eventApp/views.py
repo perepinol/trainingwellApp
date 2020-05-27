@@ -255,6 +255,32 @@ def show_reservation_schedule_view(request):
         return render(request, 'eventApp/reservation_confirmation.html', context)
 
 
+def replace_space(timeblock, non_saved_reallocations):
+    available_spaces = list(filter(
+        lambda s:
+            Timeblock.objects.filter(space=s, start_time=timeblock.start_time).count() == 0 and  # Space not busy in db
+            len([nstb for nstb in non_saved_reallocations
+                 if nstb.space == s and nstb.start_time == timeblock.start_time  # Space not busy in tb not saved
+                 ]) == 0,
+        Space.objects.filter(field=timeblock.space.field)
+    ))
+    if available_spaces:
+        timeblock.space = available_spaces[0]
+        return timeblock
+    return None
+
+
+def reallocate(tb_list):
+    realloc, no_realloc = [], []
+    for tb in tb_list:
+        new_tb = replace_space(tb, non_saved_reallocations=realloc)
+        if new_tb:
+            realloc.append(new_tb)
+        else:
+            no_realloc.append(tb)
+    return realloc, no_realloc
+
+
 class IncidenceView(TemplateView):
     template_name = 'eventApp/incidence.html'
 
@@ -265,8 +291,38 @@ class IncidenceView(TemplateView):
         form = IncidenceForm(data=request.POST)
         if form.is_valid():
             incidence = form.save(commit=False)
-            incidence.disable_fields = not incidence.disable_fields
-            incidence.save()
+            if form.cleaned_data['disable_fields']:
+                # Reallocate affected timeblocks in reservation order
+                reallocated_tb, non_reallocated_tb = reallocate(
+                    Timeblock.objects.filter(
+                        space__in=form.cleaned_data['affected_fields'],
+                        start_time__lt=form.cleaned_data['limit'],
+                        end_time__gte=datetime.now()
+                    ).order_by('reservation__reservation_date')
+                )
+                if non_reallocated_tb:
+                    # Create notification with reservations that could not be cancelled. Do not save
+                    Notification.objects.create(
+                        title='%s: incidence not created' % form.cleaned_data['name'],
+                        content='\n'.join(['Could not reallocate reservations'] + [
+                            '%s %s (%s)' % (tb.reservation.event_name, tb.start_time, tb.reservation.user)
+                            for tb in non_reallocated_tb
+                        ]),
+                        user=request.user
+                    )
+                else:
+                    # If all can be reallocated, do it and notify the organizer
+                    for tb in reallocated_tb:
+                        tb.save()
+                        Notification.objects.create(
+                            title='Reservation modified by incidence in a space',
+                            content='Your reservation %s at %s has been moved to %s'
+                                    % (tb.reservation.event_name, tb.start_time, tb.space),
+                            user=tb.reservation.user
+                        )
+                    incidence.save()
+            else:
+                incidence.save()
         return render(request, self.template_name, self.get_context_data())
 
     def get_context_data(self, **kwargs):
@@ -359,7 +415,6 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
 @decorators.get_if_creator(Reservation)
 def reservation_detail(request, instance):
     tbck = Timeblock.objects.filter(reservation=instance)
-
     context = {'reservation': instance, 'timeblocks': aggregate_timeblocks(list(tbck))}
     return render(request, 'eventApp/reservation_detail.html', context)
 
