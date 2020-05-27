@@ -11,32 +11,62 @@
         {% endwith %}
     </div>
     <div class="card-footer d-flex justify-content-between {% if  res.status == "P" %}
-                                                                        bg-success text-white;
+                                                                        bg-success
                                                                     {% else %}
                                                                        {% if  res.status == "U" %}
-                                                                           bg-warning text-dark
+                                                                           bg-warning
                                                                         {% else %}
                                                                            {% if  res.status == "CTR" %}
-                                                                                bg-secondary text-white
+                                                                                bg-secondary
                                                                             {% else %}
                                                                                {% if  res.status == "CR" %}
-                                                                                    bg-primary text-white
+                                                                                    bg-primary
                                                                                 {% else %}
                                                                                    {% if  res.status == "COT" %}
-                                                                                        bg-danger text-white
+                                                                                        bg-danger
                                                                                     {% else %}
                                                                                         {% if  res.status == "C" %}
-                                                                                            bg-light text-dark
+                                                                                            bg-light
                                                                                         {% endif %}
                                                                                     {% endif %}
                                                                                 {% endif %}
                                                                             {% endif %}
                                                                         {% endif %}
                                                                     {% endif %}">
-        <p class="card-text m-0">{% blocktrans with p=res.price state=res.current_state %}
+        <p class="card-text m-0 {% if  res.status == "P" %}
+                                    text-white
+                                {% else %}
+                                    {% if  res.status == "U" %}
+                                        text-dark
+                                    {% else %}
+                                        {% if  res.status == "CTR" %}
+                                            text-white
+                                        {% else %}
+                                            {% if  res.status == "CR" %}
+                                                text-white
+                                            {% else %}
+                                                {% if  res.status == "COT" %}
+                                                    text-white
+                                                {% else %}
+                                                    {% if  res.status == "C" %}
+                                                        text-dark
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endif %}
+                                {% endif %}">{% blocktrans with p=res.price state=res.current_state %}
             Price: {{ p }}€ ({{ state }})
         {% endblocktrans %}</p>
-        <a class="stretched-link" href={% url 'reservation_detail' obj_id=res.id %}>{% trans 'Details' %}</a>
-        <a class="stretched-link" href={% url 'reservation_bill' obj_id=res.id %}>{% trans 'Bill' %}</a>
+        <a class="stretched-link {% if  res.status == "U" or res.status == "C" %}
+                                    text-dark
+                                 {% else %}
+                                    text-white
+                                 {% endif %}" href={% url 'reservation_detail' obj_id=res.id %}>{% trans 'Details' %}</a>
+        <a class="stretched-link {% if  res.status == "U" or res.status == "C" %}
+                                    text-dark
+                                 {% else %}
+                                    text-white
+                                 {% endif %}" href={% url 'reservation_bill' obj_id=res.id %}>{% trans 'Bill' %}</a>
     </div>
 </div>
