@@ -1,5 +1,5 @@
 {% load i18n %}
-<div class="card w-100 h-100 shadow p-3 mb-5 bg-white rounded">
+<div class="card w-100 h-100 shadow p-3 mb-5 bg-white rounded       ">
     <div class="card-body">
         <h3 class="card-title">{{ res.event_name }}</h3>
         {% with f=res.timeblock_set.all|first l=res.timeblock_set.all|dictsortreversed:"start_time"|first %}
@@ -10,23 +10,23 @@
             <p class="card-text">{% blocktrans with num=res.timeblock_set.all|length %}Includes {{ num }} reservations{% endblocktrans %}</p>
         {% endwith %}
     </div>
-    <div class="card-footer d-flex justify-content-between" style="background-color:  {% if  res.status == "P" %}
-                                                                        springgreen;
+    <div class="card-footer d-flex justify-content-between {% if  res.status == "P" %}
+                                                                        bg-success text-white;
                                                                     {% else %}
                                                                        {% if  res.status == "U" %}
-                                                                           darkorange
+                                                                           bg-warning text-dark
                                                                         {% else %}
                                                                            {% if  res.status == "CTR" %}
-                                                                                lightpink
+                                                                                bg-secondary text-white
                                                                             {% else %}
                                                                                {% if  res.status == "CR" %}
-                                                                                    khaki
+                                                                                    bg-primary text-white
                                                                                 {% else %}
                                                                                    {% if  res.status == "COT" %}
-                                                                                        red
+                                                                                        bg-danger text-white
                                                                                     {% else %}
                                                                                         {% if  res.status == "C" %}
-                                                                                            aliceblue
+                                                                                            bg-light text-dark
                                                                                         {% endif %}
                                                                                     {% endif %}
                                                                                 {% endif %}

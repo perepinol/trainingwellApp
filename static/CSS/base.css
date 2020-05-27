@@ -3,6 +3,10 @@
     background-color: #b0daf1;
 }
 
+body {
+    background-color: #eeeeee;
+}
+
 .reservation > p {
     margin: 3em 0 0 0;
 }
