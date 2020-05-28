@@ -43,7 +43,7 @@
                 {% endfor%}
             </div>
         {% empty %}
-            No schedule for this week
+            {% trans 'No schedule for this week' %}
         {% endfor %}
     </div>
     <div class="row d-flex justify-content-center" style="margin-top: 2%">
@@ -76,7 +76,7 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Close' %}</button>
             <button id="save-changes" type="button" class="btn btn-primary" data-dismiss="modal">Save changes</button>
           </div>
         </div>

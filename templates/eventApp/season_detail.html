@@ -10,7 +10,7 @@
         <p class="card-text">{% blocktrans with t=s.close_time|time:"TIME_FORMAT" %}Facilities close hour: {{ t }}{% endblocktrans %}</p>
      </div>
     <div class="card-footer">
-        <a type="button" role="button" class="btn btn-secondary" href="{% url 'season' %}">Back</a>
+        <a type="button" role="button" class="btn btn-secondary" href="{% url 'season' %}">{% trans 'Back'%}</a>
         <button class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" >{% trans 'Edit season' %}</button>
         <button class="btn btn-danger" data-toggle="modal" data-target="#delete" >{% trans 'Delete season' %}</button>
     </div>
