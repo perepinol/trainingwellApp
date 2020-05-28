@@ -466,6 +466,10 @@ class ReservationStatusView(TemplateView):
         return context
 
 
+def cancelled_oot(reservation):
+    return (reservation.timeblock_set.first().start_time - datetime.now()).days < 7
+
+
 @decorators.get_if_creator(Reservation)
 def delete_reservation(request, instance):
     def create_manager_notification(content):
@@ -476,9 +480,7 @@ def delete_reservation(request, instance):
 
     group_id = Group.objects.get(name='manager')
     manager_user = User.objects.filter(groups=group_id).first()
-    request_date = datetime.now()
-    days = (instance.timeblock_set.first().start_time - request_date).days
-    if days >= 7:
+    if not cancelled_oot(instance):
         instance.status = Reservation.CANCELTOREFUND if instance.status == Reservation.PAID else Reservation.CANCEL
         logger.info("Reservation " + str(instance.id) + " successfully canceled as " + instance.status)
         create_manager_notification("Reserve " + str(instance.id) + " was canceled. You should check if needs to be refunded")

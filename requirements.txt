@@ -1,4 +1,5 @@
 asgiref==3.2.5
+dateutils==0.6.8
 Django==3.0.4
 django-bootstrap-datepicker-plus==3.0.5
 django-chartjs==2.1.0
