@@ -10,4 +10,10 @@ def has_group(user, group_name):
 
 @register.filter(name='multiply')
 def multiply(value, arg):
-    return int(value) * int(arg)
+    return round(value * arg,2)
+
+
+@register.filter(name='apply_discount')
+def apply_discount(price, discount):
+    result = price-(price*discount)
+    return round(result)
