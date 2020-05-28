@@ -67,8 +67,6 @@ msgid "Seasons"
 msgstr "Estaciones"
 
 #: templates/base.html:41
-#, fuzzy
-#| msgid "Desired Spaces"
 msgid "Spaces"
 msgstr "Espacios"
 
@@ -149,8 +147,6 @@ msgid "Creation date"
 msgstr "Fecha creación"
 
 #: templates/eventApp/incidence.html:32
-#, fuzzy
-#| msgid "Desired Spaces"
 msgid "Disabled spaces"
 msgstr "Espacios deseados"
 
@@ -168,8 +164,6 @@ msgstr "Nombre incidencia"
 
 #: templates/eventApp/incidence.html:69 templates/eventApp/space_detail.html:39
 #: templates/eventApp/space_price.html:36 templates/eventApp/spaces.html:40
-#, fuzzy
-#| msgid "Reservations"
 msgid "Description"
 msgstr "Descripción"
 
@@ -284,8 +278,6 @@ msgid "Details"
 msgstr "Detalles"
 
 #: templates/eventApp/reservation_confirmation.html:7
-#, fuzzy
-#| msgid "Reservations"
 msgid "Reservation confirmation"
 msgstr "Confirmación reserva"
 
@@ -320,14 +312,10 @@ msgid "No spaces reserved"
 msgstr "No hay espacios reservados"
 
 #: templates/eventApp/reservation_confirmation.html:33
-#, fuzzy
-#| msgid "Reservations"
 msgid "Make reservation"
 msgstr "Crear reserva"
 
 #: templates/eventApp/reservation_detail.html:9
-#, fuzzy
-#| msgid "Reservations"
 msgid "Reservation date"
 msgstr "Fecha reserva"
 
@@ -352,14 +340,10 @@ msgid "Are you sure you want to delete your reservation?"
 msgstr "Seguro que quiere borrar la reserva?"
 
 #: templates/eventApp/reservation_list_view.html:6
-#, fuzzy
-#| msgid "Reservations"
 msgid "Your reservations"
 msgstr "Tus reservas"
 
 #: templates/eventApp/reservation_list_view.html:9
-#, fuzzy
-#| msgid "Reservations"
 msgid "New reservation"
 msgstr "Nueva reserva"
 
@@ -388,14 +372,10 @@ msgid "Confirm"
 msgstr "Confirmar"
 
 #: templates/eventApp/reservation_schedule_view.html:66
-#, fuzzy
-#| msgid "Desired Spaces"
 msgid "Available Spaces"
 msgstr "Espacios libres"
 
 #: templates/eventApp/reservation_schedule_view.html:118
-#, fuzzy
-#| msgid "Desired Spaces"
 msgid "Select Spaces at"
 msgstr "Espacios seleccionados"
 
@@ -518,8 +498,6 @@ msgid "Edit space"
 msgstr "Editar espacio"
 
 #: templates/eventApp/space_detail.html:17
-#, fuzzy
-#| msgid "Desired Spaces"
 msgid "Delete space"
 msgstr "Borrar espacio"
 
@@ -585,3 +563,9 @@ msgstr "Añadir espacio"
 #: templates/eventApp/test.html:7
 msgid "This is a test page"
 msgstr "Esto es una página de prueba"
+
+msgid "Current events"
+msgstr "Eventos actuales"
+
+msgid "Coming events"
+msgstr "Próximos eventos"
