@@ -158,7 +158,7 @@ def reservation_view(request):
         # Create reservation object
         res = Reservation.objects.create(
             event_name=res_name_form.cleaned_data['event_name'],
-            price=reduce(lambda agg, tb: agg + tb.space.price_per_hour, timeblocks, 0),
+            price=reduce(lambda agg, tb: agg + tb.space.price_per_hour * (1 - tb.space.offer/100), timeblocks, 0),
             user=request.user,
             modified_by=request.user,
             status=Reservation.UNPAID
@@ -250,7 +250,7 @@ def show_reservation_schedule_view(request):
         context = {
             'form': ReservationNameForm(),
             'timeblocks': aggregate_timeblocks(requested_timeblocks),
-            'price': reduce(lambda agg, tb: agg + tb.space.price_per_hour, requested_timeblocks, 0)
+            'price': reduce(lambda agg, tb: agg + tb.space.price_per_hour * (1- tb.space.offer/100), requested_timeblocks, 0)
         }
         return render(request, 'eventApp/reservation_confirmation.html', context)
 
@@ -522,7 +522,9 @@ class SpacesListView(TemplateView):
     def post(self, request, *args, **kwargs):
         form = SpaceForm(data=request.POST)
         if form.is_valid():
-            space = form.save(commit=True)
+            space = form.save(commit=False)
+            space.price_per_hour = 0
+            space.save()
             logger.info("Created space: " + str(space.id) )
             return http.HttpResponse()
         return http.HttpResponseBadRequest(list(form.errors.values()))
