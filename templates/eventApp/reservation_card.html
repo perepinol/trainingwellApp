@@ -1,5 +1,5 @@
 {% load i18n %}
-<div class="card w-100 h-100">
+<div class="card w-100 h-100 shadow p-3 mb-5 bg-white rounded       ">
     <div class="card-body">
         <h3 class="card-title">{{ res.event_name }}</h3>
         {% with f=res.timeblock_set.all|first l=res.timeblock_set.all|dictsortreversed:"start_time"|first %}
@@ -10,32 +10,63 @@
             <p class="card-text">{% blocktrans with num=res.timeblock_set.all|length %}Includes {{ num }} reservations{% endblocktrans %}</p>
         {% endwith %}
     </div>
-    <div class="card-footer d-flex justify-content-between" style="background-color:  {% if  res.status == "P" %}
-                                                                        springgreen;
+    <div class="card-footer d-flex justify-content-between {% if  res.status == "P" %}
+                                                                bg-success
+                                                            {% else %}
+                                                                {% if  res.status == "U" %}
+                                                                    bg-warning
+                                                                {% else %}
+                                                                    {% if  res.status == "CTR" %}
+                                                                        bg-secondary
                                                                     {% else %}
-                                                                       {% if  res.status == "U" %}
-                                                                           darkorange
+                                                                        {% if  res.status == "CR" %}
+                                                                            bg-primary
                                                                         {% else %}
-                                                                           {% if  res.status == "CTR" %}
-                                                                                lightpink
+                                                                            {% if  res.status == "COT" %}
+                                                                                bg-danger
                                                                             {% else %}
-                                                                               {% if  res.status == "CR" %}
-                                                                                    khaki
-                                                                                {% else %}
-                                                                                   {% if  res.status == "COT" %}
-                                                                                        red
-                                                                                    {% else %}
-                                                                                        {% if  res.status == "C" %}
-                                                                                            aliceblue
-                                                                                        {% endif %}
-                                                                                    {% endif %}
+                                                                                {% if  res.status == "C" %}
+                                                                                    bg-light
                                                                                 {% endif %}
                                                                             {% endif %}
                                                                         {% endif %}
-                                                                    {% endif %}">
-        <p class="card-text m-0">{% blocktrans with p=res.price state=res.current_state %}
+                                                                    {% endif %}
+                                                                {% endif %}
+                                                            {% endif %}">
+        <p class="card-text m-0 {% if  res.status == "P" %}
+                                    text-white
+                                {% else %}
+                                    {% if  res.status == "U" %}
+                                        text-dark
+                                    {% else %}
+                                        {% if  res.status == "CTR" %}
+                                            text-white
+                                        {% else %}
+                                            {% if  res.status == "CR" %}
+                                                text-white
+                                            {% else %}
+                                                {% if  res.status == "COT" %}
+                                                    text-white
+                                                {% else %}
+                                                    {% if  res.status == "C" %}
+                                                        text-dark
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endif %}
+                                {% endif %}">{% blocktrans with p=res.price state=res.current_state %}
             Price: {{ p }}€ ({{ state }})
         {% endblocktrans %}</p>
-        <a class="stretched-link" href={% url 'reservation_detail' obj_id=res.id %}>{% trans 'Details' %}</a>
+        <a class="stretched-link {% if  res.status == "U" or res.status == "C" %}
+                                    text-dark
+                                 {% else %}
+                                    text-white
+                                 {% endif %}" href={% url 'reservation_detail' obj_id=res.id %}>{% trans 'Details' %}</a>
+        <a class="stretched-link {% if  res.status == "U" or res.status == "C" %}
+                                    text-dark
+                                 {% else %}
+                                    text-white
+                                 {% endif %}" href={% url 'reservation_bill' obj_id=res.id %}>{% trans 'Bill' %}</a>
     </div>
 </div>
