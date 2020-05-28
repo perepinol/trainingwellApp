@@ -158,7 +158,7 @@ def reservation_view(request):
         # Create reservation object
         res = Reservation.objects.create(
             event_name=res_name_form.cleaned_data['event_name'],
-            price=reduce(lambda agg, tb: agg + tb.space.price_per_hour, timeblocks, 0),
+            price=reduce(lambda agg, tb: agg + tb.space.price_per_hour * (1 - tb.space.offer/100), timeblocks, 0),
             user=request.user,
             modified_by=request.user,
             status=Reservation.UNPAID
@@ -253,9 +253,35 @@ def show_reservation_schedule_view(request):
         context = {
             'form': ReservationNameForm(),
             'timeblocks': aggregate_timeblocks(requested_timeblocks),
-            'price': reduce(lambda agg, tb: agg + tb.space.price_per_hour, requested_timeblocks, 0)
+            'price': reduce(lambda agg, tb: agg + tb.space.price_per_hour * (1- tb.space.offer/100), requested_timeblocks, 0)
         }
         return render(request, 'eventApp/reservation_confirmation.html', context)
+
+
+def replace_space(timeblock, non_saved_reallocations):
+    available_spaces = list(filter(
+        lambda s:
+            Timeblock.objects.filter(space=s, start_time=timeblock.start_time).count() == 0 and  # Space not busy in db
+            len([nstb for nstb in non_saved_reallocations
+                 if nstb.space == s and nstb.start_time == timeblock.start_time  # Space not busy in tb not saved
+                 ]) == 0,
+        Space.objects.filter(field=timeblock.space.field)
+    ))
+    if available_spaces:
+        timeblock.space = available_spaces[0]
+        return timeblock
+    return None
+
+
+def reallocate(tb_list):
+    realloc, no_realloc = [], []
+    for tb in tb_list:
+        new_tb = replace_space(tb, non_saved_reallocations=realloc)
+        if new_tb:
+            realloc.append(new_tb)
+        else:
+            no_realloc.append(tb)
+    return realloc, no_realloc
 
 
 class IncidenceView(TemplateView):
@@ -268,8 +294,38 @@ class IncidenceView(TemplateView):
         form = IncidenceForm(data=request.POST)
         if form.is_valid():
             incidence = form.save(commit=False)
-            incidence.disable_fields = not incidence.disable_fields
-            incidence.save()
+            if form.cleaned_data['disable_fields']:
+                # Reallocate affected timeblocks in reservation order
+                reallocated_tb, non_reallocated_tb = reallocate(
+                    Timeblock.objects.filter(
+                        space__in=form.cleaned_data['affected_fields'],
+                        start_time__lt=form.cleaned_data['limit'],
+                        end_time__gte=datetime.now()
+                    ).order_by('reservation__reservation_date')
+                )
+                if non_reallocated_tb:
+                    # Create notification with reservations that could not be cancelled. Do not save
+                    Notification.objects.create(
+                        title='%s: incidence not created' % form.cleaned_data['name'],
+                        content='\n'.join(['Could not reallocate reservations'] + [
+                            '%s %s (%s)' % (tb.reservation.event_name, tb.start_time, tb.reservation.user)
+                            for tb in non_reallocated_tb
+                        ]),
+                        user=request.user
+                    )
+                else:
+                    # If all can be reallocated, do it and notify the organizer
+                    for tb in reallocated_tb:
+                        tb.save()
+                        Notification.objects.create(
+                            title='Reservation modified by incidence in a space',
+                            content='Your reservation %s at %s has been moved to %s'
+                                    % (tb.reservation.event_name, tb.start_time, tb.space),
+                            user=tb.reservation.user
+                        )
+                    incidence.save()
+            else:
+                incidence.save()
         return render(request, self.template_name, self.get_context_data())
 
     def get_context_data(self, **kwargs):
@@ -362,7 +418,6 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
 @decorators.get_if_creator(Reservation)
 def reservation_detail(request, instance):
     tbck = Timeblock.objects.filter(reservation=instance)
-
     context = {'reservation': instance, 'timeblocks': aggregate_timeblocks(list(tbck))}
     return render(request, 'eventApp/reservation_detail.html', context)
 
@@ -414,6 +469,10 @@ class ReservationStatusView(TemplateView):
         return context
 
 
+def cancelled_oot(reservation):
+    return (reservation.timeblock_set.first().start_time - datetime.now()).days < 7
+
+
 @decorators.get_if_creator(Reservation)
 def delete_reservation(request, instance):
     def create_manager_notification(content):
@@ -424,9 +483,7 @@ def delete_reservation(request, instance):
 
     group_id = Group.objects.get(name='manager')
     manager_user = User.objects.filter(groups=group_id).first()
-    request_date = datetime.now()
-    days = (instance.timeblock_set.first().start_time - request_date).days
-    if days >= 7:
+    if not cancelled_oot(instance):
         instance.status = Reservation.CANCELTOREFUND if instance.status == Reservation.PAID else Reservation.CANCEL
         logger.info("Reservation " + str(instance.id) + " successfully canceled as " + instance.status)
         create_manager_notification("Reserve " + str(instance.id) + " was canceled. You should check if needs to be refunded")
@@ -470,7 +527,9 @@ class SpacesListView(TemplateView):
     def post(self, request, *args, **kwargs):
         form = SpaceForm(data=request.POST)
         if form.is_valid():
-            space = form.save(commit=True)
+            space = form.save(commit=False)
+            space.price_per_hour = 0
+            space.save()
             logger.info("Created space: " + str(space.id) )
             return http.HttpResponse()
         return http.HttpResponseBadRequest(list(form.errors.values()))

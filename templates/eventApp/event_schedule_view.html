@@ -3,9 +3,6 @@
 
 {% block content %}
     <div class="row m-3">
-        <div class="align-center mr-auto">
-            <h3 class="m-0">Search here?</h3>
-        </div>
         <div class="mx-1">
             <a role="button" type="button" class="btn btn-secondary {{ weeks.previous|yesno:",disabled" }}" href="{% url 'event_schedule' %}?week={{ weeks.previous|date:"U" }}">{% trans 'Previous week' %}</a>
         </div>
