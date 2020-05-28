@@ -24,5 +24,5 @@ def multiply(value, arg):
 
 @register.filter(name='apply_discount')
 def apply_discount(price, discount):
-    result = price-(price*discount)
+    result = price-(price*discount/100)
     return round(result)
