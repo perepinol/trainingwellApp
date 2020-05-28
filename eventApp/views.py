@@ -230,8 +230,11 @@ def show_reservation_schedule_view(request):
         # Remove session if available
         if 'timeblocks' in request.session:
             del request.session['timeblocks']
+        space_desc = {}
+        for space in query.get_all_spaces():
+            space_desc[str(space)] = space.description
         context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()),
-                   'back': 'reservations'}
+                   'back': 'reservations', 'spaceDescrJSON': json.dumps(space_desc)}
         return render(request, 'eventApp/reservation_schedule_view.html', context)
 
     else:
