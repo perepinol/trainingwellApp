@@ -1,7 +1,11 @@
 from datetime import date, datetime, timedelta
+from io import BytesIO
+
+from xhtml2pdf import pisa
 
 from django.contrib.auth.models import Group
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponse
+from django.template.loader import get_template
 from django.urls import reverse
 
 from django import http
@@ -11,6 +15,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 
 # Create your views here.
+
 
 from eventApp import query, decorators
 from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, SpaceForm
@@ -418,6 +423,7 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
 @decorators.get_if_creator(Reservation)
 def reservation_detail(request, instance):
     tbck = Timeblock.objects.filter(reservation=instance)
+
     context = {'reservation': instance, 'timeblocks': aggregate_timeblocks(list(tbck))}
     return render(request, 'eventApp/reservation_detail.html', context)
 
@@ -644,4 +650,20 @@ def _ajax_mark_completed_incidence(request):
     for id_ins in ids_list:
         Incidence.objects.get(id=id_ins).soft_delete()
     return http.JsonResponse({})
+
+@login_required
+def reservation_bill(request, obj_id):
+    reservation = get_object_or_404(Reservation, id=obj_id)
+    set = Timeblock.objects.filter(reservation=obj_id)
+    context = {'reservation': reservation, 'timeblocks': set}
+    return render(request, 'eventApp/reservation_bill.html', context)
+
+def render_to_pdf(template_src, context_dict={}):
+    template = get_template(template_src)
+    html  = template.render(context_dict)
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+    if not pdf.err:
+        return HttpResponse(result.getvalue(), content_type='application/pdf')
+    return None
 

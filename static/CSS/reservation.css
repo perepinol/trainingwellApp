@@ -86,6 +86,14 @@
   transform: rotate(45deg);
 }
 
+
+.black-link {
+  color: #000000 !important;
+}
+
+white-link {
+  color: #FFFFFF !important;
+
 .more-info {
   position: relative;
   display: inline-block;
@@ -110,4 +118,5 @@
 
 .more-info:hover .more-info-text {
   visibility: visible;
+
 }

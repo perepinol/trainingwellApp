@@ -34,10 +34,11 @@
 <!-- Button trigger modal -->
     <div class="row ml-2">
         <div class="col">
-            <a type="button" role="button" class="btn btn-secondary" href="{% url 'reservations' %}">Back</a>
+            <a type="button" role="button" class="btn btn-secondary" href="{% url 'reservations' %}">{% trans 'Back' %}</a>
             <button type="button" class="btn btn-primary btn-danger" data-toggle="modal" data-target="#exampleModal">
                 {% trans 'Delete' %}
             </button>
+            <a type="button" role="button" class="btn btn-primary" href={% url 'reservation_bill' obj_id=reservation.id %}>{% trans 'Bill' %}</a>
         </div>
     </div>
 
