@@ -129,3 +129,4 @@ dmypy.json
 
 **/.idea
 **/*.jpg
+/locale/es/LC_MESSAGES/django.mo
