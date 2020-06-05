@@ -18,7 +18,7 @@ from eventApp.decorators import facility_responsible_only, manager_only
 from django.urls import path
 
 from eventApp.views import TestView, IncidenceView, SeasonListView, reservation_view, show_reservation_schedule_view, \
-    _ajax_change_view, SpacePrice, \
+    _ajax_change_view, SpacePrice, ChangePasswordView, \
     reservation_detail, _ajax_mark_as_read, _ajax_mark_completed_incidence, delete_reservation, EventView, \
     SpacesListView, SpaceView, delete_space, report_view, SeasonView, delete_season, ReservationStatusView, EventListView
 
@@ -43,5 +43,6 @@ urlpatterns = [
     path('schedule', EventView.as_view(), name='event_schedule'),
     path('incidences/', facility_responsible_only(IncidenceView.as_view()), name="incidences"),
     path('report/', report_view, name="report"),
+    path('password_change/', ChangePasswordView.as_view(), name='change_password'),
     path('', EventListView.as_view(), name='home'),
 ]

@@ -32,16 +32,6 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 
-class LoginUser(LoginView):
-    template_name = "login.html"
-
-    def get_success_url(self):
-        user = self.request.user
-        if not user.passw_changed:
-            pass
-        return super().get_success_url()
-
-
 class ChangePasswordView(TemplateView):
     template_name = ""
 
@@ -52,8 +42,7 @@ class ChangePasswordView(TemplateView):
             user = get_object_or_404(User, req_user.id)
             user.password = form.password
             user.passw_changed = True
-
-        return
+        return redirect(reverse('home'))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -167,7 +156,7 @@ def generate_timeblocks(post_data):
     return timeblocks
 
 
-@login_required
+@decorators.custom_login_required
 def reservation_view(request):
     """
     Render the user's reservation list.
@@ -248,7 +237,7 @@ def aggregate_timeblocks(timeblocks):
     return agg_list
 
 
-@login_required
+@decorators.custom_login_required
 def show_reservation_schedule_view(request):
     """
     Show the different views in the reservation process.
@@ -627,7 +616,7 @@ class SeasonView(TemplateView):
         return context
 
 
-@login_required()
+@decorators.custom_login_required
 @decorators.facility_responsible_only
 def delete_space(request, obj_id):
     if request.method != 'POST':
@@ -638,7 +627,7 @@ def delete_space(request, obj_id):
     return redirect(reverse('spaces'))
 
   
-@login_required
+@decorators.custom_login_required
 @decorators.facility_responsible_only
 def delete_season(request, obj_id):
     if request.method != 'POST':
@@ -649,7 +638,7 @@ def delete_season(request, obj_id):
     return redirect(reverse('season'))
 
   
-@login_required
+@decorators.custom_login_required
 @decorators.ajax_required
 @decorators.get_if_creator(Notification)
 def _ajax_mark_as_read(request, instance):
@@ -659,7 +648,7 @@ def _ajax_mark_as_read(request, instance):
     return http.HttpResponse()
 
 
-@login_required
+@decorators.custom_login_required
 @decorators.facility_responsible_only
 @decorators.ajax_required
 def _ajax_mark_completed_incidence(request):
