@@ -193,8 +193,5 @@ class Incidence(models.Model):
         return self.name
 
     def soft_delete(self):
-        if self.is_deleted:
-            self.delete()
-        else:
-            self.is_deleted = True
-            self.save()
+        self.is_deleted = True
+        self.save()

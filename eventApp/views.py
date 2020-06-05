@@ -1,9 +1,14 @@
+from datetime import date, datetime, timedelta
+from io import BytesIO
+
+from xhtml2pdf import pisa
 from datetime import date, timedelta
 
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.models import Group
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponse
+from django.template.loader import get_template
 from django.urls import reverse
 
 from django import http
@@ -13,6 +18,10 @@ from django.shortcuts import render, get_object_or_404, redirect
 
 # Create your views here.
 
+
+from eventApp import query, decorators
+from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, SpaceForm
+from django.views.generic import TemplateView, ListView
 from eventApp.forms import SpaceForm
 from django.views.generic import TemplateView
 
@@ -174,7 +183,7 @@ def reservation_view(request):
         # Create reservation object
         res = Reservation.objects.create(
             event_name=res_name_form.cleaned_data['event_name'],
-            price=reduce(lambda agg, tb: agg + tb.space.price_per_hour, timeblocks, 0),
+            price=reduce(lambda agg, tb: agg + tb.space.price_per_hour * (1 - tb.space.offer/100), timeblocks, 0),
             user=request.user,
             modified_by=request.user,
             status=Reservation.UNPAID
@@ -246,8 +255,11 @@ def show_reservation_schedule_view(request):
         # Remove session if available
         if 'timeblocks' in request.session:
             del request.session['timeblocks']
+        space_desc = {}
+        for space in query.get_all_spaces():
+            space_desc[str(space)] = space.description
         context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()),
-                   'back': 'reservations'}
+                   'back': 'reservations', 'spaceDescrJSON': json.dumps(space_desc)}
         return render(request, 'eventApp/reservation_schedule_view.html', context)
 
     else:
@@ -266,7 +278,7 @@ def show_reservation_schedule_view(request):
         context = {
             'form': ReservationNameForm(),
             'timeblocks': aggregate_timeblocks(requested_timeblocks),
-            'price': reduce(lambda agg, tb: agg + tb.space.price_per_hour, requested_timeblocks, 0)
+            'price': reduce(lambda agg, tb: agg + tb.space.price_per_hour * (1- tb.space.offer/100), requested_timeblocks, 0)
         }
         return render(request, 'eventApp/reservation_confirmation.html', context)
 
@@ -431,6 +443,7 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
 @decorators.get_if_creator(Reservation)
 def reservation_detail(request, instance):
     tbck = Timeblock.objects.filter(reservation=instance)
+
     context = {'reservation': instance, 'timeblocks': aggregate_timeblocks(list(tbck))}
     return render(request, 'eventApp/reservation_detail.html', context)
 
@@ -482,6 +495,10 @@ class ReservationStatusView(TemplateView):
         return context
 
 
+def cancelled_oot(reservation):
+    return (reservation.timeblock_set.first().start_time - datetime.now()).days < 7
+
+
 @decorators.get_if_creator(Reservation)
 def delete_reservation(request, instance):
     def create_manager_notification(content):
@@ -492,9 +509,7 @@ def delete_reservation(request, instance):
 
     group_id = Group.objects.get(name='manager')
     manager_user = User.objects.filter(groups=group_id).first()
-    request_date = datetime.now()
-    days = (instance.timeblock_set.first().start_time - request_date).days
-    if days >= 7:
+    if not cancelled_oot(instance):
         instance.status = Reservation.CANCELTOREFUND if instance.status == Reservation.PAID else Reservation.CANCEL
         logger.info("Reservation " + str(instance.id) + " successfully canceled as " + instance.status)
         create_manager_notification("Reserve " + str(instance.id) + " was canceled. You should check if needs to be refunded")
@@ -538,7 +553,9 @@ class SpacesListView(TemplateView):
     def post(self, request, *args, **kwargs):
         form = SpaceForm(data=request.POST)
         if form.is_valid():
-            space = form.save(commit=True)
+            space = form.save(commit=False)
+            space.price_per_hour = 0
+            space.save()
             logger.info("Created space: " + str(space.id) )
             return http.HttpResponse()
         return http.HttpResponseBadRequest(list(form.errors.values()))
@@ -653,4 +670,21 @@ def _ajax_mark_completed_incidence(request):
     for id_ins in ids_list:
         Incidence.objects.get(id=id_ins).soft_delete()
     return http.JsonResponse({})
+
+@decorators.custom_login_required
+def reservation_bill(request, obj_id):
+    reservation = get_object_or_404(Reservation, id=obj_id)
+    set = Timeblock.objects.filter(reservation=obj_id)
+    context = {'reservation': reservation, 'timeblocks': set}
+    return render(request, 'eventApp/reservation_bill.html', context)
+
+
+def render_to_pdf(template_src, context_dict={}):
+    template = get_template(template_src)
+    html  = template.render(context_dict)
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+    if not pdf.err:
+        return HttpResponse(result.getvalue(), content_type='application/pdf')
+    return None
 

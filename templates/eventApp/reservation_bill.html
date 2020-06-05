@@ -1,0 +1,74 @@
+{% load static %}
+{% load i18n %}
+{% load template_tags %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Invoice</title>
+    <link rel="stylesheet" href={% static 'CSS/bill.css' %} media="all" />
+  </head>
+  <body>
+    <div class="reservation">
+        <header class="clearfix">
+          <h1>INVOICE</h1>
+          <div id="company" class="clearfix">
+            <div>Traningwell</div>
+            <div>Carrer Wells 45,<br /> 25001, Lleida</div>
+            <div>(973) 234 765</div>
+            <div><a href="mailto:company@example.com">factures@trainingwell.com</a></div>
+          </div>
+          <div id="project">
+              <div class="reservation">
+                  <div><span>EVENT</span> {{ reservation.event_name }}</div>
+                  <div><span>ORGANIZER</span> {{ reservation.user }}</div>
+                  <div><span>EMAIL</span> <a href="mailto:john@example.com">{{ reservation.user.email }}</a></div>
+                  <div><span>DATE</span> {{ reservation.reservation_date }}</div>
+              </div>
+          </div>
+        </header>
+        <dev class="reservation">
+            <main>
+              <table>
+                <thead>
+                  <tr>
+                    <th class="service">SERVICE</th>
+                    <th class="desc">DESCRIPTION</th>
+                    <th>RATE</th>
+                    <th>OFFER</th>
+                    <th>AMOUNT</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for timeblock in timeblocks %}
+                      <tr>
+                        <td class="service">Reservation</td>
+                        <td class="desc">{{ timeblock.space }} booked from {{ timeblock.start_time }} to {{ timeblock.end_time }}</td>
+                        <td class="unit">{{ timeblock.space.price_per_hour }}€</td>
+                        <td class="qty">{{ timeblock.space.offer }}</td>
+                        <td class="total">{{ timeblock.space.price_per_hour|apply_discount:timeblock.space.offer }}€</td>
+                      </tr>
+                    {% endfor %}
+                  <tr>
+                    <td colspan="4">SUBTOTAL</td>
+                    <td class="total">{{ reservation.price}}€</td>
+                  </tr>
+                  <tr>
+                    <td colspan="4">TAX 21%</td>
+                    <td class="total">{{ reservation.price|multiply:0.21 }}€</td>
+                  </tr>
+                  <tr>
+                    <td colspan="4" class="grand total">GRAND TOTAL</td>
+                    <td class="grand total">{{ reservation.price|multiply:1.21 }}€</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div id="notices">
+                <div>NOTICE:</div>
+                <div class="notice">Money will not be returned if the reservation is not canceled one week before thre reservation date.</div>
+              </div>
+            </main>
+        </dev>
+    </div>
+  </body>
+</html>

@@ -19,7 +19,7 @@
                     <a class="nav-link" href="{% url 'home' %}">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'event_schedule' %}">Schedule</a>
+                    <a class="nav-link" href="{% url 'event_schedule' %}">{% trans 'Schedule'%}</a>
                 </li>
                 {% if request.user|has_group:"organizers" %}
                     <li class="nav-item">
@@ -51,6 +51,22 @@
                     </li>
                 {% endif %}
             </ul>
+
+       <form class="form-inline" action="{% url 'set_language' %}" method="post" style="margin-right: 16px">{% csrf_token %}
+            <input name="next" type="hidden" value="{{ redirect_to }}" />
+            <select name="language" class="form-control form-control-sm">
+                {% get_current_language as LANGUAGE_CODE %}
+                {% get_available_languages as LANGUAGES %}
+                {% get_language_info_list for LANGUAGES as languages %}
+                {% for language in languages %}
+                    <option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected="selected"{% endif %}>
+                        {{ language.name_local }} ({{ language.code }})
+                    </option>
+                {% endfor %}
+            </select>
+            <input type="submit" class="btn btn-sm btn-secondary" value="Go" />
+       </form>
+
             {% if user.is_authenticated %}
                 <div class="mr-5">
                     <span id="noti-count" class="badge badge-pill badge-danger badge-overlap"></span>
@@ -68,9 +84,11 @@
         <div class="container mw-100 h-100 d-flex flex-column p-0">
             {% block content %}
             {% endblock %}
-            <div class="row footer mx-5 border-top border-light" style="height: 3em;">
-                {% block footer %}
-                {% endblock %}
+            <hr>
+            <div class="container">
+            <footer class=footer">
+                <p class="service">Web page created by Geiade Software S.A. Copyright 2020 ©</p>
+            </footer>
             </div>
         </div>
     {% if user.is_authenticated %}

@@ -85,3 +85,38 @@
   -ms-transform: rotate(45deg);
   transform: rotate(45deg);
 }
+
+
+.black-link {
+  color: #000000 !important;
+}
+
+white-link {
+  color: #FFFFFF !important;
+
+.more-info {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+
+.more-info .more-info-text {
+  visibility: hidden;
+  width: 220px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  top: -5px;
+  left: 105%;
+  z-index: 1;
+}
+
+.more-info:hover .more-info-text {
+  visibility: visible;
+
+}

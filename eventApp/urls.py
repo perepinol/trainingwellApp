@@ -18,8 +18,8 @@ from eventApp.decorators import facility_responsible_only, manager_only
 from django.urls import path
 
 from eventApp.views import TestView, IncidenceView, SeasonListView, reservation_view, show_reservation_schedule_view, \
-    _ajax_change_view, SpacePrice, change_password, \
-    reservation_detail, _ajax_mark_as_read, _ajax_mark_completed_incidence, delete_reservation, EventView, \
+    _ajax_change_view, SpacePrice, change_password,\
+    reservation_detail, _ajax_mark_as_read, _ajax_mark_completed_incidence, delete_reservation, EventView, reservation_bill, \
     SpacesListView, SpaceView, delete_space, report_view, SeasonView, delete_season, ReservationStatusView, EventListView
 
 
@@ -27,16 +27,16 @@ urlpatterns = [
     path('reservation/', reservation_view, name="reservations"),
     path('reservation/new', show_reservation_schedule_view, name="schedule_view"),
     path('reservation/<int:obj_id>/', reservation_detail, name='reservation_detail'),
+    path('reservation/<int:obj_id>/bill', reservation_bill, name='reservation_bill'),
     path('reservation/delete/<int:obj_id>/', delete_reservation, name='delete_reservation'),
+    path('manage_reservations/', manager_only(ReservationStatusView.as_view()), name='reservation_status'),
     path('season/', facility_responsible_only(SeasonListView.as_view()), name='season'),
     path('season/<int:obj_id>', facility_responsible_only(SeasonView.as_view()), name='season_detail'),
     path('season/delete/<int:obj_id>', delete_season, name='season_delete'),
     path('space/', facility_responsible_only(SpacesListView.as_view()), name='spaces'),
     path('space/<int:obj_id>', facility_responsible_only(SpaceView.as_view()), name='space_detail'),
     path('space/delete/<int:obj_id>', delete_space, name='space_delete'),
-    path('manage_reservations/', manager_only(ReservationStatusView.as_view()), name='reservation_status'),
     path('space/prices/', manager_only(SpacePrice.as_view()), name='space_price'),
-    path('reservation/delete/<int:obj_id>/', delete_reservation, name='delete_reservation'),
     path('ajax/change_week/', _ajax_change_view, name='ajax_change_week'),
     path('ajax/mark_completed_incidence/', _ajax_mark_completed_incidence, name='ajax_completed'),
     path('notification/<int:obj_id>/', _ajax_mark_as_read, name='ajax_mark_read'),
