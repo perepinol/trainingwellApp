@@ -166,6 +166,3 @@ class IncidenceForm(ModelForm):
             incidence.save()
         return incidence
 
-
-class ChangePassword(Form):
-    password = CharField(widget=PasswordInput)

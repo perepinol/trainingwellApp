@@ -8,8 +8,6 @@ from django.template.defaulttags import register
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.urls import reverse
 
-from eventApp.models import User
-
 
 def ajax_required(f):
     def wrap(request, *args, **kwargs):
@@ -66,25 +64,13 @@ def custom_login_required(f):
         if not user.is_authenticated:
             from django.contrib.auth.views import redirect_to_login
             return redirect_to_login(path, settings.LOGIN_URL, REDIRECT_FIELD_NAME)
+        print(user, user.passw_changed)
         if not user.passw_changed:
             return redirect(reverse('change_password'))
         return f(request, *args, **kwargs)
     wrap.__doc__ = f.__doc__
     wrap.__name__ = f.__name__
     return wrap
-
-
-'''def custom_login_required(function=None, redirect_field_name=REDIRECT_FIELD_NAME, login_url=None):
-    def decorator(f):
-        @wraps(f)
-        def wrap(request, *args, **kwargs):
-            user = request.user
-            path = request.build_absolute_uri()
-            if not user.is_authenticated:
-                from django.contrib.auth.views import redirect_to_login
-                return redirect_to_login(path, settings.LOGIN_URL, REDIRECT_FIELD_NAME)
-            return wrap
-        return decorator'''
 
 
 @register.filter

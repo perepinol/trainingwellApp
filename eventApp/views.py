@@ -1,24 +1,23 @@
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.models import Group
-from django.contrib.auth.views import LoginView
 from django.http import HttpResponseForbidden
 from django.urls import reverse
 
 from django import http
 from django.conf import settings
-from django.contrib.auth.decorators import login_required
 
 from django.shortcuts import render, get_object_or_404, redirect
 
 # Create your views here.
 
-from eventApp import query, decorators
-from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, SpaceForm
-from django.views.generic import TemplateView, ListView
+from eventApp.forms import SpaceForm
+from django.views.generic import TemplateView
 
 from eventApp import query, decorators, report
-from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, IncidenceForm, ReportForm, ChangePassword
+from eventApp.forms import ReservationNameForm, SeasonForm, IncidenceForm, ReportForm
 from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User, Season
 
 import json
@@ -32,22 +31,20 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 
-class ChangePasswordView(TemplateView):
-    template_name = ""
-
-    def post(self):
-        form = ChangePassword()
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
-            req_user = self.request.user
-            user = get_object_or_404(User, req_user.id)
-            user.password = form.password
+            user = form.save(commit=False)
             user.passw_changed = True
-        return redirect(reverse('home'))
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form'] = ChangePassword()
-        return context
+            user.save()
+            update_session_auth_hash(request, user)  # Important!
+            return redirect(reverse('home'))
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'registration/change_password.html', {
+        'form': form
+    })
 
 
 def notification_context_processor(request):
