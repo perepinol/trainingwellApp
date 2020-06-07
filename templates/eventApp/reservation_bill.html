@@ -9,7 +9,7 @@
     <link rel="stylesheet" href={% static 'CSS/bill.css' %} media="all" />
   </head>
   <body>
-    <div class="reservation">
+    <div class="invoice">
         <header class="clearfix">
           <h1>INVOICE</h1>
           <div id="company" class="clearfix">
@@ -19,17 +19,14 @@
             <div><a href="mailto:company@example.com">factures@trainingwell.com</a></div>
           </div>
           <div id="project">
-              <div class="reservation">
-                  <div><span>EVENT</span> {{ reservation.event_name }}</div>
-                  <div><span>ORGANIZER</span> {{ reservation.user }}</div>
-                  <div><span>EMAIL</span> <a href="mailto:john@example.com">{{ reservation.user.email }}</a></div>
-                  <div><span>DATE</span> {{ reservation.reservation_date }}</div>
-              </div>
+              <div><span>EVENT</span> {{ invoice.reservation.event_name }}</div>
+              <div><span>ORGANIZER</span> {{ invoice.reservation.user }}</div>
+              <div><span>EMAIL</span> <a href="mailto:john@example.com">{{ invoice.reservation.user.email }}</a></div>
+              <div><span>DATE</span> {{ invoice.reservation.reservation_date }}</div>
           </div>
         </header>
-        <dev class="reservation">
-            <main>
-              <table>
+        <main>
+            <table>
                 <thead>
                   <tr>
                     <th class="service">SERVICE</th>
@@ -40,7 +37,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                    {% for timeblock in timeblocks %}
+                    {% for timeblock in invoice.timeblocks %}
                       <tr>
                         <td class="service">Reservation</td>
                         <td class="desc">{{ timeblock.space }} booked from {{ timeblock.start_time }} to {{ timeblock.end_time }}</td>
@@ -51,15 +48,15 @@
                     {% endfor %}
                   <tr>
                     <td colspan="4">SUBTOTAL</td>
-                    <td class="total">{{ reservation.price}}€</td>
+                    <td class="total">{{ invoice.reservation.price}}€</td>
                   </tr>
                   <tr>
                     <td colspan="4">TAX 21%</td>
-                    <td class="total">{{ reservation.price|multiply:0.21 }}€</td>
+                    <td class="total">{{ invoice.reservation.price|multiply:0.21 }}€</td>
                   </tr>
                   <tr>
                     <td colspan="4" class="grand total">GRAND TOTAL</td>
-                    <td class="grand total">{{ reservation.price|multiply:1.21 }}€</td>
+                    <td class="grand total">{{ invoice.reservation.price|multiply:1.21 }}€</td>
                   </tr>
                 </tbody>
               </table>
@@ -67,8 +64,7 @@
                 <div>NOTICE:</div>
                 <div class="notice">Money will not be returned if the reservation is not canceled one week before thre reservation date.</div>
               </div>
-            </main>
-        </dev>
+        </main>
     </div>
   </body>
 </html>

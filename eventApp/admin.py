@@ -3,6 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 
 # Register your models here.
 from eventApp import models
+from eventApp.models import Invoice
 
 
 class ProjectAdmin(admin.ModelAdmin):
@@ -21,3 +22,4 @@ admin.site.register(models.Season, ProjectAdmin)
 admin.site.register(models.Timeblock)
 admin.site.register(models.Notification)
 admin.site.register(models.Incidence)
+admin.site.register(models.Invoice  )

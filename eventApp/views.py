@@ -23,7 +23,7 @@ from django.views.generic import TemplateView, ListView
 
 from eventApp import query, decorators, report
 from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, IncidenceForm, ReportForm
-from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User, Season
+from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User, Season, Invoice
 
 import json
 from functools import reduce
@@ -654,8 +654,18 @@ def _ajax_mark_completed_incidence(request):
 @login_required
 def reservation_bill(request, obj_id):
     reservation = get_object_or_404(Reservation, id=obj_id)
-    set = Timeblock.objects.filter(reservation=obj_id)
-    context = {'reservation': reservation, 'timeblocks': set}
+    if not Invoice.objects.filter(reservation=reservation).exists():
+        set = Timeblock.objects.filter(reservation=obj_id)
+        invoice = Invoice.objects.create(
+            reservation=reservation,
+        )
+        for timeblock in set:
+            invoice.timeblocks.append(timeblock)
+    else:
+        invoice = get_object_or_404(Invoice, reservation=reservation)
+
+    context = {'invoice': invoice}
+
     return render(request, 'eventApp/reservation_bill.html', context)
 
 def render_to_pdf(template_src, context_dict={}):

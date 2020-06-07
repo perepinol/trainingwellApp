@@ -194,3 +194,10 @@ class Incidence(models.Model):
     def soft_delete(self):
         self.is_deleted = True
         self.save()
+
+class Invoice(models.Model):
+    reservation = models.ForeignKey(Reservation, on_delete=models.PROTECT)
+    timeblocks = []
+
+    def __str__(self):
+        return "Invoice of " + self.reservation.event_name
