@@ -386,7 +386,7 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
         for _hour in range(get_int_hour(start_h), get_int_hour(end_h)):
             _hour_spaces = deepcopy(_spaces)
             for _incidence in incidences:
-                if _incidence.limit > (datetime.combine(start_day+timedelta(days=_day), datetime.min.time()) + current_hour):
+                if _incidence.limit > (datetime.combine(start_day+timedelta(days=_day), datetime.min.time()) + timedelta(hours=_hour)):
                     for _sp in _incidence.affected_fields.all():
                         del _hour_spaces[_sp.id]
             _today_sch[str(_hour)+':00'] = _hour_spaces
