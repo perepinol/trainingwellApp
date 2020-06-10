@@ -1938,14 +1938,14 @@ msgstr ""
 msgid "Connect, get help, or contribute"
 msgstr ""
 
-#~ msgid "Offer cannot be negative"
-#~ msgstr "La oferta no puede ser negativa"
+msgid "Offer cannot be negative"
+msgstr "La oferta no puede ser negativa"
 
-#~ msgid "No schedule for this week"
-#~ msgstr "No hay horario para esta semana"
+msgid "No schedule for this week"
+msgstr "No hay horario para esta semana"
 
-#~ msgid "Current events"
-#~ msgstr "Eventos actuales"
+msgid "Current events"
+msgstr "Eventos actuales"
 
-#~ msgid "Coming events"
-#~ msgstr "Próximos eventos"
+msgid "Coming events"
+msgstr "Próximos eventos"
