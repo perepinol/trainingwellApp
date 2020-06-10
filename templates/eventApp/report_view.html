@@ -20,41 +20,44 @@
         </div>
         <div class="row mt-1 mb-5 mx-5 justify-content-center">
             <canvas id="chart{{ forloop.counter0 }}" class="mw-100 mh-50"></canvas>
+            <img id="img{{ forloop.counter0 }}" src="" />
         </div>
     {% endfor %}
 {% endblock %}
 {% block scripts %}
 <script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script>
 <script>
-    $(function() {
-        Chart.scaleService.updateScaleDefaults('linear', {
-            ticks: {
-                min: 0,
-                max: 100
-            }
-        })
-        {% for chart in charts %}
-            console.log(JSON.parse($.parseHTML('{{ chart.chart }}')[0].textContent))
-            var context = $("#chart{{ forloop.counter0 }}").get(0).getContext("2d");
-            new Chart(context, {
-                type: '{{ chart.type }}' ? '{{ chart.type }}' : 'bar',
-                data: JSON.parse($.parseHTML('{{ chart.chart }}')[0].textContent),
-                options: {
-                    scales: {
-                        yAxes: [{
-                            scaleLabel: {
-                                display: true,
-                                labelString: '{{ chart.ylabel }}' ? '{{ chart.ylabel }}' : '',
-                                fontSize: 20
-                            },
-                            ticks: {
-                                max: '{{ chart.max_val }}' ? '{{ chart.max_val }}' : undefined
-                            }
-                        }]
+    Chart.scaleService.updateScaleDefaults('linear', {
+        ticks: {
+            min: 0,
+            max: 100
+        }
+    });
+    const charts = [];
+    {% for chart in charts %}
+        charts.push(new Chart(document.getElementById("chart{{ forloop.counter0 }}").getContext("2d"), {
+            type: '{{ chart.type }}' ? '{{ chart.type }}' : 'bar',
+            data: JSON.parse($.parseHTML('{{ chart.chart }}')[0].textContent),
+            options: {
+                scales: {
+                    yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: '{{ chart.ylabel }}' ? '{{ chart.ylabel }}' : '',
+                            fontSize: 20
+                        },
+                        ticks: {
+                            max: '{{ chart.max_val }}' ? '{{ chart.max_val }}' : undefined
+                        }
+                    }]
+                },
+                animation: {
+                    onComplete: () => {
+                        document.getElementById("img{{ forloop.counter0 }}").src = charts[{{ forloop.counter0 }}].toBase64Image();
                     }
                 }
-            })
-        {% endfor %}
-    })
+            }
+        }));
+    {% endfor %}
 </script>
 {% endblock %}
