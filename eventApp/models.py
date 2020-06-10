@@ -196,6 +196,7 @@ class Incidence(models.Model):
         self.is_deleted = True
         self.save()
 
+
 class Invoice(models.Model):
     reservation = models.ForeignKey(Reservation, on_delete=models.PROTECT)
     timeblocks = []
