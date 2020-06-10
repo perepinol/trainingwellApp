@@ -133,6 +133,11 @@ LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale/'),
 )
 
+LANGUAGES = (
+        ('es', 'Español'),
+        ('en', 'English'),
+    )
+
 LOG_PATH = os.path.join(BASE_DIR, 'logs')
 
 LOGIN_REDIRECT_URL = '/events'

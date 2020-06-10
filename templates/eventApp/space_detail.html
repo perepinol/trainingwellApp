@@ -12,7 +12,7 @@
             <p class="card-text">{% blocktrans with o=s.offer %}Offer: {{ o }}{% endblocktrans %}</p>
     </div>
     <div class="card-footer">
-        <a type="button" role="button" class="btn btn-secondary" href="{% url 'spaces' %}">Back</a>
+        <a type="button" role="button" class="btn btn-secondary" href="{% url 'spaces' %}">{% trans 'Back'%}</a>
         <button class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" >{% trans 'Edit space' %}</button>
         <button class="btn btn-danger" data-toggle="modal" data-target="#delete" >{% trans 'Delete space' %}</button>
     </div>
@@ -38,8 +38,6 @@
                     {{ form.photo }}<br>
                     <small>{% trans 'Description' %}</small><br>
                     {{ form.description }}<br>
-                    <small>{% trans 'Offer' %}</small><br>
-                    {{ form.offer }}<br><br>
                     <small class="js-form-error text-danger m-0"></small>
               </div>
               <div class="modal-footer">

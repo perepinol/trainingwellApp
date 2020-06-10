@@ -1,23 +1,32 @@
 from datetime import date, datetime, timedelta
+from io import BytesIO
 
+from xhtml2pdf import pisa
+from datetime import date, timedelta
+
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.models import Group
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponse
+from django.template.loader import get_template
 from django.urls import reverse
 
 from django import http
 from django.conf import settings
-from django.contrib.auth.decorators import login_required
 
 from django.shortcuts import render, get_object_or_404, redirect
 
 # Create your views here.
 
+
 from eventApp import query, decorators
 from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, SpaceForm
 from django.views.generic import TemplateView, ListView
+from eventApp.forms import SpaceForm
+from django.views.generic import TemplateView
 
 from eventApp import query, decorators, report
-from eventApp.forms import ReservationNameForm, DateForm, SeasonForm, IncidenceForm, ReportForm
+from eventApp.forms import ReservationNameForm, SeasonForm, IncidenceForm, ReportForm
 from eventApp.models import Reservation, Timeblock, Space, Notification, Incidence, User, Season
 
 import json
@@ -29,6 +38,22 @@ from eventApp.query import AlreadyExistsException
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
+
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.passw_changed = True
+            user.save()
+            update_session_auth_hash(request, user)  # Important!
+            return redirect(reverse('home'))
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'registration/change_password.html', {
+        'form': form
+    })
 
 
 def notification_context_processor(request):
@@ -137,7 +162,7 @@ def generate_timeblocks(post_data):
     return timeblocks
 
 
-@login_required
+@decorators.custom_login_required
 def reservation_view(request):
     """
     Render the user's reservation list.
@@ -158,7 +183,7 @@ def reservation_view(request):
         # Create reservation object
         res = Reservation.objects.create(
             event_name=res_name_form.cleaned_data['event_name'],
-            price=reduce(lambda agg, tb: agg + tb.space.price_per_hour, timeblocks, 0),
+            price=reduce(lambda agg, tb: agg + tb.space.price_per_hour * (1 - tb.space.offer/100), timeblocks, 0),
             user=request.user,
             modified_by=request.user,
             status=Reservation.UNPAID
@@ -218,7 +243,7 @@ def aggregate_timeblocks(timeblocks):
     return agg_list
 
 
-@login_required
+@decorators.custom_login_required
 def show_reservation_schedule_view(request):
     """
     Show the different views in the reservation process.
@@ -230,8 +255,11 @@ def show_reservation_schedule_view(request):
         # Remove session if available
         if 'timeblocks' in request.session:
             del request.session['timeblocks']
+        space_desc = {}
+        for space in query.get_all_spaces():
+            space_desc[str(space)] = space.description
         context = {'schedule': _get_schedule(), 'scheduleJSON': json.dumps(_get_schedule()),
-                   'back': 'reservations'}
+                   'back': 'reservations', 'spaceDescrJSON': json.dumps(space_desc)}
         return render(request, 'eventApp/reservation_schedule_view.html', context)
 
     else:
@@ -250,7 +278,7 @@ def show_reservation_schedule_view(request):
         context = {
             'form': ReservationNameForm(),
             'timeblocks': aggregate_timeblocks(requested_timeblocks),
-            'price': reduce(lambda agg, tb: agg + tb.space.price_per_hour, requested_timeblocks, 0)
+            'price': reduce(lambda agg, tb: agg + tb.space.price_per_hour * (1- tb.space.offer/100), requested_timeblocks, 0)
         }
         return render(request, 'eventApp/reservation_confirmation.html', context)
 
@@ -358,7 +386,7 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
         for _hour in range(get_int_hour(start_h), get_int_hour(end_h)):
             _hour_spaces = deepcopy(_spaces)
             for _incidence in incidences:
-                if _incidence.limit > (datetime.combine(start_day+timedelta(days=_day), datetime.min.time()) + current_hour):
+                if _incidence.limit > (datetime.combine(start_day+timedelta(days=_day), datetime.min.time()) + timedelta(hours=_hour)):
                     for _sp in _incidence.affected_fields.all():
                         del _hour_spaces[_sp.id]
             _today_sch[str(_hour)+':00'] = _hour_spaces
@@ -415,6 +443,7 @@ def _get_schedule(start_day=date.today()+timedelta(days=1), num_days=6):
 @decorators.get_if_creator(Reservation)
 def reservation_detail(request, instance):
     tbck = Timeblock.objects.filter(reservation=instance)
+
     context = {'reservation': instance, 'timeblocks': aggregate_timeblocks(list(tbck))}
     return render(request, 'eventApp/reservation_detail.html', context)
 
@@ -524,7 +553,9 @@ class SpacesListView(TemplateView):
     def post(self, request, *args, **kwargs):
         form = SpaceForm(data=request.POST)
         if form.is_valid():
-            space = form.save(commit=True)
+            space = form.save(commit=False)
+            space.price_per_hour = 0
+            space.save()
             logger.info("Created space: " + str(space.id) )
             return http.HttpResponse()
         return http.HttpResponseBadRequest(list(form.errors.values()))
@@ -599,7 +630,7 @@ class SeasonView(TemplateView):
         return context
 
 
-@login_required()
+@decorators.custom_login_required
 @decorators.facility_responsible_only
 def delete_space(request, obj_id):
     if request.method != 'POST':
@@ -610,7 +641,7 @@ def delete_space(request, obj_id):
     return redirect(reverse('spaces'))
 
   
-@login_required
+@decorators.custom_login_required
 @decorators.facility_responsible_only
 def delete_season(request, obj_id):
     if request.method != 'POST':
@@ -621,7 +652,7 @@ def delete_season(request, obj_id):
     return redirect(reverse('season'))
 
   
-@login_required
+@decorators.custom_login_required
 @decorators.ajax_required
 @decorators.get_if_creator(Notification)
 def _ajax_mark_as_read(request, instance):
@@ -631,7 +662,7 @@ def _ajax_mark_as_read(request, instance):
     return http.HttpResponse()
 
 
-@login_required
+@decorators.custom_login_required
 @decorators.facility_responsible_only
 @decorators.ajax_required
 def _ajax_mark_completed_incidence(request):
@@ -639,4 +670,21 @@ def _ajax_mark_completed_incidence(request):
     for id_ins in ids_list:
         Incidence.objects.get(id=id_ins).soft_delete()
     return http.JsonResponse({})
+
+@decorators.custom_login_required
+def reservation_bill(request, obj_id):
+    reservation = get_object_or_404(Reservation, id=obj_id)
+    set = Timeblock.objects.filter(reservation=obj_id)
+    context = {'reservation': reservation, 'timeblocks': set}
+    return render(request, 'eventApp/reservation_bill.html', context)
+
+
+def render_to_pdf(template_src, context_dict={}):
+    template = get_template(template_src)
+    html  = template.render(context_dict)
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+    if not pdf.err:
+        return HttpResponse(result.getvalue(), content_type='application/pdf')
+    return None
 

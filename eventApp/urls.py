@@ -18,8 +18,8 @@ from eventApp.decorators import facility_responsible_only, manager_only
 from django.urls import path
 
 from eventApp.views import TestView, IncidenceView, SeasonListView, reservation_view, show_reservation_schedule_view, \
-    _ajax_change_view, SpacePrice, \
-    reservation_detail, _ajax_mark_as_read, _ajax_mark_completed_incidence, delete_reservation, EventView, \
+    _ajax_change_view, SpacePrice, change_password,\
+    reservation_detail, _ajax_mark_as_read, _ajax_mark_completed_incidence, delete_reservation, EventView, reservation_bill, \
     SpacesListView, SpaceView, delete_space, report_view, SeasonView, delete_season, ReservationStatusView, EventListView
 
 
@@ -27,6 +27,7 @@ urlpatterns = [
     path('reservation/', reservation_view, name="reservations"),
     path('reservation/new', show_reservation_schedule_view, name="schedule_view"),
     path('reservation/<int:obj_id>/', reservation_detail, name='reservation_detail'),
+    path('reservation/<int:obj_id>/bill', reservation_bill, name='reservation_bill'),
     path('reservation/delete/<int:obj_id>/', delete_reservation, name='delete_reservation'),
     path('manage_reservations/', manager_only(ReservationStatusView.as_view()), name='reservation_status'),
     path('season/', facility_responsible_only(SeasonListView.as_view()), name='season'),
@@ -42,5 +43,6 @@ urlpatterns = [
     path('schedule', EventView.as_view(), name='event_schedule'),
     path('incidences/', facility_responsible_only(IncidenceView.as_view()), name="incidences"),
     path('report/', report_view, name="report"),
+    path('password_change/', change_password, name='change_password'),
     path('', EventListView.as_view(), name='home'),
 ]
