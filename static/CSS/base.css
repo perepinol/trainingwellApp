@@ -56,6 +56,14 @@ ul.errorlist {
     margin-bottom: 0
 }
 
+.black-link {
+  color: #000000 !important;
+}
+
+.white-link {
+  color: #FFFFFF !important;
+}
+
 footer {
     position: fixed;
     text-align: center;
