@@ -3,7 +3,6 @@ from datetime import datetime
 from xhtml2pdf import pisa
 from django.core.management import BaseCommand
 
-import requests
 from requests_html import HTMLSession
 from dateutils import relativedelta
 
@@ -20,8 +19,7 @@ class Command(BaseCommand):
         parser.add_argument('-host', help='The host and port of the Django app', default='127.0.0.1:8000')
 
     def handle(self, *args, **options):
-        base_url = 'http://%s' % options['host']
-        # Get credentials
+        base_url = 'http://%s/en' % options['host']
         cli = HTMLSession()
 
         # Login as manager
@@ -45,13 +43,9 @@ class Command(BaseCommand):
         if res.status_code != 200:
             raise RuntimeError('Could not get report (status %d)' % res.status_code)
 
-        print(res.html.find('#img0'))
         res.html.render(reload=False)
-        print(res.html.html)
-        print(res.html.find('#img0'))
-        return
         result = open('output.pdf', 'w+b')
-        status = pisa.CreatePDF(html_obj.find('.container', first=True).raw_html, dest=result)
+        status = pisa.CreatePDF(res.html.find('.container', first=True).raw_html, dest=result)
         result.close()
         cli.close()
         if status.err:
@@ -60,7 +54,7 @@ class Command(BaseCommand):
 
     @staticmethod
     def _get_csrf_token(cli, page):
-        cli.get(page)
-        if 'csrftoken' not in cli.cookies:
-            raise RuntimeError('Could not get CSRF token')
+        res = cli.get(page)
+        if res.status_code != 200 or 'csrftoken' not in cli.cookies:
+            raise RuntimeError('Could not get CSRF token (status %d)' % res.status_code)
         return cli.cookies['csrftoken']

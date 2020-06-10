@@ -20,7 +20,7 @@
         </div>
         <div class="row mt-1 mb-5 mx-5 justify-content-center">
             <canvas id="chart{{ forloop.counter0 }}" class="mw-100 mh-50"></canvas>
-            <img id="img{{ forloop.counter0 }}" src="" />
+            <img id="img{{ forloop.counter0 }}" src="" hidden />
         </div>
     {% endfor %}
 {% endblock %}
@@ -52,12 +52,11 @@
                     }]
                 },
                 animation: {
-                    onComplete: () => {
-                        document.getElementById("img{{ forloop.counter0 }}").src = charts[{{ forloop.counter0 }}].toBase64Image();
-                    }
+                    duration: 0
                 }
             }
         }));
+        document.getElementById("img{{ forloop.counter0 }}").src = charts[{{ forloop.counter0 }}].toBase64Image();
     {% endfor %}
 </script>
 {% endblock %}
