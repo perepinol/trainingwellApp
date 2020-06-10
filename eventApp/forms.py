@@ -129,7 +129,7 @@ class SeasonForm(ModelForm):
 class SpaceForm(ModelForm):
     class Meta:
         model = Space
-        fields = ['field', 'season', 'sqmt', 'photo', 'description', 'offer']
+        fields = ['field', 'season', 'sqmt', 'photo', 'description']
 
     def is_valid(self):
         if not super(SpaceForm, self).is_valid():
@@ -139,9 +139,6 @@ class SpaceForm(ModelForm):
 
         if clean['sqmt'] <= 0:
             self.add_error('sqmt', _('Space size has to be a natural number'))
-            valid = False
-        if clean['offer'] < 0:
-            self.add_error('offer', _('Offer cannot be negative'))
             valid = False
         return valid
 
