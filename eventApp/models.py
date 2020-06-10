@@ -9,6 +9,7 @@ from django.db import models
 class User(AbstractUser):
     is_adult = models.BooleanField(default=False)
     last_update = models.DateTimeField()
+    passw_changed = models.BooleanField(default=False)
     modified_by = models.ForeignKey('self', on_delete=models.PROTECT, null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
 

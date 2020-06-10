@@ -1,5 +1,5 @@
 from bootstrap_datepicker_plus import DatePickerInput
-from django.forms import ModelForm, Form, DateField, MultipleChoiceField
+from django.forms import ModelForm, Form, DateField, MultipleChoiceField, CharField, PasswordInput
 from django.utils.translation import gettext as _
 from datetime import date, timedelta
 from eventApp.models import Reservation, Season, Space, Incidence
@@ -165,3 +165,4 @@ class IncidenceForm(ModelForm):
         if commit:
             incidence.save()
         return incidence
+
