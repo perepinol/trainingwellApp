@@ -15,7 +15,7 @@ html5lib==1.0.1
 idna==2.9
 lxml==4.5.1
 parse==1.15.0
-Pillow==7.1.2
+Pillow==9.0.0
 pisa==3.0.33
 pyee==7.0.2
 PyPDF2==1.26.0
